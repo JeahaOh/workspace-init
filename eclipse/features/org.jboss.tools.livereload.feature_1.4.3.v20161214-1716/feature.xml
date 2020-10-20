@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+   id="org.jboss.tools.livereload.feature"
+   label="%featureName"
+   version="1.4.3.v20161214-1716"
+   provider-name="%featureProvider">
+
+   <description>
+      %description
+   </description>
+
+   <copyright>
+      %copyright
+   </copyright>
+
+   <license url="%licenseURL">
+      %license
+   </license>
+
+   <plugin
+         id="org.jboss.tools.livereload.core"
+         download-size="300"
+         install-size="418"
+         version="1.4.3.v20161214-1716"
+         unpack="false"/>
+
+   <plugin
+         id="org.jboss.tools.livereload.ui"
+         download-size="539"
+         install-size="646"
+         version="1.4.3.v20161214-1716"
+         unpack="false"/>
+
+</feature>

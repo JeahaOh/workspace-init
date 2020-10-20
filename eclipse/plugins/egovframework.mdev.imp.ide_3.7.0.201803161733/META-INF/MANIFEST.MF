@@ -1,0 +1,41 @@
+Manifest-Version: 1.0
+Bundle-SymbolicName: egovframework.mdev.imp.ide;singleton:=true
+Require-Bundle: org.eclipse.ui.ide;bundle-version="3.6.2",org.eclipse.
+ jdt.ui;bundle-version="3.6.2",org.eclipse.jdt.core;bundle-version="3.
+ 6.2",org.eclipse.jdt.launching;bundle-version="3.5.200",org.eclipse.w
+ st.common.frameworks.ui;bundle-version="1.2.0",org.eclipse.wst.web;bu
+ ndle-version="1.1.403",org.eclipse.wst.common.project.facet.ui;bundle
+ -version="1.4.103",org.eclipse.jst.j2ee.web;bundle-version="1.1.404",
+ org.eclipse.ui.console;bundle-version="3.5.1",org.eclipse.debug.ui;bu
+ ndle-version="3.6.3",org.eclipse.jst.j2ee;bundle-version="1.1.405",or
+ g.eclipse.jst.common.project.facet.core;bundle-version="1.4.102",org.
+ eclipse.core.filesystem;bundle-version="1.3.1",org.eclipse.equinox.p2
+ .ui;bundle-version="2.0.0",org.eclipse.equinox.p2.core;bundle-version
+ ="2.0.3",org.eclipse.equinox.p2.operations;bundle-version="2.0.0",org
+ .eclipse.equinox.p2.metadata;bundle-version="2.0.1",org.eclipse.searc
+ h;bundle-version="3.6.0",org.eclipse.core.runtime,org.eclipse.equinox
+ .p2.repository;bundle-version="2.0.2",org.eclipse.equinox.p2.engine;b
+ undle-version="2.0.1",egovframework.dev.imp.core;bundle-version="3.7.
+ 0",org.eclipse.core.resources;bundle-version="3.6.1",org.eclipse.wst.
+ server.ui;bundle-version="1.1.208",org.eclipse.m2e.core;bundle-versio
+ n="1.2.0"
+Bundle-ManifestVersion: 2
+Bundle-ActivationPolicy: lazy
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-Vendor: MOI
+Import-Package: org.apache.commons.logging
+Export-Package: egovframework.mdev.imp.ide; uses:="org.eclipse.swt.gra
+ phics,  org.osgi.framework,  org.eclipse.ui.plugin,  org.eclipse.core
+ .resoureces,  org.eclipse.jface.resource,  org.eclipse.swt.widgets,  
+ org.eclipse.ui",egovframework.mdev.imp.ide.common,egovframework.mdev.
+ imp.ide.natures,egovframework.mdev.imp.ide.wizards,egovframework.mdev
+ .imp.ide.wizards.examples,egovframework.mdev.imp.ide.wizards.model,eg
+ ovframework.mdev.imp.ide.wizards.operation,egovframework.mdev.imp.ide
+ .wizards.pages
+Bundle-Name: eGovFramework Mobile IDE
+Bundle-Version: 3.7.0.201803161733
+Bundle-ClassPath: egovframework-mdev-imp-ide.jar,lib/ant-1.6.1.jar,lib
+ /jaxb-xalan-1.5.jar
+Bundle-Activator: egovframework.mdev.imp.ide.EgovMobileIdePlugin
+
+

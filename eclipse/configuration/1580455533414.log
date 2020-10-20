@@ -1,0 +1,8 @@
+!SESSION 2020-01-31 16:25:32.586 -----------------------------------------------
+eclipse.buildId=4.6.3.M20170301-0400
+java.version=1.8.0_211
+java.vendor=Oracle Corporation
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=ko_KR
+
+!ENTRY org.eclipse.osgi 4 0 2020-01-31 16:25:34.580
+!MESSAGE The -clean (osgi.clean) option was not successful. Unable to clean the storage area: C:\Users\GMTC_JH\eGov\eclipse\configuration\org.eclipse.osgi

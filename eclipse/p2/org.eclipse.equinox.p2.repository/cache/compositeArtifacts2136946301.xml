@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<?compositeArtifactRepository version='1.0.0'?>
+<repository name="SpringSource Update Site for Eclipse 4.5" type="org.eclipse.equinox.internal.p2.artifact.repository.CompositeArtifactRepository" version="1.0.0">
+	<properties size="1">
+		<property name="p2.timestamp" value="1243822502483"/>
+	</properties>
+	<children size="2">
+		<child location="https://download.springsource.com/release/TOOLS/update/3.8.4.RELEASE/e4.5/"/>
+		<child location="https://download.springsource.com/release/TOOLS/third-party/m2e-sts310/"/>
+	</children>
+</repository>

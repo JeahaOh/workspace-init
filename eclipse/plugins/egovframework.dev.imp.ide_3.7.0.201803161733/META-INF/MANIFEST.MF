@@ -1,0 +1,49 @@
+Manifest-Version: 1.0
+Bundle-SymbolicName: egovframework.dev.imp.ide;singleton:=true
+Require-Bundle: org.eclipse.ui.ide,org.eclipse.jdt.core,org.eclipse.jd
+ t.launching,org.eclipse.wst.common.frameworks.ui,org.eclipse.wst.web,
+ org.eclipse.wst.common.project.facet.ui,org.eclipse.jst.j2ee.web,org.
+ eclipse.debug.ui,org.eclipse.jst.j2ee,org.eclipse.jst.common.project.
+ facet.core,org.eclipse.wst.server.ui,org.eclipse.core.filesystem,org.
+ eclipse.equinox.p2.ui;bundle-version="2.0.0",org.eclipse.equinox.p2.c
+ ore;bundle-version="2.0.3",org.eclipse.equinox.p2.operations;bundle-v
+ ersion="2.0.0",org.eclipse.equinox.p2.metadata;bundle-version="2.0.1"
+ ,org.eclipse.equinox.p2.repository;bundle-version="2.0.2",egovframewo
+ rk.dev.imp.core;bundle-version="3.7.0",org.eclipse.equinox.p2.engine;
+ bundle-version="2.0.1",org.eclipse.m2e.core;bundle-version="1.2.0"
+Bundle-ManifestVersion: 2
+Bundle-ActivationPolicy: lazy
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-Vendor: MOI
+Export-Package: egovframework.dev.imp.ide; uses:="org.eclipse.swt.grap
+ hics,  org.osgi.framework,  org.eclipse.ui.plugin,  org.eclipse.core.
+ resources,  org.eclipse.jface.resource,  org.eclipse.swt.widgets,  or
+ g.eclipse.ui",egovframework.dev.imp.ide.common; uses:="org.eclipse.jd
+ t.core,  org.eclipse.osgi.util,  org.eclipse.core.resources,  org.ecl
+ ipse.core.runtime",egovframework.dev.imp.ide.handlers;uses:="org.ecli
+ pse.core.commands",egovframework.dev.imp.ide.natures;uses:="org.eclip
+ se.core.resources",egovframework.dev.imp.ide.wizards; uses:="org.ecli
+ pse.jface.viewers,  egovframework.dev.imp.ide.wizards.model,  org.ecl
+ ipse.jface.operation,  org.eclipse.jface.wizard,  org.eclipse.core.ru
+ ntime,  org.eclipse.ui",egovframework.dev.imp.ide.wizards.examples,eg
+ ovframework.dev.imp.ide.wizards.model;uses:="org.eclipse.core.resourc
+ es,org.eclipse.core.runtime",egovframework.dev.imp.ide.wizards.operat
+ ion; uses:="egovframework.dev.imp.ide.wizards.model,  org.eclipse.jfa
+ ce.operation,  org.eclipse.core.resources,  org.eclipse.core.runtime,
+   org.eclipse.m2e.core.project.configurator",egovframework.dev.imp.id
+ e.wizards.pages; uses:="org.eclipse.jface.dialogs,  org.eclipse.jface
+ .viewers,  egovframework.dev.imp.ide.wizards.model,  org.eclipse.swt.
+ graphics,  org.eclipse.wst.common.componentcore.datamodel.properties,
+   org.eclipse.core.resources,  org.eclipse.wst.common.frameworks.data
+ model,  org.eclipse.wst.common.frameworks.internal.datamodel.ui,  org
+ .eclipse.wst.common.project.facet.core,  org.eclipse.jface.wizard,  o
+ rg.eclipse.swt.layout,  org.eclipse.swt.widgets,  org.eclipse.core.ru
+ ntime"
+Bundle-Name: eGovFramework IDE
+Bundle-Version: 3.7.0.201803161733
+Bundle-Localization: plugin
+Bundle-ClassPath: egovframework-dev-imp-ide.jar,lib/jaxb-xalan-1.5.jar
+ ,lib/ant-1.6.1.jar
+Bundle-Activator: egovframework.dev.imp.ide.EgovIdePlugin
+
+
