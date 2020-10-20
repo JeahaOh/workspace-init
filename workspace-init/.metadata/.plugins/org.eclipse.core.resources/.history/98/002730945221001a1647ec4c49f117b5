@@ -1,0 +1,9 @@
+package com.koem.vms.waterdepth.service;
+
+import java.util.Map;
+
+public interface WaterDepthService {
+
+  Map<String, Object> getWaterDepthData( String polygon ) throws Exception;
+  
+}

@@ -1,0 +1,432 @@
+package egovframework.com.cmmn.interceptor;
+
+import java.io.PrintWriter;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.ModelAndViewDefiningException;
+import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+import egovframework.com.cmmn.LoginVO;
+import egovframework.com.cmmn.util.CmmnUIUtil;
+import egovframework.mng.auth.service.AuthGroupService;
+import egovframework.mng.menu.service.MenuService;
+import egovframework.mng.menu.vo.MenuVO;
+import egovframework.rte.psl.dataaccess.util.EgovMap;
+
+/**
+ * 인증여부 체크 인터셉터
+ * 
+ * @author 공통서비스 개발팀 서준식
+ * @since 2011.07.01
+ * @version 1.0
+ * @see
+ *
+ *      <pre>
+ * << 개정이력(Modification Information) >>
+ *
+ *   수정일      수정자          수정내용
+ *  -------    --------    ---------------------------
+ *  2011.07.01  서준식          최초 생성
+ *  2011.09.07  서준식          인증이 필요없는 URL을 패스하는 로직 추가
+ *  2014.06.11  이기하          인증이 필요없는 URL을 패스하는 로직 삭제(xml로 대체)
+ *      </pre>
+ */
+@Service
+public class AuthenticInterceptor extends HandlerInterceptorAdapter {
+
+  /** 메뉴 */
+  @Resource(name = "menuService")
+  private MenuService menuService;
+
+  /** 사용자 권한 */
+  @Resource(name = "authGroupService")
+  private AuthGroupService authGroupService;
+  
+  Logger logger = LoggerFactory.getLogger(this.getClass());
+
+  /**
+   * @cmt : 세션에 계정정보(LoginVO)가 있는지 여부로 인증 여부를 체크한다.
+   * @cmt : 계정정보(LoginVO)가 없다면, 로그인 페이지로 이동한다.
+   */
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  @Override
+  public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
+      throws Exception {
+    logger.debug(
+        "\n\t AUTH INTERCEPTOR :: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
+    String curUri = request.getRequestURI();
+    String prvUri = request.getHeader("referer");
+    HttpSession session = request.getSession();
+    LoginVO loginVO = (LoginVO) session.getAttribute("loginVO");
+    
+    boolean isTypedRequest = prvUri == null;
+    logger.debug("request current uri : {}", curUri);
+    logger.debug("request previous uri : {}, valid : {}", prvUri, isTypedRequest);
+
+    /**
+     * 주소창에 입력한 주소로 접근한다면 접근을 막는다.
+     * @author : Jeaha
+     * @at 2020.08.22 보안취약점
+     */
+    if(isTypedRequest ) {
+      response.setContentType("text/html; charset=UTF-8");
+      PrintWriter out = response.getWriter();
+      out.println(
+          "<script> alert('정상적인 방법을 통해 다시 접근해주세요.'); history.back(); </script>");
+      out.flush();
+      logger.debug("\n\t!! URI PARAMETER IS NULL !!");
+      return false;
+    }
+    
+    /**
+     * 요청한 URL 의 menu code와 parameter로 받은 menu code 가 일치 하지않으면 false;
+     * 보안취약점 이 급해서 당장은 /board/boardArticleList.do path 한정이지만, 로직을 변경하면 메뉴코드로 확인 하도록  개선 할 수 있음.
+     * @author : Jeaha
+     * @at 2020.08.26 보안취약점
+     */
+    if(curUri.startsWith("/board/boardArticleList.do")) {
+      logger.debug("\n\t SECURE STEP ----------------------------\n");
+      try {
+        
+        List<MenuVO> gnbMenu = (List<MenuVO>) session.getAttribute("gnbMenu");
+        if (gnbMenu == null || gnbMenu.isEmpty() || gnbMenu.size() == 0) {
+          MenuVO vo = new MenuVO();
+          logger.info(">>>>>>>>>>> !! LOGIN VO HAS NO GNB MENUS !! <<<<<<<<<<<");
+          if (vo.getMenuCode().length() == 0) {
+            vo.setUpperMenuCode("MNU00001");
+          } else {
+            vo.setUpperMenuCode(vo.getMenuCode().substring(0, 3) + "00001");
+          }
+          
+          gnbMenu = menuService.getGnbSelectMenu(vo);
+          if(loginVO.getAuthorGroupCode().contains("AG01")) {
+            vo.setUpperMenuCode("ADM00001");
+            gnbMenu.addAll(menuService.getGnbSelectMenu(vo));
+          }
+          session.setAttribute("gnbMenu", gnbMenu);
+
+          logger.debug("menu length : {}", gnbMenu.size());
+        } else {
+          logger.debug(">>>>>>>>>>> LOGIN VO HAS GNB {} MENUS <<<<<<<<<<<", gnbMenu.size());
+        }
+
+        String menuCode = request.getParameter("menuCode");
+        MenuVO targetMenu = null;
+        //logger.info("\n\t gnbMenu ------------------------");
+        
+        for(int i = 0; i < gnbMenu.size(); i++) {
+          MenuVO menu = gnbMenu.get(i);
+          //logger.info(menu.toString());
+          //logger.debug("menu code : {}", menu.getMenuCode());
+          if( menu.getMenuCode().equals(menuCode) ) {
+            logger.debug("FIND!!");
+            targetMenu = menu;
+            break;
+          }
+        }
+        //logger.info("\t gnbMenu ------------------------\n");
+
+        //logger.debug("target menu : \n{}", targetMenu);
+        String targetUrl = targetMenu.getMenuUrl();
+        String targetBBSID = targetUrl.substring(targetUrl.indexOf("=") + 1);
+        String targetPathname = targetUrl.substring(0, targetUrl.indexOf("?"));
+        String targetMenuCode = targetMenu.getMenuCode();
+        
+        String requestMenuCode = request.getParameter("menuCode");
+        String requestBBSID = request.getParameter("bbsId");
+
+        //logger.debug("target pathname : {}", targetPathname);
+        //logger.debug("req pathname : {}", curUri);
+        boolean isPathnameMatch = targetPathname.equals(curUri);
+        logger.debug("isPathnameMatch : {}\n", isPathnameMatch);
+        
+        //logger.debug("target menu code : {}", targetMenuCode);
+        //logger.debug("req Menu Code : {}", requestMenuCode);
+        boolean isMenuCodeMatch = targetMenuCode.equals(requestMenuCode);
+        logger.debug("isMenuCodeMatch : {}\n", isMenuCodeMatch);
+        
+        //logger.debug("target BBSID : {}", targetBBSID);
+        //logger.debug("req BBSID : {}", requestBBSID);
+        boolean isBBSIDMatch = targetBBSID.equals(requestBBSID);
+        logger.debug("isBBSIDMatch : {}\n", isBBSIDMatch);
+        
+        boolean isRequestValid = isPathnameMatch && isMenuCodeMatch && isBBSIDMatch;
+        logger.debug("isRequestValid : {}\n", isRequestValid);
+        
+        if( !isRequestValid ) {
+          response.setContentType("text/html; charset=UTF-8");
+          PrintWriter out = response.getWriter();
+          out.println(
+              "<script> alert('정상적인 방법을 통해 접근해주세요.'); history.back(); </script>");
+          out.flush();
+          logger.debug("\n\t!! MENU CODE PARAMETER AND MENU PATHNAME IS NOT MATCH !!");
+          return false;
+        }
+      } catch(Exception e) {
+        logger.error("CUZ", e.getCause());
+        logger.error("MSG", e.getMessage());
+        e.printStackTrace();
+        
+        response.setContentType("text/html; charset=UTF-8");
+        PrintWriter out = response.getWriter();
+        out.println(
+            "<script> alert('정상적인 방법을 통해 접근해주세요.'); history.back(); </script>");
+        out.flush();
+        logger.debug("\n\t!! MENU CODE PARAMETER AND MENU PATHNAME IS NOT MATCH !!");
+        return false;
+      } finally {
+        logger.debug("\n\t SECURE STEP ----------------------------\n");
+      }
+    }
+
+    logger.debug("\t\t resquest.headers --->");
+    Enumeration headers = request.getHeaderNames();
+    while(headers.hasMoreElements()) {
+      String headerName = (String) headers.nextElement();
+      String value = request.getHeader(headerName);
+      logger.debug("{} : {}", headerName, value);
+    }
+    logger.debug("\t\t <--- resquest.headers : ");
+    
+    
+    
+    String param = "";
+    Enumeration params = request.getParameterNames();
+    
+    
+
+    while (params.hasMoreElements()) {
+      String name = (String) params.nextElement();
+      if (request.getParameter(name).length() > 0) {
+        request.setAttribute(name, request.getParameter(name));
+        // System.out.println(name + " : " +request.getParameter(name));
+        param += "&" + name + "=" + request.getParameter(name);
+      }
+    }
+    logger.debug("\n\t STEP 01 ----------------------------\n\t\tparam : {}\n", param);
+    //logger.debug("param : {}", param);
+
+    /**
+     * 요청이 ajax 로 들어 온다면, 권한을 확인 할 수 없으므로 return true 한다.
+     * 만약, CRUD 요청의 권한 확인을  server side 에서 CRUD 직전에 해야 한다면 시스템의 모든 URL을 DB에 저장, 확인 하는 방식으로 코드를 수정 해야 한다.    
+     */
+    boolean isRequestByAjax = "XMLHttpRequest".equals(request.getHeader("x-requested-with"));
+    if(isRequestByAjax) {
+      logger.debug("REQUEST IS BY AJAX : {}", isRequestByAjax);
+      logger.debug(
+          "\n\t AUTH INTERCEPTOR :: <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n\n\n");
+      return true;
+    }
+    
+    
+    String returnURL = "";
+    // 요청주소
+    if (request.getParameter("returnURL") == null) {
+      String domain =
+          request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
+      String reqURL =
+          prvUri != null ? prvUri : "/main.do";
+      // System.out.println("#### domain : " + domain );
+      // System.out.println("#### reqURL : " + reqURL );
+      if (reqURL.indexOf("?") > -1) {
+        returnURL = reqURL.replace(domain.replace(":80", ""), "");
+      } else {
+        if (param.equals("")) {
+          returnURL = reqURL.replace(domain.replace(":80", ""), "");
+        } else {
+          returnURL = reqURL.replace(domain.replace(":80", ""), "") + "?" + param.substring(1);
+        }
+      }
+    } else {
+      returnURL = request.getParameter("returnURL");
+    }
+    System.out.println("Auth Pass!!!!!!!!!!! reqURL : " + curUri);
+    System.out.println("Auth Pass!!!!!!!!!!! returnURL : " + returnURL);
+    System.out.println("Auth Pass!!!!!!!!!!! menuCode : " + request.getParameter("menuCode"));
+    logger.debug("\n\t STEP 02 ----------------------------\n\t\treturn url : {}\n", returnURL);
+    
+    
+    String mnCode = CmmnUIUtil.getParameter(returnURL, "menuCode");
+
+    if (mnCode.equals("")) {
+      
+      //List<MenuVO> menus = loginVO.getMenuList();
+      //ArrayList<MenuVO> menus = (ArrayList<MenuVO>) session.getAttribute("gnbMenu");
+
+      logger.debug("mnCode.equals(\"\"), reqUrl : {}", curUri);
+
+      // hard coding임 꼭 개선 해야 함!!
+      if(curUri.contains("mng")) mnCode = "ADM00002";
+      
+//      else {
+//        for(MenuVO menu : menus) {
+//          if( menu.getMenuUrl() == null) continue;
+//          logger.info(menu.getMenuUrl(), prvUri);
+//          Boolean isSameURL = menu.getMenuUrl().equals(reqUri);
+//          /**
+//           * 이전 url로 권한 확인. 문제 있을시 다른 방안 찾아 봐야 함.
+//           */
+//          Boolean wasPrevUrl = prvUri.indexOf( menu.getMenuUrl() ) > -1;
+//          if( isSameURL || wasPrevUrl ) {
+//            logger.debug("auth -> isSameURL : {}, wasPrevURL : {}", isSameURL, wasPrevUrl);
+//            mnCode = menu.getMenuCode();
+//            break;
+//          }
+//        }
+//      }
+      
+      if (mnCode.equals("")) {
+        mnCode = "MNU00000";
+        logger.debug("\t!!!!!!!!!!! menu code is unknown !!!!!!!!!!!");
+      }
+      
+    }
+    logger.info("mnCode : {}", mnCode);
+
+    String menuCode =
+        request.getParameter("menuCode") != null ? request.getParameter("menuCode") : mnCode;
+    returnURL = returnURL.replaceAll("amp;", "").replace("?message=auth.err.001", "");
+    // if(menuCode.equals("MNU00002") && (returnURL.indexOf("/main.do") > -1 ||
+    // returnURL.equals("/"))) {
+    // menuCode = "MNU00002";
+    // }
+    logger.debug("\n\t STEP 03 ----------------------------\n\t\tmnCode : {}, menuCode : {}, returnURL : {}\n", mnCode, menuCode, returnURL);
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+    if (loginVO == null) {
+      /**
+       * @author : 박성화
+       * @at 2020.06.12 보안취약점
+       * @cmmt : 불충분한 인증, 파라미터 변경
+       * @detail : 로그인 정보가 없는 사용자가 접근했을 때, URL 접근금지
+       */
+      response.setContentType("text/html; charset=UTF-8");
+      PrintWriter out = response.getWriter();
+      out.println(
+          "<script> alert('로그인 정보가 없습니다. 로그인 후 이용해주시기 바랍니다.'); location.href='/'; </script>");
+      out.flush();
+      logger.debug("\n\t STEP 04 LOGIN CHECK ---------------------------->> loginVO is NULL");
+      return false;
+    } else if( loginVO.getAuthorGroupCode() == null || loginVO.getAuthorGroupCode().equals("") ) {
+      response.setContentType("text/html; charset=UTF-8");
+      PrintWriter out = response.getWriter();
+      out.println(
+          "<script> alert('로그인 정보가 없습니다. 로그인 후 이용해주시기 바랍니다.'); location.href='/'; </script>");
+      out.flush();
+      logger.debug("\n\t STEP 04 LOGIN CHECK ---------------------------->> loginVO is INVALID");
+      return false;
+    } else {
+      //logger.info(loginVO.toString());
+      logger.debug("\n\t STEP 04 LOGIN CHECK ---------------------------- id : {}, gisKey : {} ", loginVO.getUserId(), loginVO.getGisKey());
+    }
+    
+    
+    
+    
+    
+    
+    // 메뉴 권한 체크
+    MenuVO menuVO = new MenuVO();
+    menuVO.setMenuCode(menuCode);
+    if (StringUtils.isNotEmpty(loginVO.getAuthorGroupCode())) {
+      menuVO.setAuthorGroupCode("'" + loginVO.getAuthorGroupCode().replaceAll(",", "','") + "'");
+    } else {
+      menuVO.setAuthorGroupCode("'AG99'");
+    }
+    
+    //logger.debug("menuVO : {}", menuVO);
+    int menuAutn = menuService.selectAuthMenu(menuVO);
+    logger.debug("menuAuthN : {}", menuAutn);
+    if (menuAutn == 0) {
+      ModelAndView modelAndView = new ModelAndView("redirect:/main.do");
+      modelAndView.addObject("message", "auth.err.001");
+      logger.debug("\n\t STEP 05 ACCESS AUTH NOT PASSED --> menuAutn : {}\n\n", menuAutn);
+      throw new ModelAndViewDefiningException(modelAndView);
+      
+    } else {
+      //  접근 메뉴의  CRUD 권한 조회 -> 잠시 주석 처리.
+      //  logger.info(loginVO.toString());
+      List<EgovMap> accessableMenuList = (List<EgovMap>) session.getAttribute("accessableMenuList");
+      try {
+        EgovMap accessAuth = null;
+        //logger.info("\n\taccessableMenuList ------------------------");
+        //for( EgovMap auth : accessableMenuList ) { logger.info(auth.toString()); }
+        //logger.info("\taccessableMenuList ------------------------\n");
+        for( EgovMap auth : accessableMenuList ) {
+          if( auth.get("menuCode").equals(menuCode) ) {
+            accessAuth = auth;
+            //logger.debug(menuCode);
+            logger.debug("\n\nfinded auth : {}\n", auth.toString());
+            break;
+          }
+        }
+        
+        if( accessAuth == null ) {
+          logger.error("\n\n\t\t!! ACCESS AUTH IS NULL !!\n\n");
+        } else {
+          if( accessAuth.get("rollRead").equals("N") )  logger.error("\n\n\t\t!! ROLL READ IS N !!\n\n");
+          Map<String, Boolean> tempAuth = new HashMap<>();
+          tempAuth.put("rollRead", accessAuth.get("rollRead") != null
+              ? accessAuth.get("rollRead").equals("Y")
+                  ? true : false
+              : false);
+          tempAuth.put("rollCreate", accessAuth.get("rollCreate") != null
+              ? accessAuth.get("rollCreate").equals("Y")
+                  ? true : false
+              : false);
+          tempAuth.put("rollUpdate", accessAuth.get("rollUpdate") != null
+              ? accessAuth.get("rollUpdate").equals("Y")
+                  ? true : false
+              : false);
+          tempAuth.put("rollDelete", accessAuth.get("rollDelete") != null
+              ? accessAuth.get("rollDelete").equals("Y")
+                  ? true : false
+              : false);
+          session.setAttribute("accessAuth", tempAuth);
+          // originAuth는 출력 용임. debuging 끝나면 주석 처리 하도록.
+          //session.setAttribute("originAuth", accessAuth.toString());
+          
+          //logger.info("accessAuth : {}", accessAuth.toString());
+          logger.debug("\n\t STEP 05 ACCESS AUTH ----------------------------\n\t\taccessAuth : {}\n\n", tempAuth.toString());
+        }
+        
+//        
+//        logger.info("\n\taccessableMenuList ------------------------");
+//        for( EgovMap auth : accessableMenuList ) { logger.info(auth.toString()); }
+//        logger.info("\taccessableMenuList ------------------------\n");
+//        
+        
+        
+      } catch (Exception e ) {
+        logger.error( e.getMessage() );
+        logger.error( e.getCause() + "" );
+        e.printStackTrace();
+      }
+      
+      
+      
+      logger.debug(
+          "\n\t AUTH INTERCEPTOR :: <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n\n\n");
+      return true;
+    }
+  }
+}

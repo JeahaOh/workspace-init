@@ -1,0 +1,12 @@
+package com.koem.vms.waterdepth.service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import com.koem.vms.waterdepth.dto.WaterDepthDTO;
+
+public interface WaterDepthService {
+  ArrayList<Map<String, Object>> getWaterDepthInRange( String polygon ) throws Exception;
+  Map<String, List<Float>> getWaterDepthInRange( String polygon ) throws Exception;
+  
+}

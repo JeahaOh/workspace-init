@@ -1,0 +1,321 @@
+package egovframework.mng.user.vo;
+
+import java.util.List;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+import egovframework.com.cmmn.CmmnAbstractVO;
+
+/**
+ * 사용자 VO 클래스
+ *
+ * @author hjh
+ * @since 2018.05.31
+ * @version 1.0
+ * @see
+ *
+ *      <pre>
+ * << 개정이력(Modification Information) >>
+ *
+ *      수정일     수정자          수정내용
+ *   -----------  --------   ---------------------
+ *   2018.05.31    hjh          최초 생성
+ *
+ *      </pre>
+ */
+public class UserVO extends CmmnAbstractVO {
+
+  /** 사용자ID */
+  private String userId;
+  /** 인증서키값 */
+  private String crtfctHightValue;
+  /** 사용자명 */
+  private String userNm;
+  /** 비밀번호 */
+  private String password;
+  /** 기관코드 */
+  private String insttCode;
+  /** 기관명 */
+  private String insttNm;
+  /** 권한그룹코드 */
+  private String authorGroupCode;
+  /** 권한그룹명 */
+  private String authorGroupNm;
+  /** 전화번호 */
+  private String telno;
+  /** 직급명 */
+  private String clsfNm;
+  /** 상태코드 */
+  private String sttusCode;
+  /** 등록자ID */
+  private String registerId;
+  /** 등록일시 */
+  private String registDt;
+  /** 최종수정일시 */
+  private String lastUpdtDt;
+  /** 최종수정자ID */
+  private String lastUpdusrId;
+  /** 사용자 VO */
+  private UserVO userVO;
+  /** 사용자 VO List */
+  private List<UserVO> userVOList;
+  /** 검색조건 : 기관코드 */
+  private String searchInsttCode;
+  /** 검색조건 : 기관명 */
+  private String searchInsttNm;
+  /** 검색조건 : 상태코드 */
+  private String searchSttusCode;
+  /** 검색조건 : 권한그룹코드 */
+  private String searchAuthorGroupCode;
+  /** 검색조건 : 권한그룹코드 배열 */
+  private String[] searchAuthorGroupCodeArr;
+  /** 검색조건 : 권한그룹코드_권한그룹명 */
+  private String searchAuthorGroupNm;
+  /** 사용자 구분 (일반사용자, 기관사용자) */
+  private String gubun;
+  /** 검색조건 : 사용자 구분 (일반사용자, 기관사용자) */
+  private String searchGubun;
+  /** 검색조건 : 가입일-시작일 */
+  private String searchRegistDtF;
+  /** 검색조건 : 가입일-종료일 */
+  private String searchRegistDtT;
+  /** 사용자 권한레벨 **/
+  private String odr;
+
+  public String getUserId() {
+    return userId;
+  }
+
+  public void setUserId(String userId) {
+    this.userId = userId;
+  }
+
+  public String getCrtfctHightValue() {
+    return crtfctHightValue;
+  }
+
+  public void setCrtfctHightValue(String crtfctHightValue) {
+    this.crtfctHightValue = crtfctHightValue;
+  }
+
+  public String getUserNm() {
+    return userNm;
+  }
+
+  public void setUserNm(String userNm) {
+    this.userNm = userNm;
+  }
+
+  public String getPassword() {
+    return password;
+  }
+
+  public void setPassword(String password) {
+    this.password = password;
+  }
+
+  public String getInsttCode() {
+    return insttCode;
+  }
+
+  public void setInsttCode(String insttCode) {
+    this.insttCode = insttCode;
+  }
+
+  public String getInsttNm() {
+    return insttNm;
+  }
+
+  public void setInsttNm(String insttNm) {
+    this.insttNm = insttNm;
+  }
+
+  public String getAuthorGroupCode() {
+    return authorGroupCode;
+  }
+
+  public void setAuthorGroupCode(String authorGroupCode) {
+    this.authorGroupCode = authorGroupCode;
+  }
+
+  public String getAuthorGroupNm() {
+    return authorGroupNm;
+  }
+
+  public void setAuthorGroupNm(String authorGroupNm) {
+    this.authorGroupNm = authorGroupNm;
+  }
+
+  public String getTelno() {
+    return telno;
+  }
+
+  public void setTelno(String telno) {
+    this.telno = telno;
+  }
+
+  public String getClsfNm() {
+    return clsfNm;
+  }
+
+  public void setClsfNm(String clsfNm) {
+    this.clsfNm = clsfNm;
+  }
+
+  public String getSttusCode() {
+    return sttusCode;
+  }
+
+  public void setSttusCode(String sttusCode) {
+    this.sttusCode = sttusCode;
+  }
+
+  public String getRegisterId() {
+    return registerId;
+  }
+
+  public void setRegisterId(String registerId) {
+    this.registerId = registerId;
+  }
+
+  public String getRegistDt() {
+    return registDt;
+  }
+
+  public void setRegistDt(String registDt) {
+    this.registDt = registDt;
+  }
+
+  public UserVO getUserVO() {
+    return userVO;
+  }
+
+  public void setUserVO(UserVO userVO) {
+    this.userVO = userVO;
+  }
+
+  public List<UserVO> getUserVOList() {
+
+    return userVOList;
+  }
+
+  public void setUserVOList(List<UserVO> userVOList) {
+    this.userVOList = userVOList;
+  }
+
+  public String getSearchInsttCode() {
+    return searchInsttCode;
+  }
+
+  public void setSearchInsttCode(String searchInsttCode) {
+    this.searchInsttCode = searchInsttCode;
+  }
+
+  public String getSearchInsttNm() {
+    return searchInsttNm;
+  }
+
+  public void setSearchInsttNm(String searchInsttNm) {
+    this.searchInsttNm = searchInsttNm;
+  }
+
+  public String getSearchSttusCode() {
+    return searchSttusCode;
+  }
+
+  public void setSearchSttusCode(String searchSttusCode) {
+    this.searchSttusCode = searchSttusCode;
+  }
+
+  public String getSearchAuthorGroupCode() {
+    return searchAuthorGroupCode;
+  }
+
+  public void setSearchAuthorGroupCode(String searchAuthorGroupCode) {
+    this.searchAuthorGroupCode = searchAuthorGroupCode;
+  }
+
+  public String getLastUpdtDt() {
+    return lastUpdtDt;
+  }
+
+  public void setLastUpdtDt(String lastUpdtDt) {
+    this.lastUpdtDt = lastUpdtDt;
+  }
+
+  public String getLastUpdusrId() {
+    return lastUpdusrId;
+  }
+
+  public void setLastUpdusrId(String lastUpdusrId) {
+    this.lastUpdusrId = lastUpdusrId;
+  }
+
+  public String[] getSearchAuthorGroupCodeArr() {
+    String[] newSearchAuthorGroupCodeArr = new String[searchAuthorGroupCodeArr.length];
+    System.arraycopy(searchAuthorGroupCodeArr, 0, newSearchAuthorGroupCodeArr, 0,
+        searchAuthorGroupCodeArr.length);
+    return newSearchAuthorGroupCodeArr;
+  }
+
+  public void setSearchAuthorGroupCodeArr(String[] searchAuthorGroupCodeArr) {
+    String[] newSearchAuthorGroupCodeArr = new String[searchAuthorGroupCodeArr.length];
+    System.arraycopy(searchAuthorGroupCodeArr, 0, newSearchAuthorGroupCodeArr, 0,
+        searchAuthorGroupCodeArr.length);
+    this.searchAuthorGroupCodeArr = newSearchAuthorGroupCodeArr;
+  }
+
+  public String getSearchAuthorGroupNm() {
+    return searchAuthorGroupNm;
+  }
+
+  public void setSearchAuthorGroupNm(String searchAuthorGroupNm) {
+    this.searchAuthorGroupNm = searchAuthorGroupNm;
+  }
+
+  @Override
+  public String toString() {
+    return ToStringBuilder.reflectionToString(this, ToStringStyle.MULTI_LINE_STYLE);
+  }
+
+  public String getGubun() {
+    return gubun;
+  }
+
+  public void setGubun(String gubun) {
+    this.gubun = gubun;
+  }
+
+  public String getSearchGubun() {
+    return searchGubun;
+  }
+
+  public void setSearchGubun(String searchGubun) {
+    this.searchGubun = searchGubun;
+  }
+
+  public String getSearchRegistDtF() {
+    return searchRegistDtF;
+  }
+
+  public void setSearchRegistDtF(String searchRegistDtF) {
+    this.searchRegistDtF = searchRegistDtF;
+  }
+
+  public String getSearchRegistDtT() {
+    return searchRegistDtT;
+  }
+
+  public void setSearchRegistDtT(String searchRegistDtT) {
+    this.searchRegistDtT = searchRegistDtT;
+  }
+
+  public String getOdr() {
+    return odr;
+  }
+
+  public void setOdr(String odr) {
+    this.odr = odr;
+  }
+
+
+}

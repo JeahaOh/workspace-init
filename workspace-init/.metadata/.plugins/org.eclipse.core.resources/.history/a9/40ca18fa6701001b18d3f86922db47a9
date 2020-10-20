@@ -1,0 +1,34 @@
+package egovframework.board.bug.vo;
+
+import egovframework.com.cmmn.CmmnAbstractVO;
+
+public class Bug extends CmmnAbstractVO {
+  //  발생 일시
+  String bug_date;
+  //  사용 브라우져
+  String bug_browser;
+  //  발생 url
+  String bug_url;
+  //  발생 pathname
+  String bug_pathname;
+  //  발생 querystring
+  String bug_query;
+  //  발생 이전 페이지
+  String bug_prv_page;
+  //  버그 발생 위치
+  String bug_loc_nav;
+  //  버그 발생 파일
+  String bug_file;
+  //  버그 발생 라인
+  String bug_at;
+  //  버그 발생시 form 인자값.
+  String bug_form_cont;
+  //  예외 스택
+  String bug_stack;
+  //  에러 메세지
+  String bug_msg;
+  //  버그 사항
+  String bug_cmmnt;
+  //  버그 보고자.
+  String reporter;
+}

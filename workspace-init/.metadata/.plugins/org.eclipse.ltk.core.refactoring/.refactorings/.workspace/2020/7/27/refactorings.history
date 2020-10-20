@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Delete resource &apos;MPC_GIS&apos;" deleteContents="false" description="Delete resource &apos;MPC_GIS&apos;" element1="/MPC_GIS" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1593769227202"/>
+</session>

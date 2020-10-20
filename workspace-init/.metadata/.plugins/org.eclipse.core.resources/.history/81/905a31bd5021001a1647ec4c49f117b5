@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="waterdepth">
+
+  <select id="selectAll">
+    <![CDATA[
+      SELECT
+        A.IDX, ST_ASTEXT(A.GEOM), A.DEPT
+      FROM
+        TB_DEPTH_DATA AS A;
+    ]]>
+  </select>
+
+</mapper>

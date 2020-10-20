@@ -1,0 +1,12 @@
+package com.koem.vms.area.dto;
+
+import java.sql.Timestamp;
+
+public class EnvDTO {
+  private int idx;
+  private String geom_type;
+  private String geom;
+  private float dept;
+  private Timestamp survey_date;
+
+}

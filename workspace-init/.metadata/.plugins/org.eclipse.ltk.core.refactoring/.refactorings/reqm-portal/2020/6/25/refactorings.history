@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename field &apos;log&apos; in &apos;egovframework.com.cmmn.interceptor.UriParamInterceptor&apos; to &apos;logger&apos;&#x0D;&#x0A;- Original project: &apos;reqm-portal&apos;&#x0D;&#x0A;- Original element: &apos;egovframework.com.cmmn.interceptor.UriParamInterceptor.log&apos;&#x0D;&#x0A;- Renamed element: &apos;egovframework.com.cmmn.interceptor.UriParamInterceptor.logger&apos;&#x0D;&#x0A;- Update references to refactored element&#x0D;&#x0A;- Update textual occurrences in comments and strings" delegate="false" deprecate="false" description="Rename field &apos;log&apos;" flags="589830" getter="false" id="org.eclipse.jdt.ui.rename.field" input="/src\/main\/java&lt;egovframework.com.cmmn.interceptor{UriParamInterceptor.java[UriParamInterceptor^log" name="logger" references="true" setter="false" stamp="1592292616897" textual="true" version="1.0"/>
+</session>

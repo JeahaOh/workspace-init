@@ -1,0 +1,545 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="MainMenu">
+
+  <typeAlias  alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+  <typeAlias  alias="menuManageVO" type="egovframework.let.sym.mnu.mpm.service.MenuManageVO"/>
+  <typeAlias  alias="comDefaultVO" type="egovframework.com.cmm.ComDefaultVO"/>
+  <typeAlias alias="caseMap" type="org.apache.commons.collections.map.CaseInsensitiveMap"/>
+  
+  
+  <!-- select count(*) from lettnmenuinfo_20190926 where menu_no = #menuNo# -->
+  <select id="menuManageDAO.selectMenuCheck" parameterClass="MenuManageVO" resultClass="int">
+    <![CDATA[
+      SELECT
+        COUNT( * )
+      FROM
+        LETTNMENUINFO_20190926
+      WHERE
+        MENU_NO = #menuNo#
+    ]]>
+  </select>
+
+  <!-- select max(high) from lettnmenuinfo_20190926 -->
+  <select id="menuManageDAO.selectHighLevel" resultClass="int">
+    <![CDATA[
+      SELECT
+        MAX(HIGH)
+      FROM
+        LETTNMENUINFO_20190926
+    ]]>
+  </select>
+
+  <select id="menuManageDAO.selectMidLevel" parameterClass="MenuManageVO" resultClass="int">
+    <![CDATA[
+      SELECT
+        MAX(MID) as mid
+      FROM
+        LETTNMENUINFO_20190926
+      WHERE
+        UPPER_MENU_NO = #menuNo#
+      AND
+        SITEID = #siteId#
+    ]]>
+  </select>
+
+  <select id="menuManageDAO.selectLowLevel" resultClass="int">
+    <![CDATA[
+      SELECT max(low)
+      FROM lettnmenuinfo_20190926
+    ]]>
+  </select>
+  
+  <select id="menuManageDAO.selectHighMenuNo" parameterClass="MenuManageVO" resultClass="int">
+    <![CDATA[
+      SELECT menu_no AS menuNo
+      FROM lettnmenuinfo_20190926
+      WHERE UPPER_MENU_NO = 0
+      AND SITEID = #siteId#
+      AND high is not null
+      AND high =(select max(high) from lettnmenuinfo_20190926)
+    ]]>
+  </select>
+  
+  <select id="menuManageDAO.selectMidMenuNo" parameterClass="MenuManageVO" resultClass="int">
+    <![CDATA[
+      SELECT MENU_NO AS menuNo
+      FROM lettnmenuinfo_20190926
+      WHERE
+        upper_menu_no = #menuNo#
+        and SITEID = #siteId#
+      ORDER BY menuNo DESC
+      LIMIT 1;
+    ]]>
+  </select>
+  
+  <select id="menuManageDAO.selectLowMenuNo" parameterClass="MenuManageVO" resultClass="int">
+    <![CDATA[
+      SELECT
+        menu_no AS menuNo
+      FROM
+        lettnmenuinfo_20190926
+      WHERE
+        upper_menu_no = 0
+      AND SITEID = #siteId#
+      AND low is not null
+      AND low = (select max(low) from lettnmenuinfo_20190926)
+    ]]>
+  </select>
+  
+  <insert id="menuManageDAO.insertHighMenu" parameterClass="MenuManageVO">
+    <![CDATA[
+      INSERT INTO lettnmenuinfo_20190926 
+        (siteid, menu_nm,  menu_dc, menu_no, upper_menu_no, high, idx, menu_ordr) 
+      VALUES (#siteId#, #menuNm#, #menuDc#, #menuNo#, '0', #high#, #idx#, #high#)
+    ]]>
+  </insert>
+  
+  <insert id="menuManageDAO.insertMidMenu" parameterClass="MenuManageVO">
+    <![CDATA[
+      INSERT INTO lettnmenuinfo_20190926
+        (siteid, progrm_file_nm, menu_nm,  menu_dc, menu_no, upper_menu_no, high, mid, idx, menu_ordr)
+      VALUES (#siteId#, #menuDc#, #menuNm#, #menuDc#, #menuNo#, #upperMenuId#, #high#, #mid#, #idx#, #mid#)
+    ]]>
+  </insert>
+  
+  <insert id="menuManageDAO.insertLowMenu" parameterClass="MenuManageVO">
+    <![CDATA[
+      INSERT INTO lettnmenuinfo_20190926 
+        (siteid, progrm_file_nm, menu_nm,  menu_dc, menu_no, upper_menu_no, high, mid, low, idx) 
+      VALUES (#siteId#, #menuDc#, #menuNm#, #menuDc#, #menuNo#, #upperMenuId#,#high#, #mid#, #low#, #idx#)
+   ]]>
+  </insert>
+  
+  <insert id="menuManageDAO.insertMenuAuth" parameterClass="MenuManageVO">
+    <![CDATA[
+      INSERT INTO LETTNMENUCREATDTLS 
+        (menu_no, author_code, siteid) 
+      VALUES (#menuNo#, #authorCode#, #siteId#)
+      ON DUPLICATE KEY 
+      UPDATE 
+        siteId = #siteId#,
+        menu_no = #menuNo#,
+        author_code = #authorCode#
+    ]]>
+  </insert>
+  
+  <update id="menuManageDAO.updateMenu" parameterClass="MenuManageVO">
+    <isEqual property="menuFlag" compareValue="high">
+      UPDATE lettnmenuinfo_20190926 
+      SET high = #high# 
+      WHERE menu_no = #menuNo#
+    </isEqual>
+    <isEqual property="menuFlag" compareValue="mid">
+      UPDATE lettnmenuinfo_20190926 
+      SET mid = #mid# 
+      WHERE menu_no = #menuNo#
+    </isEqual>
+    <isEqual property="menuFlag" compareValue="low">
+      UPDATE lettnmenuinfo_20190926 
+      SET low = #low# 
+      WHERE menu_no = #menuNo#
+    </isEqual>
+  </update>
+  
+  <delete id="menuManageDAO.deleteMenu" parameterClass="MenuManageVO">
+    <![CDATA[
+      DELETE
+      FROM
+        LETTNMENUINFO_20190926
+      WHERE
+        MENU_NO = #menuNo#
+    ]]>
+  </delete>
+  
+  <delete id="menuManageDAO.deleteMenuAuth" parameterClass="MenuManageVO">
+    <![CDATA[
+      DELETE
+      FROM
+        LETTNMENUCREATDTLS
+      WHERE
+        MENU_NO = #menuNo#
+    ]]>
+  </delete>
+  
+  <select id="menuManageDAO.selectSubMenuList" parameterClass="Map" resultClass="caseMap">
+    <![CDATA[
+      SELECT
+        menu_no
+        , #site_id# AS site_id
+      FROM LETTNMENUINFO_20190926
+      WHERE
+        (upper_menu_no = #menu_no# ) and siteid= #site_id#
+    ]]>
+  </select>
+  
+<!--   <select id="menuManageDAO.selectMainMenuHead" parameterClass="MenuManageVO" resultClass="egovMap">
+    <![CDATA[ 
+      SELECT
+          B.MENU_NO AS menuNo
+        , B.MENU_ORDR AS menuOrdr
+        , B.MENU_NM AS menuNm
+        , B.UPPER_MENU_NO AS upperMenuId
+        , B.MENU_DC AS menuDc
+        , B.RELATE_IMAGE_PATH AS relateImagePath
+        , B.RELATE_IMAGE_NM AS relateImageNm
+        , B.PROGRM_FILE_NM AS progrmFileNm
+        , (SELECT C.URL FROM LETTNPROGRMLIST C WHERE B.PROGRM_FILE_NM = C.PROGRM_FILE_NM) AS chkURL
+      FROM LETTNMENUCREATDTLS A, LETTNMENUINFO B 
+      WHERE  B.Menu_NO > 0 
+      AND    B.UPPER_MENU_NO = 0  
+      AND    A.MENU_NO  = B.MENU_NO 
+      AND     A.SITEID = B.SITEID
+      AND     A.SITEID = CASE WHEN #siteId# = '2' THEN '2' ELSE '1' END
+      AND    A.AUTHOR_CODE = (SELECT C.AUTHOR_CODE from LETTNEMPLYRSCRTYESTBS C
+                                  WHERE  C.SCRTY_DTRMN_TRGET_ID = #tmp_UniqId#)
+          AND B.UPPER_MENU_NO = '0'
+      ORDER BY MENU_ORDR
+    ]]> 
+  </select> -->
+  
+    <select id="menuManageDAO.selectMainMenuHead" parameterClass="MenuManageVO" resultClass="egovMap">
+    <![CDATA[ 
+      SELECT
+        B.MENU_NO AS menuNo
+        , B.MENU_ORDR AS menuOrdr
+        , B.MENU_NM AS menuNm
+        , B.UPPER_MENU_NO AS upperMenuId
+        , B.MENU_DC AS menuDc
+        , B.RELATE_IMAGE_PATH AS relateImagePath
+        , B.RELATE_IMAGE_NM AS relateImageNm
+        , B.PROGRM_FILE_NM AS progrmFileNm
+        , (SELECT C.URL FROM LETTNPROGRMLIST C WHERE B.PROGRM_FILE_NM = C.PROGRM_FILE_NM) AS chkURL
+        , B.high
+        , B.mid
+        , B.low 
+      FROM LETTNMENUCREATDTLS A, lettnmenuinfo_20190926 B 
+      WHERE  B.Menu_NO > 0 
+      AND    B.UPPER_MENU_NO = 0  
+      AND    A.MENU_NO  = B.MENU_NO 
+      AND     A.SITEID = B.SITEID
+      AND     A.SITEID = CASE WHEN #siteId# = '2' THEN '2' ELSE '1' END
+      AND    A.AUTHOR_CODE = (SELECT C.AUTHOR_CODE from LETTNEMPLYRSCRTYESTBS C
+                  WHERE  C.SCRTY_DTRMN_TRGET_ID = #tmp_UniqId#)
+      AND B.UPPER_MENU_NO = '0'      
+      ORDER BY B.MENU_ORDR is null ASC , B.MENU_ORDR ASC
+    ]]> 
+  </select>
+
+  <select id="menuManageDAO.selectMainMenuLeft" parameterClass="MenuManageVO" resultClass="caseMap">
+    <![CDATA[ 
+  SELECT
+          B.MENU_NO AS menuNo
+        , B.MENU_ORDR AS menuOrdr
+        , B.MENU_NM AS menuNm
+        , B.UPPER_MENU_NO AS upperMenuId
+        , B.MENU_DC AS menuDc
+        , B.RELATE_IMAGE_PATH AS relateImagePath
+        , B.RELATE_IMAGE_NM AS relateImageNm
+        , B.PROGRM_FILE_NM AS progrmFileNm
+        , (SELECT C.URL FROM LETTNPROGRMLIST C WHERE B.PROGRM_FILE_NM = C.PROGRM_FILE_NM) AS chkURL
+                , B.high
+                , B.mid
+                , B.low 
+      FROM   LETTNMENUCREATDTLS A, lettnmenuinfo_20190926 B
+      WHERE  A.MENU_NO  = B.MENU_NO 
+      AND     A.SITEID = B.SITEID
+      AND     A.SITEID = CASE WHEN #siteId# = '2' THEN '2' ELSE '1' END
+      AND    A.AUTHOR_CODE = (SELECT AUTHOR_CODE from LETTNEMPLYRSCRTYESTBS
+                                  WHERE  SCRTY_DTRMN_TRGET_ID = #tmp_UniqId#)
+      ORDER BY B.MENU_ORDR is null ASC , B.MENU_ORDR ASC
+    ]]> 
+  </select>
+  
+  
+  
+  <select id = "menuManageDAO.selectMenuList" parameterClass="Map" resultClass = "caseMap">
+  	 SELECT
+        B.MENU_NO AS menuNo
+        , B.MENU_ORDR AS menuOrdr
+        , B.MENU_NM AS menuNm
+        , B.UPPER_MENU_NO AS upperMenuId
+        , B.MENU_DC AS menuDc
+        , B.RELATE_IMAGE_PATH AS relateImagePath
+        , B.RELATE_IMAGE_NM AS relateImageNm
+        , B.PROGRM_FILE_NM AS progrmFileNm
+        , (SELECT C.URL FROM LETTNPROGRMLIST C WHERE B.PROGRM_FILE_NM = C.PROGRM_FILE_NM) AS chkURL
+                , B.high
+                , B.mid
+                , B.low
+      FROM   LETTNMENUCREATDTLS A, lettnmenuinfo_20190926 B
+      WHERE  A.MENU_NO  = B.MENU_NO 
+      AND     A.SITEID = B.SITEID
+      AND     A.SITEID = CASE WHEN #siteId# = '2' THEN '2' ELSE '1' END
+            AND    A.AUTHOR_CODE = (SELECT AUTHOR_CODE from LETTNEMPLYRSCRTYESTBS
+                                  WHERE  SCRTY_DTRMN_TRGET_ID = #tmpUniqid#)
+            and B.UPPER_MENU_NO = #menuNo#
+      	 	ORDER BY B.MENU_ORDR is null ASC , B.MENU_ORDR ASC
+  
+  </select>
+  
+  <update id = "menuManageDAO.updateMenuOrder" parameterClass="Map">
+  	UPDATE lettnmenuinfo_20190926
+  	SET
+  	  menu_ordr = #sortOrder#
+  	WHERE 
+  	  1=1
+  		AND menu_no = #menuNo#
+  		AND siteid = #siteId#
+  </update> 
+  
+  
+  <select id="menuManageDAO.selectMidList" parameterClass="MenuManageVO" resultClass="egovMap">
+    <![CDATA[ 
+      SELECT
+        B.MENU_NO AS menuNo
+        , B.MENU_ORDR AS menuOrdr
+        , B.MENU_NM AS menuNm
+        , B.UPPER_MENU_NO AS upperMenuId
+        , B.MENU_DC AS menuDc
+        , B.RELATE_IMAGE_PATH AS relateImagePath
+        , B.RELATE_IMAGE_NM AS relateImageNm
+        , B.PROGRM_FILE_NM AS progrmFileNm
+        , (SELECT C.URL FROM LETTNPROGRMLIST C WHERE B.PROGRM_FILE_NM = C.PROGRM_FILE_NM) AS chkURL
+                , B.high
+                , B.mid
+                , B.low
+      FROM   LETTNMENUCREATDTLS A, lettnmenuinfo_20190926 B
+      WHERE  A.MENU_NO  = B.MENU_NO 
+      AND     A.SITEID = B.SITEID
+      AND     A.SITEID = CASE WHEN #siteId# = '2' THEN '2' ELSE '1' END
+            AND    A.AUTHOR_CODE = (SELECT AUTHOR_CODE from LETTNEMPLYRSCRTYESTBS
+                                  WHERE  SCRTY_DTRMN_TRGET_ID = #tmp_UniqId#)
+            and B.UPPER_MENU_NO = #menuNo#
+      ORDER BY B.MENU_ORDR
+    ]]> 
+  </select>
+  
+    <select id="menuManageDAO.selectLowList" parameterClass="MenuManageVO" resultClass="egovMap">
+    <![CDATA[ 
+      SELECT
+             B.MENU_NO AS menuNo
+        , B.MENU_ORDR AS menuOrdr
+        , B.MENU_NM AS menuNm
+        , B.UPPER_MENU_NO AS upperMenuId
+        , B.MENU_DC AS menuDc
+        , B.RELATE_IMAGE_PATH AS relateImagePath
+        , B.RELATE_IMAGE_NM AS relateImageNm
+        , B.PROGRM_FILE_NM AS progrmFileNm
+        , (SELECT C.URL FROM LETTNPROGRMLIST C WHERE B.PROGRM_FILE_NM = C.PROGRM_FILE_NM) AS chkURL
+                , B.high
+                , B.mid
+                , B.low 
+      FROM   LETTNMENUCREATDTLS A, lettnmenuinfo_20190926 B
+      WHERE  A.MENU_NO  = B.MENU_NO 
+      AND     A.SITEID = B.SITEID
+      AND     A.SITEID = CASE WHEN #siteId# = '2' THEN '2' ELSE '1' END
+            AND    A.AUTHOR_CODE = (SELECT AUTHOR_CODE from LETTNEMPLYRSCRTYESTBS
+                                  WHERE  SCRTY_DTRMN_TRGET_ID = #tmp_UniqId#)
+            and B.UPPER_MENU_NO = #menuNo#
+      ORDER BY B.MENU_ORDR
+    ]]> 
+  </select>
+
+  <select id="menuManageDAO.selectLastMenuURL" parameterClass="MenuManageVO" resultClass="String">
+    <![CDATA[ 
+      SELECT URL 
+      FROM   LETTNPROGRMLIST
+      WHERE  PROGRM_FILE_NM =
+             (SELECT PROGRM_FILE_NM FROM LETTNMENUINFO
+            WHERE MENU_NO = #menuNo#)
+    ]]> 
+  </select>
+
+  <select id="menuManageDAO.selectLastMenuNo" parameterClass="MenuManageVO" resultClass="int">
+    <![CDATA[ 
+      select MIN(MENU_NO) 
+      from   LETTNMENUINFO
+      where  UPPER_MENU_NO = #menuNo#
+      and    MENU_ORDR =
+            (select MIN(MENU_ORDR) 
+             from LETTNMENUCREATDTLS A, LETTNMENUINFO B
+             where A.MENU_NO = B.MENU_NO
+             AND   A.AUTHOR_CODE = (SELECT AUTHOR_CODE from LETTNEMPLYRSCRTYESTBS
+                                        WHERE  SCRTY_DTRMN_TRGET_ID = #tempValue#)
+             AND   B.UPPER_MENU_NO = #menuNo#)
+    ]]> 
+  </select>
+
+  <select id="menuManageDAO.selectLastMenuNoCnt" parameterClass="MenuManageVO" resultClass="int">
+    <![CDATA[ 
+      select count(MENU_NO) 
+      from   LETTNMENUINFO
+      where  UPPER_MENU_NO = #menuNo#
+      and    MENU_ORDR =
+            (select MIN(MENU_ORDR) 
+             from LETTNMENUCREATDTLS A, LETTNMENUINFO B
+             where A.MENU_NO = B.MENU_NO
+             AND   A.AUTHOR_CODE = (SELECT AUTHOR_CODE from LETTNEMPLYRSCRTYESTBS
+                                        WHERE  SCRTY_DTRMN_TRGET_ID = #tempValue#)
+             AND   B.UPPER_MENU_NO = #menuNo#)
+    ]]>
+  </select>
+  
+  <select id="menuManageDAO.selectMainMenuHeadByAuthor" parameterClass="MenuManageVO" resultClass="egovMap">
+    <![CDATA[
+      SELECT
+            B.MENU_NO AS menuNo
+          , B.MENU_ORDR AS menuOrdr
+          , B.MENU_NM AS menuNm
+          , B.UPPER_MENU_NO AS upperMenuId
+          , B.MENU_DC AS menuDc
+          , B.RELATE_IMAGE_PATH AS relateImagePath
+          , B.RELATE_IMAGE_NM AS relateImageNm
+          , B.PROGRM_FILE_NM AS progrmFileNm
+          , (SELECT C.URL FROM LETTNPROGRMLIST C WHERE B.PROGRM_FILE_NM = C.PROGRM_FILE_NM) AS chkURL
+      FROM LETTNMENUCREATDTLS A, LETTNMENUINFO B 
+      WHERE  B.Menu_NO > 0 
+      AND    B.UPPER_MENU_NO = 0  
+      AND    A.MENU_NO  = B.MENU_NO
+      AND    A.SITEID = B.SITEID
+      AND     A.SITEID = CASE WHEN #siteId# = '2' THEN '2' ELSE '1' END
+      AND    A.AUTHOR_CODE = #authorCode#
+      ORDER BY B.MENU_ORDR is null ASC 
+    ]]>
+  </select>
+
+  <select id="menuManageDAO.selectMainMenuLeftByAuthor" parameterClass="MenuManageVO" resultClass="egovMap">
+    <![CDATA[
+      SELECT
+             B.MENU_NO AS menuNo
+           , B.MENU_ORDR AS menuOrdr
+           , B.MENU_NM AS menuNm
+           , B.UPPER_MENU_NO AS upperMenuId
+           , B.RELATE_IMAGE_PATH AS relateImagePath
+           , B.RELATE_IMAGE_NM AS relateImageNm
+           , (SELECT C.URL FROM LETTNPROGRMLIST C WHERE B.PROGRM_FILE_NM = C.PROGRM_FILE_NM) AS chkURL    
+      FROM   LETTNMENUCREATDTLS A, LETTNMENUINFO B
+      WHERE  A.MENU_NO  = B.MENU_NO 
+      AND    A.SITEID = B.SITEID
+      AND    A.SITEID = CASE WHEN #siteId# = '2' THEN '2' ELSE '1' END
+      AND    A.AUTHOR_CODE =  #authorCode#
+      ORDER BY B.MENU_ORDR
+    ]]>
+  </select>
+  
+  <insert id="menuManageDAO.insertURL" parameterClass="MenuManageVO">
+    <![CDATA[
+    INSERT INTO LETTNPROGRMLIST
+        (PROGRM_FILE_NM, PROGRM_STRE_PATH, PROGRM_KOREAN_NM, PROGRM_DC, URL)
+    VALUES (#menuDc#, '/', #menuDc#, #menuDc#, #tempValue#)
+    ]]>
+  </insert>
+  
+  <select id="menuManageDAO.getNextMenuIdx" resultClass="int" >
+    <![CDATA[
+      SELECT MAX(IDX) + 1
+      FROM LETTNMENUINFO_20190926
+    ]]>
+  </select>
+  
+  <insert id="menuManageDAO.insertNoticeBoard" parameterClass="MenuManageVO" >
+    <![CDATA[
+      INSERT INTO LETTENUWMASTER
+        (CFR_DIV, CFR_YEAR, CTT_DIV, CTT_NM, CTT_INTRCN, OPEN_AT, STR_PNTTM, END_PNTTM)
+      VALUES
+        ('A', (SELECT YEAR(NOW())), #tempValue#, #menuNm#, #menuDc#, 'Y', NOW(), NOW());
+    ]]>
+  </insert>
+  
+  <!-- 
+  , MENU_ORDR      AS menuOrdr
+  , HIGH           AS high
+  , MID            AS mid
+  , LOW            AS low
+   -->
+  <select id="menuManageDAO.selectOneMenu" parameterClass="MenuManageVO" resultClass="MenuManageVO">
+    <![CDATA[
+      SELECT
+          MENU_NM        AS menuNm
+        , PROGRM_FILE_NM AS progrmFileNm
+        , SITEID         AS siteId
+        , MENU_NO        AS menuNo
+        , UPPER_MENU_NO  AS upperMenuId
+        , MENU_DC        AS menuDc
+        , IDX            AS idx
+      FROM
+        LETTNMENUINFO_20190926
+      WHERE
+        MENU_NO = #menuNo#
+      AND
+        UPPER_MENU_NO = #upperMenuId#
+      AND
+        SITEID = #siteId#
+    ]]>
+  </select>
+  
+    <select id="menuManageDAO.checkURL" parameterClass="MenuManageVO" resultClass="String">
+    <![CDATA[
+      SELECT URL
+      FROM LETTNPROGRMLIST
+      WHERE
+        PROGRM_DC = #menuDc#
+    ]]>
+  </select>
+  
+  <select id="menuManageDAO.getHighByMenuManageVO" parameterClass="MenuManageVO" resultClass="int">
+    <![CDATA[
+      SELECT HIGH
+      FROM LETTNMENUINFO_20190926
+      WHERE
+        MENU_NO = #upperMenuId#
+      AND
+        SITEID = #siteId#
+    ]]>
+  </select>
+  
+  <select id="menuManageDAO.getMenuOrdrByUpperMenuNoAndSiteId" parameterClass="MenuManageVO" resultClass="int" >
+    <![CDATA[
+      SELECT
+        MAX(MENU_ORDR) AS menuOrdr
+      FROM
+        LETTNMENUINFO_20190926
+      WHERE
+        UPPER_MENU_NO = #upperMenuId#
+      AND
+        SITEID = #siteId#
+    ]]>
+  </select>
+  
+  <select id="menuManageDAO.getUpperGroup" parameterClass="MenuManageVO" resultClass="MenuManageVO" >
+    <![CDATA[
+      SELECT
+        MENU_NO AS  menuNo
+      , HIGH    AS  high
+      , MID     AS  mid
+      , SITEID  AS  siteId
+      FROM
+        LETTNMENUINFO_20190926
+      WHERE
+        MENU_NO = #upperMenuId#
+      AND
+        SITEID = #siteId#
+    ]]>
+  </select>
+  
+  <select id="menuManageDAO.getLastChild" parameterClass="MenuManageVO" resultClass="MenuManageVO" >
+    <![CDATA[
+      SELECT
+        MENU_NO   AS  menuNo
+      , HIGH      AS  high
+      , MID       AS  mid
+      , LOW       AS  low
+      , SITEID    AS  siteId
+      FROM
+        LETTNMENUINFO_20190926
+      WHERE
+        UPPER_MENU_NO = #menuNo#
+      AND
+        SITEID = #siteId#
+      ORDER BY IDX DESC
+      LIMIT 1
+    ]]>
+  </select>
+</sqlMap>

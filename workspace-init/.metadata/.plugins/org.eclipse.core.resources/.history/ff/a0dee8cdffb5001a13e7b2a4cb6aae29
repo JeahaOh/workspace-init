@@ -1,0 +1,241 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"
+%><%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" 
+%><%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"
+%><%@ taglib prefix="ui" uri="http://egovframework.gov/ctl/ui"
+%><%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+		<div class="bodywrap">
+			<!--title, location start-->
+			<jsp:include page="/menu/location.do"></jsp:include>
+			<!--title, location end-->
+			
+			<!--content start-->
+			<div class="content" id="content">
+				<form id="loginFrm" name="loginFrm" method="post" action="/cmmn/login.do">
+					<input type="hidden" id="loginMenuCode" name="menuCode" value="${param.menuCode}"/>
+					<input type="hidden" id="loginSn" name="sn" value="${view.sn}"/>
+				</form>
+				<form id="pfrm" name="pfrm" method="post" action="/ext/resrcIrds/resrcIrdsList.do">
+					<input type="hidden" id="pageIndex" name="pageIndex" value="${hstryVO.pageIndex}" />
+					<input type="hidden" id="searchHoldInsttNm" name="searchHoldInsttNm" value="${hstryVO.searchHoldInsttNm}" />
+					<input type="hidden" id="searchResrcTyCode" name="searchResrcTyCode" value="${hstryVO.searchResrcTyCode}" />
+					<input type="hidden" id="searchResrcClCode" name="searchResrcClCode" value="${hstryVO.searchResrcClCode}" />
+					<input type="hidden" id="searchModlNm" name="searchModlNm" value="${hstryVO.searchModlNm}" />
+					<input type="hidden" id="searchIrdsSeValue" name="searchIrdsSeValue" value="${hstryVO.searchIrdsSeValue}" />
+					<input type="hidden" id="searchMenuCode" name="menuCode" value="${param.menuCode}"/>
+				</form>
+				<form id="frm" name="frm" method="post" action="/ext/resrcIrds/resrcIrdsList.do">
+				<input type="hidden" id="resrcIrdsSeCode" name="resrcIrdsSeCode" value="R" />
+				<input type="hidden" id="resrcMngNo" name="resrcMngNo" value="${view.resrcMngNo}" />
+				<input type="hidden" id="registerId" name="registerId" value="${loginVO.userId}" />
+				<input type="hidden" id="menuCode" name="menuCode" value="${param.menuCode}"/>
+				<input type="hidden" id="irdsQy" name="irdsQy" value="${view.irdsQy}"/>
+				<input type="hidden" id="nowQy" name="nowQy" value="${view.nowQy}"/>
+				<input type="hidden" id="resrcCngeDt" name="resrcCngeDt" value="${view.resrcCngeDt}"/>
+				<input type="hidden" id="sn" name="sn" value="${view.sn}"/>
+				<input type="hidden" id="irdsSeValue" name="irdsSeValue" value="${view.irdsSeValue}"/>
+				<input type="hidden" id="resrcTyCode" name="resrcTyCode" value="${view.resrcTyCode}"/>
+				<input type="hidden" id="acqsUntpcValue" name="acqsUntpcValue" value="${view.acqsUntpcValue}"/>
+				<c:choose><c:when test="${view.irdsSeValue eq 'U'}"><c:set var="irdsSeValueTxt" value="증가"/></c:when><c:otherwise><c:set var="irdsSeValueTxt" value="감소"/></c:otherwise></c:choose>
+				<h1 class="tit">자원 ${irdsSeValueTxt}</h1>
+				<h2 class="tit">기본정보</h2>
+				<!--table_left start-->
+				<div class="table_left" style="padding-bottom: 20px;">
+					<table>
+						<caption>기본정보</caption>
+						<colgroup>
+							<col style="width:18%" />
+							<col style="width:32%" />
+							<col style="width:18%" />
+							<col style="width:32%" />
+						</colgroup>
+						<tbody>
+							<tr>
+								<th scope="row">자원 증/감 구분</th>
+								<td colspan="3">${irdsSeValueTxt}</td>
+							</tr>
+							<tr>
+								<th scope="row">보유기관</th>
+								<td colspan="3">${view.holdInsttNm}</td>
+							</tr>
+							<tr>
+								<th scope="row" rowspan="2">자원유형</th>
+								<td colspan="3">${view.resrcTyCodeNm}</td>
+							</tr>
+							<tr>
+								<td colspan="3">${view.resrcClCodeNm}</td>
+							</tr>
+							<tr>
+								<th scope="row">모델명</th>
+								<td>${view.modlNm}</td>
+								<th scope="row">제조사</th>
+								<td>${view.mkrNm}</td>
+							</tr>
+							<tr>
+								<th scope="row"><label for="kndTxt">종류</label></th>
+								<td colspan="3">${view.resrcKndTrNm}</td>
+							</tr>
+							<tr id="bdata">
+								<th scope="row">현재수량(단위)</th>
+								<td><fmt:formatNumber value="${view.nowQy}" type="number" />(${view.unitNm})</td>
+								<th scope="row">보유자원<br/>관리번호</th>
+								<td>${view.resrcMngNo}(${view.nowSttusValueNm})</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				<h2 class="tit mt30">자원 ${irdsSeValueTxt} 정보 </h2>
+				<!--table_left start-->
+				<div class="table_left">
+					<table>
+						<caption>자원 ${irdsSeValueTxt} 정보</caption>
+						<colgroup>
+							<col style="width:15%" />
+							<col style="width:21%" />
+							<col style="width:12%" />
+							<col style="width:18%" />
+							<col style="width:12%" />
+							<col style="width:22%" />
+						</colgroup>
+						<tbody>
+							<tr>
+								<th scope="row">관리번호</th>
+								<td colspan="2">${view.resrcMngNo}</td>
+								<th scope="row">${irdsSeValueTxt}사유</th>
+								<td colspan="2">${view.irdsPrvonshNm}</td>
+							</tr>
+							<tr>
+								<th scope="row">${irdsSeValueTxt}사유설명</th>
+								<td colspan="5">${view.irdsPrvonshDc}</td>
+							</tr>
+							<tr>
+								<th scope="row">${irdsSeValueTxt}년월일</th>
+								<td colspan="2">${view.resrcCngeDt}</td>
+								<th scope="row">${irdsSeValueTxt}수량(단위)</th>
+								<td colspan="2"><fmt:formatNumber value="${view.irdsQy}" type="number" />(${view.unitNm})</td>
+							</tr>
+							
+							<c:if test = "${view.resrcClCode eq 'PR90'}">
+								<tr>
+								<th scope="row">차량번호</th>
+								<td colspan="2">
+									${view.regNum} 
+								</td>
+								<th scope="row">보험가입여부</th>
+								<td colspan="2">${view.insuranceAt}</td>
+								</tr>	
+							
+							</c:if>
+							
+							<tr>
+								<th scope="row">취득단가</th>
+								<td colspan="2">
+									${view.unitNm} <fmt:formatNumber value="${view.acqsUntpcValue}" type="number" /> 원
+								</td>
+								<th scope="row">비고</th>
+								<td colspan="2">${view.rm}</td>
+							</tr>
+							<tr>
+								<th scope="row" colspan="6">배치장소</th>
+							</tr>					
+							<tr>
+								<th scope="row">육·해상</th>
+								<td><c:choose
+									><c:when test="${view.landSeaSeCode eq 'L'}">육상</c:when
+									><c:when test="${view.landSeaSeCode eq 'S'}">해상</c:when
+									><c:otherwise></c:otherwise></c:choose></td>
+								<th scope="row">선명</th>
+								<td>${view.shipNm}</td>
+								<th scope="row">위치<br/>(주정박항)</th>
+								<td>${view.lc}</td>
+							</tr>
+							<tr>
+								<th scope="row">도로명 주소</th>
+								<td colspan="5">${view.adres}</td>
+							</tr>					
+						</tbody>
+					</table>
+					<!--table_left end-->
+				</div>			
+				
+				<!--page btn start-->
+				<div class="btn_wrap pt10 tr">
+					<c:if test="${fn:contains(loginVO.authorGroupCode, 'AG01') || view.registerId eq loginVO.userId }">
+						<a href="javascript:fnResrcIrdsUpdate();" class="btn pagebtn normal">수정</a>
+					</c:if>
+					<c:if test="${fn:contains(loginVO.authorGroupCode, 'AG01')}">
+						<a href="javascript:fnResrcIrdsDelete();" class="btn pagebtn negative">삭제</a>
+					</c:if>
+					<a href="javascript:fnSelectResrcIrds('${hstryVO.pageIndex}');" class="btn pagebtn normal">목록</a>
+				</div>
+				<!--page btn end-->
+				</form>
+			</div>
+			<!--content end-->
+		</div>
+		<script type="text/javascript">
+			var message = "${message}";
+			if(message != new String("")) {
+				alert(message);
+			}
+		
+			/* 수정 */
+			if(${fn:contains(loginVO.authorGroupCode, 'AG01') || view.registerId eq loginVO.userId }){
+			function fnResrcIrdsUpdate(pageNo){
+				document.frm.sn.value = "${view.sn}";
+				document.frm.action = "<c:url value='/ext/resrcIrds/updateResrcIrdsForm.do'/>";
+				document.frm.submit();
+			} 
+			}
+			
+			/* 삭제 */
+			if(${fn:contains(loginVO.authorGroupCode, 'AG01')}){
+			function fnResrcIrdsDelete(pageNo){
+				var irdsSeValue = "${view.irdsSeValue}";
+				var login = "${loginVO.userId}";
+				if(login != new String("")) {
+					if(confirm("삭제 하시겠습니까?")){
+						if(irdsSeValue == new String("U")) {
+							$.ajax({
+								url : "/ext/resrc/hstryDataJson.do",
+								type : 'POST',
+								data : { resrcMngNo : "${view.resrcMngNo}", irdsSeValue : "D"},
+								success : function(json) {
+									if(json > 1) {
+										alert("현재 자원에 대한 감소이력이있습니다("+(json)+"개). 감소이력 삭제 후 다시 시도 해주세요.");
+									} else {
+										document.frm.sn.value = "${view.sn}";
+										document.frm.action = "<c:url value='/ext/resrcIrds/deleteResrcIrds.do'/>";
+										document.frm.submit();
+									}
+								}
+							});
+						} else {
+							document.frm.sn.value = "${view.sn}";
+							document.frm.action = "<c:url value='/ext/resrcIrds/deleteResrcIrds.do'/>";
+							document.frm.submit();
+						}
+					} else {
+						return;
+					}
+				} else {
+					if(confirm("로그인이 필요합니다. 로그인 페이지로 이동 하시겠습니까?")){
+						var loginFrm = document.getElementById("loginFrm");
+						loginFrm.action = "/cmmn/login.do";
+						loginFrm.submit();
+					} else {
+						return;
+					}
+				}
+			} 
+			}
+
+			/* 목록 */
+			function fnSelectResrcIrds(pageNo){
+				document.pfrm.pageIndex.value = pageNo;
+				document.pfrm.action = "<c:url value='/ext/resrcIrds/resrcIrdsList.do'/>";
+				document.pfrm.submit();
+			} 
+			
+		</script>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.2.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<mvc:cors>
+        <mvc:mapping path="/**" allowed-origins="*"/>
+    </mvc:cors>
+<mvc:annotation-driven>
+  <!-- messageConvertert -->
+  <mvc:message-converters>
+    <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+      <property name="supportedMediaTypes">
+        <list>
+          <value>text/html; charset=UTF-8</value>
+        </list>
+      </property>
+    </bean>
+
+    <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+      <property name="supportedMediaTypes">
+        <list>
+          <value>application/json; charset=UTF-8</value>
+        </list>
+      </property>
+    </bean>
+  </mvc:message-converters>
+
+</mvc:annotation-driven>
+    <!-- 아래는 특정 도메인 허용-->
+  <!--   <mvc:cors>
+        <mvc:mapping path="/**" allowed-origins="http://localhost:1841"/>
+    </mvc:cors> -->
+ 
+    <!-- 아래는 여러 특정 도메인 허용-->
+<!--     <mvc:cors>
+        <mvc:mapping path="/**" allowed-origins="http://localhost:1841, http://localhost:1234, http://localhost:5678"/>
+    </mvc:cors> -->
+
+</beans>

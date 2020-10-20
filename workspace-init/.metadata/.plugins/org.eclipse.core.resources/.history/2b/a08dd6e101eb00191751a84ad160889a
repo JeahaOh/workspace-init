@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?><project-modules id="moduleCoreId" project-version="1.5.0">
+    <wb-module deploy-name="KOEM_WebVMS">
+        <wb-resource deploy-path="/" source-path="/WebContent" tag="defaultRootSource"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src"/>
+        <wb-resource deploy-path="/WEB-INF/classes/" source-path="/ImportedClasses"/>
+        <dependent-module archiveName="c3p0-0.9.5.2.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/c3p0-0.9.5.2/c3p0-0.9.5.2">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="cors-filter-2.6.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/cors-filter-2.6/cors-filter-2.6">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="egovframework.rte.fdl.idgnr-3.5.0.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/egovframework.rte.fdl.idgnr-3.5.0/egovframework.rte.fdl.idgnr-3.5.0">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="egovframework.rte.fdl.property-3.5.0.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/egovframework.rte.fdl.property-3.5.0/egovframework.rte.fdl.property-3.5.0">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="commons-dbcp-1.4.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/commons-dbcp-1.4/commons-dbcp-1.4">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="commons-collections-3.2.1.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/commons-collections-3.2.1/commons-collections-3.2.1">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="egovframework.rte.fdl.logging-3.5.0.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/egovframework.rte.fdl.logging-3.5.0/egovframework.rte.fdl.logging-3.5.0">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="egovframework.rte.ptl.mvc-3.5.0.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/egovframework.rte.ptl.mvc-3.5.0/egovframework.rte.ptl.mvc-3.5.0">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="commons-digester-1.8.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/commons-digester-1.8/commons-digester-1.8">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="antlr-runtime-3.5.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/antlr-runtime-3.5/antlr-runtime-3.5">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="antlr-3.5.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/antlr-3.5/antlr-3.5">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="egovframework.rte.psl.dataaccess-3.5.0.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/egovframework.rte.psl.dataaccess-3.5.0/egovframework.rte.psl.dataaccess-3.5.0">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="commons-validator-1.4.0.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/commons-validator-1.4.0/commons-validator-1.4.0">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="aspectjweaver-1.8.0.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/aspectjweaver-1.8.0/aspectjweaver-1.8.0">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="commons-lang3-3.3.2.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/commons-lang3-3.3.2/commons-lang3-3.3.2">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="aopalliance-1.0.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/aopalliance-1.0/aopalliance-1.0">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="commons-beanutils-1.8.3.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/commons-beanutils-1.8.3/commons-beanutils-1.8.3">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="commons-pool-1.5.4.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/commons-pool-1.5.4/commons-pool-1.5.4">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="egovframework.rte.fdl.cmmn-3.5.0.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/egovframework.rte.fdl.cmmn-3.5.0/egovframework.rte.fdl.cmmn-3.5.0">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <property name="context-root" value="KOEM_WebVMS"/>
+        <property name="java-output-path" value="/KOEM_WebVMS/build/classes"/>
+    </wb-module>
+</project-modules>

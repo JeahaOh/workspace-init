@@ -1,0 +1,804 @@
+<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="ui" uri="http://egovframework.gov/ctl/ui"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
+<%@ taglib prefix="spring" uri="http://www.springframework.org/tags"%>
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"%>
+<%@ taglib prefix="validator" uri="http://www.springmodules.org/tags/commons-validator"%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="content-language" content="ko">
+<link rel="stylesheet" href="<c:url value='/'/>css/default.css" type="text/css">
+<script type="text/javascript" src="<c:url value='/js/EgovBBSMng.js' />"></script>
+<script type="text/javascript" src="<c:url value="/validator.do"/>"></script>
+<validator:javascript formName="boardMaster" staticJavascript="false" xhtml="true" cdata="false" />
+<script type="text/javascript" src="<c:url value='/js/showModalDialog.js'/>"></script>
+<style>
+  #boardMaster > select { -webkit-appearance: none; -moz-appearance: none; appearance: none;  width: 150px;}
+  #boardMaster > select::-ms-expand { display: none; }
+</style>
+<%--
+<script type="text/javascript">
+  function fn_egov_regist_brdMstr() {
+    if (!validateBoardMaster(document.boardMaster)) {
+      return;
+    }
+
+    if (confirm('<spring:message code="common.regist.msg" />')) {
+      form = document.boardMaster;
+      form.action = "<c:url value='/cop/bbs/insertBBSMasterInf.do'/>";
+      form.submit();
+    }
+  }
+
+  function fn_egov_select_brdMstrList() {
+    form = document.boardMaster;
+    form.action = "<c:url value='/cop/bbs/SelectBBSMasterInfs.do'/>";
+    form.submit();
+  }
+
+  function fn_egov_inqire_tmplatInqire() {
+    form = document.boardMaster;
+    var retVal;
+    var url = "<c:url value='/cop/com/openPopup.do?requestUrl=/cop/com/selectTemplateInfsPop.do&typeFlag=BBS&width=850&height=360'/>";
+    var openParam = "dialogWidth: 850px; dialogHeight: 360px; resizable: 0, scroll: 1, center: 1";
+
+    retVal = window.showModalDialog(url, "p_tmplatInqire", openParam);
+    if (retVal != null) {
+      var tmp = retVal.split("|");
+      form.tmplatId.value = tmp[0];
+      form.tmplatNm.value = tmp[1];
+    }
+  }
+
+  function showModalDialogCallback(retVal) {
+    if (retVal != null) {
+      var tmp = retVal.split("|");
+      form.tmplatId.value = tmp[0];
+      form.tmplatNm.value = tmp[1];
+    }
+  }
+</script>
+--%>
+<c:import url="/sym/mms/EgovMainMenuHead.do" />
+<div style="background-image: url('/images/common/visual-sub.jpg')" class="visual-sub"></div>
+<section class="contents-wrap">
+<div class="inner">
+  <aside class="side"> <!-- side navigation -->
+  <div class="snb"></div>
+  </aside>
+  <article role=”main” class="contents">
+  <h2 class="title">Menu Management</h2>
+  <!-- location -->
+  <aside class="location">
+    Service <span>&gt;</span> <b>Menu Management</b>
+  </aside>
+  <!-- //location -->
+
+  <div class="cbody">
+    <!-- content body -->
+    <ul id="siteSelect" class="siteSelect">
+      <li class="siteSelected" value="2" onclick="highMenuList(2)">International</li>
+      <li value="1" onclick="highMenuList(1)">Asia-Pacific</li>
+    </ul>
+    
+    <div id="menuManageContent">
+      <h3>Menu List</h3>
+
+      <div class="contentBox">
+        <div class="contentTitle">Main Menu</div>
+        <div class="contentItem">
+          <ul class="contentMenuList" id="contentMainMenu">
+          </ul>
+          <%--
+          <ul class="contentUpdown">
+            <li onclick="menuUp('contentMainMenu')"><img src="/images/up_icon.png"></li>
+            <li onclick="menuDown('contentMainMenu')"><img src="/images/down_icon.png"></li>
+            <li onclick="setMenuList('high')"><img src="/images/save_btn.png"></li>
+            <li onclick="deleteMenu('high')"><img src="/images/delete_icon.png"></li>
+          </ul>
+          --%>
+        </div>
+        <div class="contentCreateMenu">
+          <h3>Edit Menu</h3>
+          <form id="mainMenuFrm">
+            <input type="text" name="menuNm" placeholder="Menu Name"/><br>
+            <input type="text" name="menuDc" placeholder="Menu Desc"/><br>
+            <button type="button" onclick="insertMenu('high');">Add Menu</button>
+          </form>
+          <button type="button" onclick="deleteMenu('high');">Delete Selected Menu</button>
+        </div>
+      </div>
+      
+      <div class="contentBox">
+        <div class="contentTitle">Left Menu</div>
+        <div class="contentItem">
+          <ul class="contentMenuList" id="contentLeftMenu">
+          </ul>
+          <%--
+          <ul class="contentUpdown">
+            <li onclick="menuUp('contentLeftMenu')"><img src="/images/up_icon.png"></li>
+            <li onclick="menuDown('contentLeftMenu')"><img src="/images/down_icon.png"></li>
+            <li onclick="setMenuList('mid')"><img src="/images/save_btn.png"></li>
+            <li onclick="deleteMenu('mid')"><img src="/images/delete_icon.png"></li>
+          </ul>
+          --%>
+        </div>
+        <div class="contentCreateMenu">
+          <h3>Edit Menu</h3>
+          <form id="midMenuFrm">
+            <button type="button" onclick="showMenuForm4Insert('mid')">Add Menu Or Board</button>
+            <input type="hidden" name="menuNm" placeholder="Menu Name" value="."/>
+            <input type="hidden" name="menuDc" placeholder="Menu Desc" value="."/>
+          </form>
+          <button type="button" onclick="deleteMenu('mid');">Delete Selected Menu</button>
+        </div>
+      </div>
+      
+      <div class="contentBox">
+        <div class="contentTitle">Left Sub Menu</div>
+        <div class="contentItem">
+          <ul class="contentMenuList" id="LeftSubMenuList">
+          </ul>
+          <%--
+          <ul class="contentUpdown">
+            <li onclick="menuUp('LeftSubMenuList')"><img src="/images/up_icon.png"></li>
+            <li onclick="menuDown('LeftSubMenuList')"><img src="/images/down_icon.png"></li>
+            <li onclick="setMenuList('low')"><img src="/images/save_btn.png"></li>
+            <li onclick="deleteMenu('low')"><img src="/images/delete_icon.png"></li>
+          </ul>
+          --%>
+        </div>
+        <div class="contentCreateMenu">
+          <h3>Edit Menu</h3>
+          <form id="lowMenuFrm">
+            <button type="button" onclick="isMidMenuGroupCheck()">Add Board</button>
+            <input type="hidden" name="menuNm" placeholder="Menu Name" value="."/>
+            <input type="hidden" name="menuDc" placeholder="Menu Desc" value="."/>
+            <%-- 
+            <input type="text" name="menuNm" placeholder="Menu Name"/><br>
+            <input type="text" name="menuDc" placeholder="Menu Desc"/><br>
+            <button type="button" onclick="insertMenu('low')">Add Menu</button>
+          <!--    <button type="button" onclick="isMidMenuGroupCheck()">Add Board</button> -->
+             --%>
+          </form>
+          <button type="button" onclick="deleteMenu('low');">Delete Selected Menu</button>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+  <!-- //content body -->
+  </article>
+</div>
+</section>
+
+<script>
+  //  --> International, Asia-Pacific의 선택시 표시하기 위한 함수.
+  var siteSelect = $('#siteSelect li');
+  
+  siteSelect.on('click', function() {
+    //console.log(this);
+    $.each(siteSelect, function(idx, item) {
+      siteSelect.eq(idx).removeClass('siteSelected');
+    });
+    this.classList.add('siteSelected');
+  });
+  //  <-- International, Asia-Pacific의 선택시 표시하기 위한 함수.
+  
+  //  --> International, Asia-Pacific에서  현제 선택된  siteId를 가져온다.
+  function selectSiteId() {
+    var siteId = "";
+    
+    $.each(siteSelect, function(idx) {
+      if(siteSelect.eq(idx).hasClass('siteSelected')) {
+        siteId = siteSelect.eq(idx).val();
+      }
+    });
+    //console.log( 'site id : ' + siteId );
+    return siteId;
+  }
+  //  <-- International, Asia-Pacific에서  현제 선택된  siteId를 가져온다.
+  
+  // -- > 메인 메뉴 추가 버튼 
+  function insertMenu(level) {
+    var menulist = $('#contentMainMenu li');
+    var validate = false;
+    
+    var menuNo = "";
+    
+    if( level =='high' ) {
+      if( !$('#mainMenuFrm > input:text[name=menuNm]').val().length > 0 ){
+        $('#mainMenuFrm > input:text[name=menuNm]').focus();
+        alert("Required Value For Main Menu.");
+        return;
+      }
+      if( !$('#mainMenuFrm > input:text[name=menuDc]').val().length > 0 ){
+        $('#mainMenuFrm > input:text[name=menuDc]').focus();
+        alert("Required Value For Main Menu.");
+        return;
+      }
+    } else if(level == 'mid') {
+      $.each(menulist, function(idx) {
+        if(menulist.eq(idx).hasClass('siteSelected')) {
+          console.log(menulist.eq(idx).val());
+          menuNo = menulist.eq(idx).val();
+          validate = true;
+        }
+      });
+      
+      if(!validate) {
+        alert('대메뉴를 선택해주세요');
+        return;
+      }
+    }
+    
+    
+    
+    // 폼 데이터 가져오기
+    var mainFrm = $('#mainMenuFrm');
+    var midFrm = $('#midMenuFrm');
+  //   var lowFrm = $('#lowMenuFrm');
+  //   console.log(mainFrm.serialize());
+  //   console.log(midFrm.serialize());
+    // 사이트 아이디 가져오기
+    var siteId = selectSiteId();
+    var params = '';
+    
+    //   + ("&high=" + $('#contentMainMenu .siteSelected > input').val()???????????????????????????
+    
+    switch( level ) {
+    case 'high' :
+      params = mainFrm.serialize();
+      console.log( params );
+      break;
+    case 'mid' :
+      params = midFrm.serialize() + (menuNo != null ? "&menuNo=" + menuNo :"" ) + ("&high=" + $('#contentMainMenu .siteSelected > input').val());
+      console.log( params );
+      break;
+    }
+    params += "&siteId=" + siteId + "&menuFlag=" + level;
+    console.log( params );
+    
+  //   console.log( (level == 'high' ? mainFrm.serialize() : level == 'mid' ? midFrm.serialize() : lowFrm.serialize()) + "&siteId=" + siteId + "&menuFlag=" + level + (menuNo != null ? "&menuNo=" + menuNo :"" ));
+    // high 값 가져오기
+     $.ajax({
+      type: 'GET',
+      //data: (level == 'high' ? mainFrm.serialize() : level == 'mid' ? midFrm.serialize() : lowFrm.serialize()) + "&siteId=" + siteId + "&menuFlag=" + level + (menuNo ? "&menuNo=" + menuNo : "") + ('&high=' + $('#contentMainMenu .siteSelected .mainId').val()),
+      data: params,
+      url: '/insertMenu.do',
+      dataType: 'JSON',
+      success: function(data) {
+        setMenuList(level);
+      }
+    });
+  }
+  //  <-- 메인 메뉴 추가 버튼
+  
+  // --> 선택된 siteId의 대메뉴 불러오기
+  function highMenuList(siteId) {
+    if(siteId==undefined) {
+      var siteId = selectSiteId();
+    }
+  
+    $.ajax({
+      type: 'POST',
+      url: '/selectHighMenuList.do',
+      data: {siteId: siteId},
+      dataType: 'JSON',
+      success: function(data) {
+        var html = "";
+        $.each(data.highList, function(idx, item) {
+          html += "<li onclick='menuSelect(this)' value='" + item.menuNo + "'>" + item.menuNm;
+          html += "<input type='hidden' class='mainId' id='" + item.menuNo + "' value='" + item.high + "'/>";
+          //html += "&nbsp;&nbsp;&nbsp;&nbsp;<button onclick='deleteMenu(\"" + item.menuNo + "\")'><img src='/images/delete_icon.png' width='12px'/></button>"; 
+          html += "</li>";
+        });
+        $('#contentMainMenu').html(html);
+        $('#contentLeftMenu').empty();
+        $('#LeftSubMenuList').empty();
+        hideInsertMenu();
+      }
+    }); //  ajax
+  }
+  // <-- 선택된 siteId의 대메뉴 불러오기
+  // 메뉴 진입 시 메뉴 불러오기
+  highMenuList();
+  
+  
+  
+  //  --> 대메뉴 선택시 siteSelected class를 토글로 주고 하위 메뉴의 리스트를 가져와서 뿌린다.
+  function menuSelect(e) {
+    $('#contentLeftMenu').empty();
+    $('#LeftSubMenuList').empty();
+    hideInsertMenu();
+    var siteId = selectSiteId();
+    
+    var menulist = $('#contentMainMenu li');
+    
+    $.each(menulist, function(idx) {
+      if(menulist.eq(idx).hasClass('siteSelected')) {
+        menulist.eq(idx).removeClass('siteSelected');
+      }
+    });
+    
+    e.classList.add('siteSelected');
+    
+    var menuNo = e.value;
+//     console.log(menuNo);
+    
+    $.ajax({
+      type: "POST",
+      data: {siteId: siteId, menuNo: menuNo},
+      dataType: 'JSON',
+      url: "/selectMidList.do",
+      success: function(data) {
+        var html = "";
+        
+        $.each(data.midList, function(idx, item) {
+          html += "<li onclick='menuSubSelect(this)' value='" + item.menuNo + "'>" + item.menuNm;
+          html += "<input type='hidden' class='leftId' id='" + item.menuNo + "' value='" + item.mid + "'/>";
+          //html += "&nbsp;&nbsp;&nbsp;&nbsp;<button onclick='deleteMenu(\"" + item.menuNo + "\")'><img src='/images/delete_icon.png' width='12px'/></button>"; 
+          html += "</li>";
+        });
+        
+        $('#contentLeftMenu').html(html);
+      }
+    });
+  }
+  //  <-- 대메뉴 선택시 siteSelected class를 토글로 주고 하위 메뉴의 리스트를 가져와서 뿌린다.
+  
+  //  --> 중메뉴 선택시 siteSelected class를 토글로 주고 하위 메뉴의 리스트를 가져와서 뿌린다.
+  function menuSubSelect(e) {
+    $('#LeftSubMenuList').empty();
+    hideInsertMenu();
+    var siteId = selectSiteId();
+    var menulist = $('#contentLeftMenu li');
+    
+    $.each(menulist, function(idx) {
+      if(menulist.eq(idx).hasClass('siteSelected')) {
+        menulist.eq(idx).removeClass('siteSelected');
+      }
+    });
+    
+    e.classList.add('siteSelected');
+    
+    var menuNo = e.value;
+//     console.log(menuNo);
+    
+    $.ajax({
+      type: "POST",
+      data: {siteId: siteId, menuNo: menuNo},
+      dataType: 'JSON',
+      url: "/selectMidList.do",
+      success: function(data) {
+        var html = "";
+        
+        $.each(data.midList, function(idx, item) {
+          html += "<li  onclick='menuLeftSubSelect(this)' value='" + item.menuNo + "'>" + item.menuNm;
+          html += "<input type='hidden' class='leftSubId' id='" + item.menuNo + "' value='" + item.low + "'/>";
+          //html += "&nbsp;&nbsp;&nbsp;&nbsp;<button onclick='deleteMenu(\"" + item.menuNo + "\")'><img src='/images/delete_icon.png' width='12px'/></button>"; 
+          html += "</li>";
+        });
+        
+        $('#LeftSubMenuList').html(html);
+      }
+    });
+  }
+  //  <-- 중메뉴 선택시 siteSelected class를 토글로 주고 하위 메뉴의 리스트를 가져와서 뿌린다.
+  
+  //  --> 소메뉴 선택시 siteSelected class를 토글로 주고 하위 메뉴의 리스트를 가져와서 뿌린다.
+  function menuLeftSubSelect(e) {
+    var siteId = selectSiteId();
+    
+    var menulist = $('#LeftSubMenuList li');
+    
+    $.each(menulist, function(idx) {
+      if(menulist.eq(idx).hasClass('siteSelected')) {
+        menulist.eq(idx).removeClass('siteSelected');
+      }
+    });
+    
+    e.classList.add('siteSelected');
+    
+    var menuNo = e.value;
+//     console.log(menuNo);
+  }
+  //  <-- 소메뉴 선택시 siteSelected class를 토글로 주고 하위 메뉴의 리스트를 가져와서 뿌린다.
+  
+  
+  
+  
+  function mainUp() {
+    var menulist = $('#contentMainMenu li');
+    var mainId = $('.mainId');
+    
+    $.each(menulist, function(idx) {
+      if(menulist.eq(idx).hasClass('siteSelected')) {
+        var high = mainId.eq(idx).val();
+        
+        // 전체 길이
+        var length = menulist.length;
+        if(high<=length && high>=1) {
+          high = high-1;
+          
+          $(menulist.eq(high)).insertAfter(menulist.eq(idx));
+          
+          // 클릭한 li 위에 있는 값
+          console.log(mainId.eq(idx-1));
+          console.log(menulist.eq(idx-1));
+          
+          var temp = mainId.eq(idx-1).val();
+          
+          mainId.eq(idx-1).val(mainId.eq(idx).val());
+          mainId.eq(idx).val(temp);
+        }
+      }
+    });
+  }
+  
+  function mainDown() {
+    var menulist = $('#contentMainMenu li');
+    var mainId = $('.mainId');
+    
+    $.each(menulist, function(idx) {
+      if(menulist.eq(idx).hasClass('siteSelected')) {
+        var high = mainId.eq(idx).val();
+        
+        // 전체 길이
+        var length = menulist.length;
+        if(high<length-1&& high>=0) {
+          high = Number(high)+1;
+          
+          console.log(high);
+          // 클릭한 li 아래있는값
+          console.log("select menu : " + mainId.eq(idx).val());
+          console.log("select 아래에있는 menu : " + mainId.eq(idx+1).val());
+          
+          var temp = mainId.eq(idx).val();
+          
+          mainId.eq(idx).val(high);
+          mainId.eq(high).val(temp);
+          
+          $(menulist.eq(idx)).insertAfter(menulist.eq(high));
+        }
+      }
+    });
+  }
+  
+
+  
+  
+  // --> Left Menu 컨트롤
+  function leftMenuUp() {
+    var menulist = $('#contentLeftMenu li');
+    var leftId = $('.leftId');
+    
+    $.each(menulist, function(idx) {
+      if(menulist.eq(idx).hasClass('siteSelected')) {
+        var high = leftId.eq(idx).val();
+        
+        // 전체 길이
+        var length = menulist.length;
+        if(high<=length && high>=1) {
+          high = high-1;
+          
+          $(menulist.eq(high)).insertAfter(menulist.eq(idx));
+          
+          // 클릭한 li 위에 있는 값
+//          console.log(leftId.eq(idx-1));
+//          console.log(menulist.eq(idx-1));
+          
+          var temp = leftId.eq(idx-1).val();
+          
+          leftId.eq(idx-1).val(leftId.eq(idx).val());
+          leftId.eq(idx).val(temp);
+        }
+      }
+    });
+  }
+
+  function leftMenuDown() {
+    var menulist = $('#contentLeftMenu li');
+    var leftId = $('.leftId');
+    
+    $.each(menulist, function(idx) {
+      if(menulist.eq(idx).hasClass('siteSelected')) {
+        var high = leftId.eq(idx).val();
+        
+        // 전체 길이
+        var length = menulist.length;
+        if(high<length-1&& high>=0) {
+          high = Number(high)+1;
+          
+          console.log(high);
+          // 클릭한 li 아래있는값
+//          console.log("select menu : " + leftId.eq(idx).val());
+//          console.log("select 아래에있는 menu : " + leftId.eq(idx+1).val());
+          
+          var temp = leftId.eq(idx).val();
+          
+          leftId.eq(idx).val(high);
+          leftId.eq(high).val(temp);
+          
+          $(menulist.eq(idx)).insertAfter(menulist.eq(high));
+        }
+      }
+    });
+  }
+  ///////////leftSub
+  
+  function leftSubMenuUp() {
+    var menulist = $('#LeftSubMenuList li');
+    var leftSubId = $('.leftSubId');
+    
+    $.each(menulist, function(idx) {
+      if(menulist.eq(idx).hasClass('siteSelected')) {
+        var high = leftSubId.eq(idx).val();
+        
+        // 전체 길이
+        var length = menulist.length;
+        if(high<=length && high>=1) {
+          high = high-1;
+          
+          $(menulist.eq(high)).insertAfter(menulist.eq(idx));
+          
+          // 클릭한 li 위에 있는 값
+//          console.log(leftId.eq(idx-1));
+//          console.log(menulist.eq(idx-1));
+          
+          var temp = leftSubId.eq(idx-1).val();
+          
+          leftSubId.eq(idx-1).val(leftSubId.eq(idx).val());
+          leftSubId.eq(idx).val(temp);
+        }
+      }
+    });
+  }
+
+  function leftSubMenuDown() {
+    var menulist = $('#LeftSubMenuList li');
+    var leftSubId = $('.leftSubId');
+    
+    $.each(menulist, function(idx) {
+      if(menulist.eq(idx).hasClass('siteSelected')) {
+        var high = leftSubId.eq(idx).val();
+        
+        // 전체 길이
+        var length = menulist.length;
+        if(high<length-1&& high>=0) {
+          high = Number(high)+1;
+          
+          console.log(high);
+          // 클릭한 li 아래있는값
+//          console.log("select menu : " + leftId.eq(idx).val());
+//          console.log("select 아래에있는 menu : " + leftId.eq(idx+1).val());
+          
+          var temp = leftSubId.eq(idx).val();
+          
+          leftSubId.eq(idx).val(high);
+          leftSubId.eq(high).val(temp);
+          
+          $(menulist.eq(idx)).insertAfter(menulist.eq(high));
+        }
+      }
+    });
+  }
+
+  function setLeftMenuList() {
+    var menulist = $('#contentLeftMenu li input');
+    var list = [];
+    
+    $.each( menulist, function (idx) {
+//      console.log( menulist[idx].id );
+//      console.log( menulist[idx].value );
+      var menu = new Object();
+      menu.menuNo = menulist[idx].id;
+      menu.mid = menulist[idx].value;
+//      console.log( menu );
+      list.push(menu);
+    });
+    console.log(list);
+  }
+  
+  
+
+  function setLeftSubMenuList() {
+    var menulist = $('#LeftSubMenuList li input');
+    var list = [];
+    
+    $.each( menulist, function(idx) {
+      var menu = new Object();
+      menu.menuNo = menulist[idx].id;
+      menu.low = menulist[idx].value;
+      list.push(menu);
+    });
+    console.log(list);
+  }
+  
+  
+
+  
+  
+  /*  function setMenuList(level) {
+    var siteId = selectSiteId();
+
+    if(level == 'high') {
+      var menulist = $('#contentMainMenu li input');
+      var list = [];
+
+      $.each(menulist, function (idx) {
+        var menu = new Object();
+
+        menu.menuNo = menulist[idx].id;
+        menu.high = menulist[idx].value;
+        list.push(menu);
+      });
+    } else if (level == 'mid') {
+      var menulist = $('#contentLeftMenu li input');
+      var list = [];
+
+      $.each(menulist, function (idx) {
+        var menu = new Object();
+
+        menu.menuNo = menulist[idx].id;
+        menu.mid = menulist[idx].value;
+        list.push(menu);
+      });
+    } else {
+      var menulist = $('#contentMainMenu li input');
+      var list = [];
+
+      $.each(menulist, function (idx) {
+        var menu = new Object();
+
+        menu.menuNo = menulist[idx].id;
+        menu.high = menulist[idx].value;
+        list.push(menu);
+      });
+    }
+
+    $.each(list, function(idx) {
+      console.log(list[idx].menuNo);
+      $.ajax({
+        type: 'GET',
+        data: "menuNo=" + list[idx].menuNo + "&" + level + "=" +
+        (level === 'high' ? list[idx].high : level === 'mid' ? list[idx].mid : list[idx].low )+ "&menuFlag=" + level,
+        url: '/updateMenu.do',
+        dataType: 'JSON',
+        success: function(data) {
+          alert(data);
+          window.location.reload();
+        }
+      })
+    });
+  } */
+
+  //  메뉴 순서 바꾸는 기능은 일단 숨겨 두도록 한다.
+  // 저장버튼
+  function setMenuList(level) {
+    window.location.reload();
+    /*
+    var siteId = selectSiteId();
+    var menuNo = "";    
+    switch (level) {
+      case "high":
+        id = "contentMainMenu";
+        break;
+      case "mid":
+        id = "contentLeftMenu";
+        break;
+      case "low":
+        id = "LeftSubMenuList";
+        break;
+      }
+    
+    $("#"+id+" li").each(function(idx){   
+      menuNo += $(this).val()+",";
+    });
+    
+    menuNo = menuNo.substring(0,menuNo.length - 1);
+    
+    $.ajax({
+      type: "POST",
+      data: {
+        menuNoList: menuNo
+        ,siteId : siteId
+      },
+      dataType: 'JSON',
+      url: '/updateMenuOrder.do',
+      success: function(data) {
+        alert(data.message);
+        window.location.reload();
+        
+      }
+    }); 
+    */
+  }
+  /*
+  function menuUp(id){
+    var flag = false;
+    var object;
+    $("#"+id+" li").each(function(){
+      if($(this).attr("class") == "siteSelected" ){
+        flag = true;
+        object = $(this);
+        return false;
+      }
+    });
+    
+    if(!flag){alert("이동할 메뉴를 선택해주세요"); return;}
+    object.prev().before(object); 
+  }
+  
+  function menuDown(id){
+    var flag = false;
+    var object;
+    $("#"+id+" li").each(function(){
+      if($(this).attr("class") == "siteSelected" ){
+        flag = true;
+        object = $(this);
+        return false;
+      }
+    });
+    
+    if(!flag){alert("이동할 메뉴를 선택해주세요"); return;}
+    object.next().after(object); 
+  }
+  */
+
+  //  --> 선택한 메뉴를 삭제하기 위한 함수.
+  function deleteMenu(type) {
+    /**
+     * high mid low에 따라
+     * delete Menu 함수의 분기 처리 해야 함.
+     */
+    var id = "";
+    var menuNo = "";
+    
+    switch (type) {
+      case "high":
+        id = "contentMainMenu";
+        break;
+      case "mid":
+        id = "contentLeftMenu";
+        break;
+      case "low":
+        id = "LeftSubMenuList";
+        break;
+    }
+    
+    menuNo = $("#"+id+" li[class=siteSelected]").val();
+    
+    if(menuNo == "" || menuNo == null){alert("삭제할 메뉴를 선택 해주세요.");return;}
+    if(!confirm('해당 메뉴를 삭제하시겠습니까?')) return;
+    console.log( menuNo );
+    console.log( type );
+    console.log( $("#siteId").val() );
+    
+    $.ajax({
+      type: "POST",
+      data: {
+        menuNo: menuNo
+        ,type : type
+        ,siteId : $("#siteId").val()
+      },
+      dataType: 'JSON',
+      url: '/deleteMenu.do',
+      success: function(data) {
+        alert(data.message);
+        //  window.location.reload();
+      }
+    });
+    
+  }
+  //  <-- 선택한 메뉴를 삭제하기 위한 함수.
+  
+</script>
+
+<jsp:include page="/WEB-INF/jsp/management/BoardManagement.jsp" />
+<!-- /menuList.do === menuManagement -->
+<c:import url="/EgovPageLink.do?link=main/inc/EgovIncFooter" />
