@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<list key="org.eclipse.ui.internal.wizards.datatransfer.SmartImportRootWizardPage.knownSources">
+		<item value="C:\Users\GMTC_JH\eGov\workspace\snp"/>
+		<item value="C:\Users\GMTC_JH\git\gmt\Enav-Services"/>
+	</list>
+	<section name="CleanDialogSettings">
+		<item value="666" key="DIALOG_WIDTH"/>
+		<item value="false" key="TOGGLE_SELECTED"/>
+		<item value="471" key="DIALOG_HEIGHT"/>
+		<item value="1107" key="DIALOG_X_ORIGIN"/>
+		<item value="556" key="DIALOG_Y_ORIGIN"/>
+	</section>
+	<section name="ExternalProjectImportWizard">
+		<item value="false" key="WizardProjectsImportPage.STORE_NESTED_PROJECTS"/>
+		<item value="false" key="WizardProjectsImportPage.STORE_COPY_PROJECT_ID"/>
+		<item value="false" key="WizardProjectsImportPage.STORE_ARCHIVE_SELECTED"/>
+		<list key="WizardProjectsImportPage.STORE_DIRECTORIES">
+			<item value="C:\Users\GMTC_JH\Desktop\APPWEB\APPWebSRC\html"/>
+			<item value="C:\Users\Jeaha\GIT\The-Intern-Diary\com.yummy"/>
+			<item value="C:\Users\Jeaha\egov\workspace\com.yummy"/>
+			<item value="C:\Users\Jeaha\GIT"/>
+		</list>
+		<list key="WizardProjectsImportPage.STORE_ARCHIVES">
+			<item value=""/>
+		</list>
+	</section>
+	<section name="WORKBENCH_SETTINGS">
+		<list key="ENABLED_TRANSFERS">
+		</list>
+	</section>
+	<section name="NewWizardAction">
+		<item value="com.springsource.sts.wizard.template" key="NewWizardSelectionPage.STORE_SELECTED_ID"/>
+		<list key="NewWizardSelectionPage.STORE_EXPANDED_CATEGORIES_ID">
+			<item value="org.springframework.ide.eclipse.beans.ui.wizards.category"/>
+			<item value="org.eclipse.team.svn.ui.repository"/>
+		</list>
+	</section>
+	<section name="ChooseWorkspaceDialogSettings">
+		<item value="422" key="DIALOG_X_ORIGIN"/>
+		<item value="257" key="DIALOG_Y_ORIGIN"/>
+	</section>
+	<section name="org.eclipse.ui.dialogs.FilteredResourcesSelectionDialog">
+		<item value="false" key="FilterByLocation"/>
+		<item value="true" key="ShowStatusLine"/>
+		<item value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#x0D;&#x0A;&lt;History&gt;&#x0D;&#x0A;&lt;historyRootNode&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/resources/egovframework/egovProps/globals.properties&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/java/egovframework/mng/user/web/UserController.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/resources/egovframework/sqlmap/ext/acdntCntrmsr/AcdntCntrmsr_SQL_Tibero.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/resources/log4j2.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/java/egovframework/com/cmmn/service/impl/LoginDAO.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/webapp/WEB-INF/jsp/ext/preScat/aqrm/aqrmList.jsp&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/webapp/WEB-INF/jsp/layout/inc/simple/header.jsp&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/java/egovframework/com/cmmn/interceptor/UriParamInterceptor.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/java/egovframework/mng/syslog/web/SysLogController.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/java/egovframework/mng/syslog/service/SysLogAspect.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/resources/egovframework/sqlmap/mng/user/InsttUser_SQL_Tibero.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/resources/egovframework/sqlmap/mng/user/User_SQL_Tibero.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/webapp/js/cmmn/cmmnUtil.js&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/webapp/WEB-INF/jsp/ext/resrc/prvnbeResrcList.jsp&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/webapp/common/pop/jusoPopup.jsp&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/java/egovframework/mng/user/vo/UserVO.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/java/egovframework/com/cmmn/interceptor/LoginInterceptor.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/java/egovframework/com/cmmn/util/ExcelDownloadUtil.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/webapp/WEB-INF/jsp/ext/blkadeEntrps/blkadeEntrpsList.jsp&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/java/egovframework/ext/blkadeEntrps/web/BlkadeEntrpsController.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/webapp/WEB-INF/jsp/ext/agremEntrps/agremEntrpsList.jsp&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/webapp/WEB-INF/jsp/ext/olRespmtEntrps/olRespmtEntrpsList.jsp&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/java/egovframework/ext/olRespmtEntrps/web/OlRespmtEntrpsController.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/java/egovframework/ext/agremEntrps/web/AgremEntrpsController.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/java/egovframework/ext/resrcStat/web/ResrcStatController.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/webapp/WEB-INF/jsp/cmmn/login.jsp&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/java/egovframework/board/board/web/BoardController.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/webapp/WEB-INF/web.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/java/egovframework/com/cmmn/interceptor/AuthenticInterceptor.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/webapp/WEB-INF/jsp/cmmn/fms/EgovFileList.jsp&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/java/egovframework/com/cmmn/web/EgovFileMngController.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/webapp/WEB-INF/jsp/prvntn/mrenvVioltCrime/mrenvVioltCrimeWrite.jsp&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/webapp/css/design.css&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/webapp/WEB-INF/jsp/cmmn/fms/EgovImgFileList.jsp&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/java/egovframework/com/cmmn/interceptor/ManagerPageAccessInterceptor.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/java/egovframework/mng/auth/web/AuthController.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/java/egovframework/mng/code/web/CodeController.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/webapp/WEB-INF/tiles/tiles-def.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/java/egovframework/com/cmmn/web/LoginController.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/resources/egovframework/message/message-common.properties&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/java/egovframework/com/cmmn/interceptor/RequestMethodInterceptor.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/java/egovframework/com/cmmn/util/EgovMultiLoginPreventor.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/java/egovframework/mng/menu/web/MenuTmplController.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/java/egovframework/com/cmmn/LoginVO.java&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;infoNode path=&quot;/reqm-portal/src/main/webapp/WEB-INF/config/egovframework/springmvc/dispatcher-servlet.xml&quot; type=&quot;1&quot;/&gt;&#x0D;&#x0A;&lt;/historyRootNode&gt;&#x0D;&#x0A;&lt;/History&gt;" key="History"/>
+		<item value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#x0D;&#x0A;&lt;workingSet workingSetName=&quot;&quot;/&gt;" key="WorkingSet"/>
+		<item value="false" key="ShowDerived"/>
+		<section name="DialogBoundsSettings">
+			<item value="562" key="DIALOG_WIDTH"/>
+			<item value="1|맑은 고딕|9.0|0|WINDOWS|1|-15|0|0|0|400|0|0|0|1|0|0|0|0|맑은 고딕" key="DIALOG_FONT_NAME"/>
+			<item value="650" key="DIALOG_HEIGHT"/>
+			<item value="887" key="DIALOG_X_ORIGIN"/>
+			<item value="496" key="DIALOG_Y_ORIGIN"/>
+		</section>
+	</section>
+	<section name="SaveAsDialogSettings">
+		<item value="613" key="DIALOG_WIDTH"/>
+		<item value="1|맑은 고딕|9.0|0|WINDOWS|1|-15|0|0|0|400|0|0|0|1|0|0|0|0|맑은 고딕" key="DIALOG_FONT_NAME"/>
+		<item value="645" key="DIALOG_HEIGHT"/>
+		<item value="983" key="DIALOG_X_ORIGIN"/>
+		<item value="274" key="DIALOG_Y_ORIGIN"/>
+	</section>
+</section>

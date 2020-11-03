@@ -1,0 +1,11 @@
+package com.koem.vms.waterdepth.dao;
+
+import java.util.List;
+import org.springframework.stereotype.Repository;
+import com.koem.vms.waterdepth.dto.WaterDepthDTO;
+
+@Repository
+public interface WaterDepthDAO {
+
+  List<WaterDepthDTO> selectAll() throws Exception;
+}

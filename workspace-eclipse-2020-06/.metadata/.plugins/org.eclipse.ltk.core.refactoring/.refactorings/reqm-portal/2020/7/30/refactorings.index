@@ -1,0 +1,34 @@
+1595298795125	Delete element
+1595299786002	Delete elements
+1595299798461	Delete elements
+1595299822173	Delete elements
+1595305769396	Rename local variable 'usersip'
+1595306361700	Rename local variable 'inIpSearch'
+1595316185060	Rename local variable 'isLoginAble'
+1595316210209	Rename local variable 'isPasswordMatche'
+1595384393802	Delete element
+1595387710108	Rename field 'IP_WhiteList'
+1595393465660	Rename local variable 'isOuterUserFromIntraNet'
+1595393481264	Rename local variable 'isInnerUserFromInterNet'
+1595407481670	Delete element
+1595479594417	Rename resource 'context-security.xml'
+1595480651796	Rename resource '_context-security.xml'
+1595481147049	Rename resource 'context-security.xml'
+1595481718058	Rename resource '_context-security.xml'
+1595482885594	Rename type 'LoginDetailService'
+1595484368108	Delete element
+1595484480056	Delete element
+1595486831338	Delete element
+1595486842460	Delete element
+1595487434414	Rename local variable 'isDupplicate'
+1595495283676	Delete elements
+1595556804030	Rename package 'egovframework.ext.board'
+1595556871731	Rename package 'egovframework.ext.etc'
+1595556924782	Move 'board' to 'sqlmap'
+1595558028472	Move 2 resources to 'jsp'
+1595558041928	Move 'etc' to 'board'
+1595558812501	Copy files
+1595572260382	Delete element
+1595573214218	Delete element
+1595576817842	Rename package 'egovframework.ext.main'
+1595577462805	Move 'main' to 'jsp'

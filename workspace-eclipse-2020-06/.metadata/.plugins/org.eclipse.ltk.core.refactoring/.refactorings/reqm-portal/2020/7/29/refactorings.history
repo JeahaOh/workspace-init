@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename resource &apos;reqm-portal/src/main/resources/egovframework/sqlmap/mng/user/InsttUser_SQL_Tibero_decoded.xml.md&apos; to &apos;InsttUser_SQL_Tibero_decoded.xml&apos;" description="Rename resource &apos;InsttUser_SQL_Tibero_decoded.xml.md&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="src/main/resources/egovframework/sqlmap/mng/user/InsttUser_SQL_Tibero_decoded.xml.md" name="InsttUser_SQL_Tibero_decoded.xml" stamp="1594892894509" updateReferences="true"/>
+</session>

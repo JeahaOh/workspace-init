@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Copy element &apos;db&apos; to &apos;resources&apos;&#x0D;&#x0A;- Original project: &apos;asdf&apos;&#x0D;&#x0A;- Destination element: &apos;resources&apos;&#x0D;&#x0A;- Original element: &apos;db&apos;" description="Copy folder" element1="src/main/resources/db" files="0" flags="589830" folders="1" id="org.eclipse.jdt.ui.copy" policy="org.eclipse.jdt.ui.copyResources" stamp="1591781591393" target="/NEW_REQM_PORTAL/src/main/resources" units="0" version="1.0"/>
+</session>

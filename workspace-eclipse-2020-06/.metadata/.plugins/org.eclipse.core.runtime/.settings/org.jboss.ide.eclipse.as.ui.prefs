@@ -1,0 +1,9 @@
+eclipse.preferences.version=1
+org.jboss.ide.eclipse.as.ui.defaultWebServer=Tomcat v7.0
+org.jboss.ide.eclipse.as.ui.preferences.disabled.automatic.server.view=true
+org.jboss.ide.eclipse.as.ui.preferences.enabledDecorators.1=true
+org.jboss.ide.eclipse.as.ui.preferences.runtime.last.type.org.jboss.ide.eclipse.as.runtime.wildfly.80=C\:\\Users\\GMTC_JH\\Desktop\\APPWEB\\APPWebSRC\\html\\Enav-Services\\balticweb\\wildfly-8.2.0.Final
+org.jboss.ide.eclipse.as.ui.wizards.LAST_RUNTIME_CREATED=Tomcat v7.0
+org.jboss.ide.eclipse.as.ui.wizards.LAST_RUNTIME_TYPE_CREATED=org.eclipse.jst.server.tomcat.runtime.70
+org.jboss.ide.eclipse.as.ui.wizards.LAST_SERVER_CREATED=Tomcat v8.5
+org.jboss.ide.eclipse.as.ui.wizards.LAST_SERVER_TYPE_CREATED=org.eclipse.jst.server.tomcat.85

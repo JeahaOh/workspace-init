@@ -1,0 +1,150 @@
+// Global
+Chart.pluginService.register({
+  beforeDraw: function (chart, easing) {
+      if (chart.config.options.chartArea && chart.config.options.chartArea.backgroundColor) {
+          var helpers = Chart.helpers;
+          var ctx = chart.chart.ctx;
+          var chartArea = chart.chartArea;
+
+          ctx.save();
+          ctx.fillStyle = chart.config.options.chartArea.backgroundColor;
+          ctx.fillRect(chartArea.left, chartArea.top, chartArea.right - chartArea.left, chartArea.bottom - chartArea.top);
+          ctx.restore();
+      }
+  }
+});
+let depthDataChart, depthDatasets, depthDataChartImg, depthDataLableLength, depthDataEmptyLabels;
+const BORDER_COLOR = "rgba(250, 250, 250, 1)";
+const BORDER_COLOR_LIST = [
+  "#DC392A"
+  , "#C35400"
+  , "#E67E22"
+  , "#F39C12"
+  , "#F1C40F"
+  , "#27AE60"
+  , "#2ECC71"
+  , "#16A085"
+  , "#1ABC9C"
+  , "#2980B9"
+  , "#3498DB"
+  , "#1850B9"
+  , "#1045DB"
+];
+
+let GLOBAL_DEPTH_CHART_DATA;
+let SHOWING_DEPTH_CHART_DATA = [];
+let DEPTH_CHART;
+
+const drawDepthDataChart = function( depthData ) {
+  console.group( 'drawDepthDataChart' );
+  console.log( depthData );
+  depthDatasets = [];
+  depthDataEmptyLabels = [];
+  let cnt = 0;
+  
+  while( depthData[cnt] ) {
+    //  style
+    depthData[cnt].backgroundColor = BORDER_COLOR_LIST[cnt];
+    depthData[cnt].borderColor = BORDER_COLOR_LIST[cnt];
+    depthData[cnt].borderWidth = 1;
+    depthData[cnt].lineTension = 0.3;
+//    depthData[cnt].fill = false;
+    
+    //  데이터
+    depthDatasets[cnt] = depthData[cnt];
+    
+    // --> Chart의 X축 눈금을 위한 조건문.
+    if( cnt == 0 ) depthDataLableLength = depthData[cnt].data.length;
+    if( depthDataLableLength > depthData[cnt].data.length ) depthDataLableLength = (depthData[cnt].data.length);
+    // <-- Chart의 X축 눈금을 위한 조건문.
+    
+    cnt++;
+  }
+
+  // --> Chart의 X축 눈금을 위한 반복문.
+  for( let i = 0; i < depthDataLableLength; i++ ) {
+    depthDataEmptyLabels.push('');
+  }
+  // <-- Chart의 X축 눈금을 위한 반복문.
+  
+  var data = {
+    labels: depthDataEmptyLabels,
+    datasets: depthDatasets.reverse()
+  };
+  console.log( 'Prepared Chart Data' );
+// console.log( data );
+
+  DEPTH_CHART = new Chart.Line(document.getElementById("waterDepthChart").getContext("2d"), {
+    data: data,
+    options: {
+      responsive: true,
+      chartArea: {
+//          backgroundColor: 'rgba(0, 0, 0, 0.6)'
+      },
+      scales: {
+          yAxes: [{
+            ticks:{
+              // min : 0,
+              // stepSize : 1,
+              fontColor : "#333",
+              fontSize : 13
+            },
+            gridLines:{
+              color: "#000",
+              lineWidth:1,
+              lineHeight:8
+              // zeroLineColor :"#000",
+              // zeroLineWidth : 2
+            },
+            // stacked: true
+          }],
+          xAxes: [{
+            gridLines:{
+              color: "#000",
+              //color: "rgba(200, 200, 200, 0.8)",
+              lineWidth:0.5
+            }
+          }]
+        },
+      animation: {
+        onComplete: function(animation){
+          document.querySelector('#savegraph').download = TimeStamp.getDateTime();
+          document.querySelector('#savegraph').setAttribute('href', this.toBase64Image());
+        }
+      }
+    }
+  });
+  
+  var waterDepthModal = $('#side-waterDepth-modal');
+  waterDepthModal.css({"width":"900px", "opacity":"1", "transform":"translateY(0px)"});
+  
+  console.groupEnd( 'drawDepthDataChart' );
+};
+
+/**
+ * Chart를 이미지로 저장하기 위한 함수. Issue -> 이미지의 배경이 없다.
+ */
+const chartToImg = function() {
+  document.querySelector('#savegraph').click();
+}
+
+const redrawDepthChart = function() {
+//  console.clear();
+  console.group('Redraw Depth Chart');
+  SHOWING_DEPTH_CHART_DATA = [];
+  let unitList = $('.unit-li').get();
+//  console.log( unitList );
+  unitList.forEach((el, idx) => {
+//    console.log( el.checked );
+    if( el.checked ) {
+      SHOWING_DEPTH_CHART_DATA[idx] = GLOBAL_DEPTH_CHART_DATA.find(( unitData ) => {
+        return unitData.label == el.value;
+      });
+    }
+  });
+  SHOWING_DEPTH_CHART_DATA = SHOWING_DEPTH_CHART_DATA.filter(Boolean);
+//  
+  DEPTH_CHART.destroy();
+  drawDepthDataChart( SHOWING_DEPTH_CHART_DATA );
+  console.groupEnd('Redraw Depth Chart');
+}

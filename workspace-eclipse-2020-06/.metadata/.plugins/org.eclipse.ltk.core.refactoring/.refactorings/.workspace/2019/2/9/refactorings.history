@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Delete 15 resources" deleteContents="true" description="Delete 15 resources" element1="/asdf" element10="/michelin" element11="/Servers" element12="/spring-webmvc-coursebook" element13="/SpringWebMVC" element14="/test" element15="/themoviedbapi" element2="/java110-coursebook" element3="/java110-db" element4="/java110-mybatis" element5="/java110-project" element6="/java110-servlet" element7="/java110-spring-ioc" element8="/java110-spring-webmvc" element9="/java110-team-project" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="15" stamp="1551321002488"/>
+</session>

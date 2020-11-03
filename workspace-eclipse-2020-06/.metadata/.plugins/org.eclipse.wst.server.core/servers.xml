@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<servers>
+  <server auto-publish-setting="2" auto-publish-time="1" configuration-id="/Servers/tomcat-7777 at localhost-config" deployDir="wtpwebapps" hostname="localhost" id="tomcat-7777 at localhost" name="tomcat-7777" runtime-id="Apache Tomcat v7.0" server-type="org.eclipse.jst.server.tomcat.70" server-type-id="org.eclipse.jst.server.tomcat.70" start-timeout="45" stop-timeout="15" testEnvironment="true" timestamp="1"/>
+  <server auto-publish-setting="2" auto-publish-time="1" configuration-id="/Servers/tomcat-8888-config" deployDir="wtpwebapps" hostname="localhost" id="tomcat-8888" name="tomcat-8888" runtime-id="tomcat-8888" server-type="org.eclipse.jst.server.tomcat.85" server-type-id="org.eclipse.jst.server.tomcat.85" start-timeout="45" stop-timeout="15" testEnvironment="true" timestamp="0"/>
+  <server auto-publish-setting="2" auto-publish-time="1" configuration-id="/Servers/tomcat-9999-config" deployDir="wtpwebapps" hostname="localhost" id="tomcat-9999" name="tomcat-9999" runtime-id="tomcat-9999" server-type="org.eclipse.jst.server.tomcat.90" server-type-id="org.eclipse.jst.server.tomcat.90" start-timeout="45" stop-timeout="15" testEnvironment="true" timestamp="0"/>
+</servers>

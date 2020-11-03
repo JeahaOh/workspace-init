@@ -1,0 +1,13 @@
+1591779642801	Delete element
+1591780551738	Move 'logback.xml' to 'resources'
+1591846876969	Rename resource 'log4j.xml'
+1591846881519	Rename resource 'logback.xml.xml'
+1591852540291	Copy file
+1591852543035	Copy file
+1591862131672	Rename resource 'jdbc.properties'
+1591862336823	Rename resource 'SQL_MAPPER'
+1591863658438	Move compilation unit
+1591866648896	Rename type 'SysHomeService'
+1591938238334	Copy file
+1591939505882	Rename resource 'log4j2.xml'
+1591939560558	Copy file

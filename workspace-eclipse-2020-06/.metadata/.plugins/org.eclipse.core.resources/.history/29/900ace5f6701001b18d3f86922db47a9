@@ -1,0 +1,8 @@
+package egovframework.board.bug.vo;
+
+import egovframework.com.cmmn.CmmnAbstractVO;
+
+public class Bug extends CmmnAbstractVO {
+  
+  String reporter;
+}

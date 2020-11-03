@@ -1,0 +1,10 @@
+package com.koem.vms.waterdepth.service;
+
+import org.json.JSONObject;
+
+public interface WaterDepthService {
+
+//  JSONObject getWaterDepthInRange( String polygon ) throws Exception;
+  Map<String, List<WaterDepthDTO>> getWaterDepthInRange( String polygon ) throws Exception;
+  
+}
