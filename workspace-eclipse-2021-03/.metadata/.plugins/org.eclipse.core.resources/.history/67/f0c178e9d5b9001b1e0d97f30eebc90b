@@ -1,0 +1,232 @@
+package kr.co.hanshinit.NeoCMS.cmm.scheduler;
+
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.List;
+import javax.annotation.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import kr.co.hanshinit.NeoCMS.cmm.api.ApiService;
+import kr.co.hanshinit.NeoCMS.cmm.util.StringUtil;
+import kr.co.hanshinit.NeoCMS.cop.cnt.service.CrawlingService;
+import kr.co.hanshinit.NeoCMS.cop.cnt.service.SnsDataService;
+import kr.co.hanshinit.NeoCMS.cop.cnt.service.SnsDataVO;
+import kr.co.hanshinit.NeoCMS.cop.cnt.service.blog.BlogVO;
+import kr.co.hanshinit.NeoCMS.cop.cnt.service.fb.FaceBookVO;
+import kr.co.hanshinit.NeoCMS.cop.cnt.service.insta.InstagramVO;
+import kr.co.hanshinit.NeoCMS.cop.cnt.service.twt.TwitterVO;
+/**
+ * 스케줄 실행을 위한 클래스
+ * @author (주)한신정보기술 기업부설연구소 최관형
+ * @since 2017.01.08
+ * @version 1.0
+ * @see
+ *
+ * <pre>
+ * << 개정이력(Modification Information) >>
+ *
+ *  수정일      수정자    수정내용
+ *  ---------- -------- ---------------------------
+ *  2017.01.08 최관형	    최초 생성
+ * </pre>
+ *
+ */
+//@RunWith(SpringJUnit4ClassRunner.class)
+//@ContextConfiguration("file:src/main/resources/kr/co/hanshinit/NeoCMS/spring/context-*.xml")
+public class Scheduler {
+
+  private Logger logger = LoggerFactory.getLogger(this.getClass());
+
+  @Resource(name = "weatherDataService")
+  private ApiService weatherDataService;
+
+  @Resource(name = "airDataService")
+  private ApiService airDataService;
+
+  @Resource(name = "snsDataService")
+  private SnsDataService snsDataService;
+
+  @Resource(name = "crawlingService")
+  private CrawlingService crawlingService;
+
+
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class, SQLException.class}, readOnly = false)
+	public boolean weatherData() throws Exception {
+
+		List<HashMap<String, String>> resultMap = weatherDataService.getWeatherApiData();
+		weatherDataService.insertData(resultMap);
+
+		return true;
+	}
+
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class, SQLException.class}, readOnly = false)
+	public boolean airData() throws Exception {
+
+		List<HashMap<String, String>> resultMap = airDataService.getAirApiData();
+		airDataService.insertData(resultMap);
+
+		return true;
+
+	}
+
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class, SQLException.class}, readOnly = false)
+	public boolean facebookData1() throws Exception {
+		//여성회관
+		FaceBookVO hpFacebookVO1 = crawlingService.getFaceBook("womanbcf", "1031488270536772", "46b761475798a0d882f2ed45d885cbdb", "EAAOqIhP0kEQBALLS5i95iXAfg214zt3E0rI2Yip34KQtzmw1VcAdG6BZAYI17ZBXoXtWCM0v0eP9yLrRDP4CznaoRXeH6JNwVrZAcgR4pSR8FbNbn8Q3NeiffBVJwm9aNKchlf1AjgZCccLI04dy2zLTzcdCMYVAiIxDugynQBqLrCGGB4UM");//군포시청
+		List<SnsDataVO> resultList1 =  hpFacebookVO1.convertToSnsDataVO(null);
+		System.out.println("facebook insert..");
+		insertSns(resultList1);
+		return true;
+	}
+
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class, SQLException.class}, readOnly = false)
+	public boolean facebookData2() throws Exception {
+	  // 20210518 -> 여성청소년센터로 추정.
+		FaceBookVO hpFacebookVO2 = crawlingService.getFaceBook("vomul.or.kr", "548672912388741", "6ef7942b46e555c08d6a25ac7bf32ee4", "EAAHzA94KcoUBAEk7VK6r7tUVrLZCUKcPHda03WeuDFVzzlnYlK2ZB6pT145LYZBBfsWOVJsB85R1t2WWm5fczZBGGlmGTZCTnbGpl9RararZCL91Ovkfw17iVXDiCmYgewZAHGDzlZCxSRaJ6nXl29d2puZA3FgYwFBgLiqzbgD0exKU7NaBl6CtV");
+		List<SnsDataVO> resultList2 =  hpFacebookVO2.convertToSnsDataVO(null);
+		System.out.println("facebook insert..");
+		insertSns(resultList2);
+		return true;
+	}
+
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class, SQLException.class}, readOnly = false)
+	public boolean facebookData3() throws Exception {
+
+	  //  부천시 청소년 수련관 (bucheonyouth)
+    try {
+      FaceBookVO hpFacebookVO3 = crawlingService.getFaceBook(
+          "456704854497451"
+          , "601649647073118"
+          , "1955fbe3f2fe3e00fa2585a7ddd83f2f"
+          , "EAAIjMnlZBN14BAA2lZAfcSgT51DE3kEXDDFNOhBsWOZBMocghyUcAaR8SCJV79iUitXlpqrPJv0bdhmv8cVi3i9iK3uzoBOzLBr74nqQNDUgwCU6biRefJ71dvxr793p4c7zlgGTKzyay0El37yrmVwVfyEUhZCaeOqTcRpZCTEo4gOFbqR3Sg8ZCe5fUwVPz4pa1oPa4LdwZDZD"
+          );
+      List<SnsDataVO> resultList3 =  hpFacebookVO3.convertToSnsDataVO(null);
+      System.out.println("facebookData3 insert..");
+      insertSns(resultList3);
+      logger.error("\n\t>> facebookData3 END SUCCESSFULLY");
+    } catch (Exception e ) {
+      StringUtil.printException(e, true);
+      return false;
+    }
+    return true;
+
+	}
+
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class, SQLException.class}, readOnly = false)
+	public boolean facebookData4() throws Exception {
+
+		//여성재단
+		FaceBookVO hpFacebookVO = crawlingService.getFaceBook("823180864790204", "1750579141878486", "b3e06babd7a561fcef4f0d55e1a169b1", "EAAY4JHfnItYBAMaZCBjgOJ5l7OZAgCBgcTEnMrIJz1WH2uyOiM1cb5KNPzUZCzC8QSl3MNZCRmd37qQLD1yHitMGVeWKcNx3ZA7NGthz23ZBh9v5fq43vINap1OrL5OEDLTAqtKK3Iyi6HGjWITzneI29gF3d5YCTlZCwGiXFRg8wZDZD");
+		List<SnsDataVO> resultList =  hpFacebookVO.convertToSnsDataVO(null);
+		System.out.println("facebook insert..");
+		insertSns(resultList);
+		return true;
+
+	}
+
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class, SQLException.class}, readOnly = false)
+	public boolean facebookData5() throws Exception {
+		//산울림
+		FaceBookVO hpFacebookVO4 = crawlingService.getFaceBook("2847795801970979", "206386997209819", "013431e8516c30ee68854e9e62fff921", "EAAC7tTenqtsBAO1QIVLycjLiX2aQ3YBiLrZAZBAY7mbMNJZAMe0fggB4WA1HlhtfwoIrMPbtXwSvFaknGVGxED6ISlIDam5fUFKSNg8ZCL16k1a8cVuPXOR0aDkVH1ZCYsJXpVofiP1D9eDHlNTOcfTBz3Vt0kZBPqCCEZBiaYEEwZDZD");
+		List<SnsDataVO> resultList4 =  hpFacebookVO4.convertToSnsDataVO(null);
+		System.out.println("facebook insert..");
+		insertSns(resultList4);
+		return true;
+
+	}
+
+
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class, SQLException.class}, readOnly = false)
+	public boolean twitterData() throws Exception {
+
+		TwitterVO twitterVO = crawlingService.getTwitter("140003544-gGF8SK72FzVXD3sLe0quMlmzwhYmdVhSKBURbX9M", "ptmdopeMSAmUumSqcMxs0Ce0GOtbze2ShKWrRYGZzAQ5W", "27m2ky9ytZo5CI0mSEhTFnd1q", "RKlm20v0exlRBY9d10Fave4yalHdDAWLwMls6deDt9BMJJm50S");
+		List<SnsDataVO> resultList = twitterVO.convertToSnsDataVO(null);
+		insertSns(resultList);
+
+		return true;
+
+	}
+
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class, SQLException.class}, readOnly = false)
+	public boolean blogData() throws Exception {
+
+		BlogVO BlogVO = crawlingService.getBlog("bwyf9090");
+		List<SnsDataVO> resultList =  BlogVO.convertToSnsDataVO(null);
+		insertSns(resultList);
+
+		return true;
+
+	}
+
+	public boolean instagramData() throws Exception {
+
+		InstagramVO instagramVO = crawlingService.getInstagram("2076220629", "2076220629.844fc82.5ccf7336291e4a2681ddbfa5cff871b4");
+		List<SnsDataVO> resultList =  instagramVO.convertToSnsDataVO(null);
+		insertSns(resultList);
+
+		return true;
+	}
+
+  /**
+   * 소사 청소년 수련관 Instagram 데이터 처리
+  public boolean sosayouthInsta() throws Exception {
+    try {
+      //  String userId, String accessToken
+      InstagramVO instagramVO = crawlingService.getInstagram("", "");
+      List<SnsDataVO> resultList = instagramVO.convertToSnsDataVO(null);
+      insertSns(resultList);
+      logger.error("\n\t>> sosayouthInsta END SUCCESSFULLY");
+    } catch (Exception e ) {
+      StringUtil.printException(e, true);
+      return false;
+    }
+    return true;
+  }
+   */
+
+  /**
+   * 소사 청소년 수련관 Facebook 데이터 처리
+   */
+  @Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class, SQLException.class}, readOnly = false)
+  public boolean crawlSosayouthFB() throws Exception {
+    try {
+      FaceBookVO hpFacebookVO4 = crawlingService.getFaceBook("1068187709949270", "1853955888096700", "29c68491be1739e6dbe9f54d0db1348a", "EAAaWKb4jpbwBAHMDxlElwTk6ZCGNo2YZA7CIyE4v93rrFUhWw5tUPddfXS2cuD51ZAWhYSMBkOMyZBVVpkNKRefa2soRvXpEkoP6i1z7t68CzWDZCpYTOsg4MQ8yITZCml14wKwa2wwfoZA4BGZB3QTH4phdWDsh8h0xo7GFUAoSeuyjVBoE2snJxpRsGxFduy4ZD");
+      List<SnsDataVO> resultList4 =  hpFacebookVO4.convertToSnsDataVO(null);
+      insertSns(resultList4);
+      logger.error("\n\t>> sosayouthFB END SUCCESSFULLY");
+    } catch (Exception e ) {
+      StringUtil.printException(e, true);
+      return false;
+    }
+    return true;
+  }
+
+  public void insertSns(List<SnsDataVO> snsResult) {
+    for (SnsDataVO snsDataVO : snsResult) {
+      try {
+        SnsDataVO forSearch = new SnsDataVO();
+        forSearch.setFirstIndex(0);
+        forSearch.setLastIndex(1000);
+        forSearch.setSnsUrl(snsDataVO.getSnsUrl());
+        if (snsDataService.selectSnsDataCount(forSearch) == 0) {
+          // if(snsDataVO.getSnsContents() != null){
+          // snsDataVO.setSnsContents(URLEncoder.encode(snsDataVO.getSnsContents()));
+          // }
+          snsDataService.insertSnsData(snsDataVO);
+          logger.debug("\n\t>> INSERT {}", snsDataVO.getSnsUrl());
+        }
+        //  20210428 굳이 로그 찍을 필요가 없어시 지움.
+//        else {
+//          // snsDataService.updateSnsDataBySnsUrl(snsDataVO.getSnsUrl(), snsDataVO);
+//          logger.debug("\n\t{} is already exist.", snsDataVO.getSnsUrl());
+//        }
+      } catch (Exception ex) {
+        StringUtil.printException( ex );
+      }
+    }
+  }
+
+
+}

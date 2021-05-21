@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="org.eclipse.jst.jsp.ui.internal.preferences.ui.JSPTemplatePreferencePage$JSPEditTemplateDialog_dialogBounds">
+		<item key="DIALOG_WIDTH" value="827"/>
+		<item key="DIALOG_FONT_NAME" value="1|맑은 고딕|9.0|0|WINDOWS|1|-18|0|0|0|400|0|0|0|1|0|0|0|0|맑은 고딕"/>
+		<item key="DIALOG_HEIGHT" value="508"/>
+		<item key="DIALOG_X_ORIGIN" value="635"/>
+		<item key="DIALOG_Y_ORIGIN" value="399"/>
+	</section>
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
+		<item key="isRegEx" value="true"/>
+		<item key="selection" value="contractXLXS"/>
+		<item key="casesensitive" value="false"/>
+		<item key="incremental" value="false"/>
+		<item key="wrap" value="true"/>
+		<item key="wholeword" value="false"/>
+		<list key="findhistory">
+			<item value="contractXLXS"/>
+			<item value="LFIS"/>
+			<item value="잘못된 접근"/>
+			<item value="잘못된접근"/>
+			<item value="addSignmentView"/>
+			<item value="selectBbsNttMainView"/>
+			<item value="addSignmentView.do"/>
+			<item value="java.sun"/>
+			<item value="Set Character Encoding"/>
+			<item value="System.ou"/>
+			<item value="&gt;"/>
+			<item value="logout"/>
+			<item value="updatePwdProcFromLoginPage"/>
+			<item value="frame"/>
+			<item value="return &quot;"/>
+		</list>
+		<list key="replacehistory">
+			<item value="&lt;"/>
+			<item value="/board"/>
+			<item value="&gt;\n&lt;input"/>
+			<item value="  "/>
+			<item value=""/>
+			<item value="resultType"/>
+			<item value="break;\n"/>
+			<item value="#{searchKey}"/>
+		</list>
+	</section>
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
+		<item key="DIALOG_WIDTH" value="288"/>
+		<item key="DIALOG_FONT_NAME" value="1|맑은 고딕|9.0|0|WINDOWS|1|-12|0|0|0|400|0|0|0|1|0|0|5|0|맑은 고딕"/>
+		<item key="DIALOG_HEIGHT" value="391"/>
+		<item key="DIALOG_X_ORIGIN" value="1496"/>
+		<item key="DIALOG_Y_ORIGIN" value="314"/>
+	</section>
+</section>

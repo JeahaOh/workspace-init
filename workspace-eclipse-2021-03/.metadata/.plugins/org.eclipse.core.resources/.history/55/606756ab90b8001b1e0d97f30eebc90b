@@ -1,0 +1,260 @@
+<%@ page contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
+<%@ taglib prefix="validator" uri="http://www.springmodules.org/tags/commons-validator" %>
+<%@ taglib prefix="spring" uri="http://www.springframework.org/tags"%>
+<%@ taglib prefix="ui" uri="http://egovframework.gov/ctl/ui"%>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@ taglib prefix="tsu" uri="http://www.hanshinit.co.kr/jstl/tagStringUtil"%>
+<%@ page trimDirectiveWhitespaces="true" %>
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta name="decorator" content="${menuInfo.siteId}" />
+  <title>${siteInfo.siteNm} - [통합예약]교육강좌 신청내역 목록</title>
+</head>
+<body>
+<script>
+	function fn_deleteData(url) {
+    	if (confirm('해당 건을 삭제하시겠습니까?')) {
+			document.location.href = url;
+        }
+    }
+
+function fn_updateEdcAtnlcMngrOptn(no) {
+
+	var userRceptSttus = $("#userRceptSttus_" + no).val();
+	var setleSttus = $("#setleSttus_" + no).val();
+
+    $.ajax({
+		url : "./updateEdcAtnlcMngrOptn.do",
+		contentType : "application/x-www-form-urlencoded; charset=UTF-8",
+		type : "post",
+		dataType : "html",
+		data : "&atnclKey=" + no + "&userRceptSttus=" + userRceptSttus + "&setleSttus=" + setleSttus,
+		async : true,
+		beforeSend : function() {
+		},
+		success : function(r) {
+			var rtn = JSON.parse(r);
+			if (rtn.result == "1") {
+				alert("변경되었습니다.");
+			} else if (rtn.result == "0") {
+				alert(rtn.msg);
+				return;
+			} else {
+				alert(rtn.msg);
+				return;
+			}
+		},
+		complete : function() {
+		},
+		error : function(){
+			alert('error');
+		}
+	});
+
+}
+
+function fn_Submit(){
+	/*
+	if($.trim($("#searchAll").val()) == "") {
+		alert("검색 조건이 없습니다.");
+		$("#searchAll").val($.trim($("#searchAll").val()));
+        $("#searchAll").focus();
+        return false;
+    }
+
+	if($.trim($("#searchAll").val()).length < 2){
+		alert("두자 이상 입력해야 조회가 가능합니다.");
+		$("#searchAll").focus();
+		return false;
+	}
+	*/
+	document.getElementById("edcAtnlcMngrFrm").submit();
+}
+
+$(document).ready(function(){
+	$("body").focus();
+});
+
+</script>
+<c:set var="ecmc" value="${tsu:edcCmmMultiCode('APPLCNT_RELATE,USER_RCEPT_STTUS,DONG_CODE')}" />
+<c:set var="applcntRelate" value="${tsu:edcCmmCode(ecmc,'APPLCNT_RELATE')}"/>
+<c:set var="userSttus" value="${tsu:edcCmmCode(ecmc,'USER_RCEPT_STTUS')}"/>
+<div class="bbs_search">
+	<form action="./edcAtnlcMngList.do" method="get" name="edcAtnlcMngrFrm" id="edcAtnlcMngrFrm" onsubmit="fn_Submit(); return false;">
+		 <select name="searchInsttCode" id="searchInsttCode"  class="p-input p-input--auto">
+			<option value="">예약그룹 선택</option>
+			<c:forEach var="result" items="${insttList}" varStatus="status">
+			<option value="${result.codeValue}"  <c:if test="${result.codeValue eq atnlcList.searchInsttCode}"> selected="selected"</c:if>>${result.codeNm}</option>
+			</c:forEach>
+		</select>
+		<input type="hidden" name="key" value="${key}">
+		<input type="hidden" name="rep" value="1">
+		<input type="text" id="searchAll" name="searchAll" class="p-input w30p" placeholder="신청자명,입금자명, 연락처, 아이디를 두자 이상 입력 후 검색해주세요." value="${atnlcList.searchAll}">
+		<button type="submit" class="p-button p-button--small primary">검색</button>
+	
+		<div class="row">
+				<div style="width: 500px;position: relative;min-height: 1px;padding-right: 8px;padding-left: 8px;float: left;">
+					<div class="p-date-group">
+						<select id="searchDateGubun" name="searchDateGubun" class="p-input p-input--auto">
+										<option value="R" <c:if test="${'R' eq atnlcList.searchDateGubun}"> selected="selected"</c:if>>접수기간 시작일 기준</option>
+										<option value="E" <c:if test="${'E' eq atnlcList.searchDateGubun}"> selected="selected"</c:if>>교육기간 시작일 기준</option>
+						</select>
+						
+							<select id="userRceptSttus" name="searchStatus" class="p-input p-input--auto">
+									<option value="">예약상태 선택</option>
+									<c:forEach var="item" items="${userSttus}" varStatus="status">
+										<c:if test="${item.key ne '00' }">
+											<option value="${item.key}"<c:if test="${item.key eq atnlcList.searchStatus}"> selected="selected"</c:if>>${item.value}</option>
+										</c:if>
+									</c:forEach>
+							</select>
+							<select id="setleSttus" name="searchSetleSttus" class="p-input p-input--auto" >
+								<option value=""  <c:if test="${'' eq atnlcList.searchSetleSttus}">selected="selected"</c:if> >결제상태 선택</option>
+								<option value="00"  <c:if test="${'00' eq atnlcList.searchSetleSttus}">selected="selected"</c:if> >결제대기</option>
+								<option value="01"  <c:if test="${'01' eq atnlcList.searchSetleSttus}">selected="selected"</c:if> >결제완료</option>
+								<option value="02"  <c:if test="${'02' eq atnlcList.searchSetleSttus}">selected="selected"</c:if> >환불요청</option>
+								<option value="03"  <c:if test="${'03' eq atnlcList.searchSetleSttus}">selected="selected"</c:if> >환불완료</option>
+								<option value="04"  <c:if test="${'04' eq atnlcList.searchSetleSttus}">selected="selected"</c:if> >결제완료(무료상품)</option>
+								<option value="05"  <c:if test="${'05' eq atnlcList.searchSetleSttus}">selected="selected"</c:if> >입금보류</option>
+							</select>
+				
+					</div>
+				</div>
+				<div class="col-6">
+					<div class="p-date-group">
+							<div class="p-form-group p-date" data-date="datepicker">
+				                <input type="text" name="searchStartDate" id="searchStartDate" class="p-input p-input--auto" title="시작일자"  value="${atnlcList.searchStartDate}" placeholder="yyyy-mm-dd"  dateAutoInput="true"  maxlength="10"/>
+				                <div class="p-input__split">
+				                    <button type="button" class="p-input__item  p-date__icon">달력 열기</button>
+				                </div>
+				            </div>
+				            <span class="p-form__split">~</span>
+				            <div class="p-form-group p-date" data-date="datepicker">
+				                <input type="text" name="searchEndDate" id="searchEndDate" class="p-input p-input--auto" title="종료일자"  value="${atnlcList.searchEndDate}"  placeholder="yyyy-mm-dd"  dateAutoInput="true"  maxlength="10"/>
+				                <div class="p-input__split">
+				                    <button type="button" class="p-input__item  p-date__icon">달력 열기</button>
+				                </div>
+				            </div>
+				    </div>
+				</div>
+		</div>
+		
+	</form>
+</div>
+
+<div class="line-gutter"></div>
+<div class="row p-relative">
+	<div class="col-12">
+		<span class="p-total__number">총 <em class="em_black" data-mask="#,##0" data-mask-reverse="true">${paginationInfo.totalRecordCount}</em>건   [ <em class="em_b_black">${paginationInfo.currentPageNo}</em>/${paginationInfo.totalPageCount} 페이지 ]</span>
+	</div>
+	<div class="col-12 right">
+			<a href="./edcAtnlcMngListExcel.do?key=${key}" class="p-button p-button--small">
+				<svg width="16" height="15" fill="#888" focusable="false">
+					
+					<use xlink:href="/common/images/program/p-icon.svg#excel"></use>
+				</svg>
+				엑셀다운로드
+			</a>
+	</div>
+</div>
+</form>
+
+<form name="edcAtnlcMngrList" id="edcAtnlcMngrList" method="post" action="./edcAtnlcMngrList.do" data-select="checkall" data-checkallid="#check-all2" data-checkname="checkid">
+
+<table class="p-table sde p-table--bordered p-table--hover">
+<colgroup>
+  <col style="width:90px;" />
+  <col style="width:70px;" />
+  <col style="width:70px;" />
+   <col style="width:70px;" />
+  <col />
+  <col style="width:115px;" />
+  <col style="width:70px;" />
+  <col style="width:90px;"/>
+  <col style="width:110px;"/>
+  <col style="width:110px;"/>
+  <col style="width:100px;"/>
+  <col style="width:110px;" />
+  <col style="width:110px;" />
+  <col style="width:90px;" />
+</colgroup>
+<thead>
+<tr>
+	<th scope="col">번호</th>
+	<th scope="col">신청자명</th>
+	<th scope="col">수강생명</th>
+	<th scope="col">입금자명</th>
+	<th scope="col">강좌</th>
+	<th scope="col">수강기간</th>
+	<th scope="col">성별</th>
+	<th scope="col">생년월일</th>
+	<th scope="col">신청자연락처</th>
+	<th scope="col">수강자연락처</th>
+	<th scope="col">접수일시</th>
+	<th scope="col">접수상태</th>
+	<th scope="col">결제상태</th>
+	<th scope="col">교육상태</th>
+</tr>
+</thead>
+<tbody class="small text_center">
+<c:set var="currentPageStartNo" value="${paginationInfo.currentPageStartNo}" />
+<c:forEach var="result" items="${edcAtnlcMngrList}" varStatus="status">
+<tr>
+	<td class="vertical_middle"><c:out value="${currentPageStartNo}" /></td>
+	<td class="vertical_middle"><a href="./edcAtnlcMngrMngUserViewMypage.do?key=${key}&searchAtnclKey=${result.atnclKey}&searchLctreKey=${result.lctreKey}"><c:out value="${result.userNm}" /></a></td>
+	<td class="vertical_middle"><a href="./edcAtnlcMngrMngUserViewMypage.do?key=${key}&searchAtnclKey=${result.atnclKey}&searchLctreKey=${result.lctreKey}"><c:out value="${result.atnlcUserNm}" /></a></td>
+	<td class="vertical_middle"><a href="./edcAtnlcMngrMngUserViewMypage.do?key=${key}&searchAtnclKey=${result.atnclKey}&searchLctreKey=${result.lctreKey}"><c:out value="${result.rcpmnyNm}" /></a></td>
+	<td class="p-subject vertical_middle"><c:out value="${result.lctreNm}" /></td>
+	<td class="vertical_middle"><c:out value="${tsu:toDateFormat(result.edcBgnde,'yyyyMMddHHmm','yyyy-MM-dd')}" /> 부터<br/><c:out value="${tsu:toDateFormat(result.edcEndde,'yyyyMMddHHmm','yyyy-MM-dd')}" /> 까지</td>
+	<td class="vertical_middle"><c:choose><c:when test="${result.userSexdstn eq 'M'}">남</c:when><c:when test="${result.userSexdstn eq 'F'}">여</c:when></c:choose></td>
+	<td class="vertical_middle"><c:out value="${tsu:toDateFormat(result.userBrthdy,'yyyyMMdd','yyyy-MM-dd')}" /></td>
+	<td class="vertical_middle"><c:out value="${result.userMobile}" /></td>
+	<td class="vertical_middle"><c:out value="${result.atnlcUserTel}" /></td>
+	<td class="vertical_middle"><c:out value="${tsu:toDateFormat(result.frstRegisterPnttm,'yyyyMMddHHmmss','yyyy-MM-dd HH:mm:ss')}" /></td>
+	<td class="vertical_middle">
+		<c:set var="ecmc" value="${tsu:edcCmmMultiCode('USER_RCEPT_STTUS,SETLE_STTUS')}" />
+		<c:set var="userRceptSttus" value="${tsu:edcCmmCode(ecmc,'USER_RCEPT_STTUS')}"/>
+		<c:set var="setleSttus" value="${tsu:edcCmmCode(ecmc,'SETLE_STTUS')}"/>
+		<c:out value="${userRceptSttus[result.userRceptSttus]}" />
+	</td>
+	<td class="vertical_middle">
+		<c:out value="${setleSttus[result.setleSttus]}" />
+	</td>
+	<td class="vertical_middle">
+		<c:choose>
+				<c:when test="${'EW1' eq result.edcSttus}"><span class="p-badge p-badge--small type6">교육대기</span></c:when>
+				<c:when test="${'EP1' eq result.edcSttus}"><span class="p-badge p-badge--small type1">교육중</span></c:when>
+				<c:when test="${'EC1' eq result.edcSttus}"><span class="p-badge p-badge--small type8">교육완료</span></c:when>
+		</c:choose>
+	</td>
+</tr>
+<c:set var="currentPageStartNo" value="${currentPageStartNo-1}" />
+</c:forEach>
+<c:if test="${fn:length(edcAtnlcMngrList) < 1}">
+ <tr>
+	<td colspan="100%">검색 결과가 없습니다.</td>
+ </tr>
+  </c:if>
+</tbody>
+</table>
+</form>
+
+<div class="row margin_t_30">
+    <div class="col-12">
+      <div class="p-pagination left">
+        <div class="p-page">
+            <ui:pagination paginationInfo="${paginationInfo}" type="staff" jsFunction="./edcAtnlcMngList.do?key=${key}&pageUnit=${atnlcList.pageUnit}&searchCnd=${atnlcList.searchCnd}&searchKrwd=${atnlcList.searchKrwd}&pageIndex=" />
+        </div>
+      </div>
+  	  </div>
+      <div class="col-12 right">
+
+      </div>
+</div>
+</body>
+</html>

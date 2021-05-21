@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="prvnbeResrcDAO">
+
+	<typeAlias alias="prvnbeResrcVO" type="egovframework.ext.resrc.prvnbeResrc.vo.PrvnbeResrcVO"/>
+    	
+	<resultMap id="prvnbeResrc" class="egovframework.ext.resrc.prvnbeResrc.vo.PrvnbeResrcVO">
+        <result property="sn" column="SN"/>
+        <result property="resrcTyCode" column="RESRC_TY_CODE"/>
+        <result property="resrcTyCodeNm" column="resrcTyCodeNm"/>
+        <result property="resrcClCode" column="RESRC_CL_CODE"/>
+        <result property="resrcClCodeNm" column="resrcClCodeNm"/>
+        <result property="resrcDtlClCode" column="RESRC_DTL_CL_CODE"/>
+        <result property="resrcDtlClCodeNm" column="resrcDtlClCodeNm"/>
+        <result property="mkrNm" column="MKR_NM"/>
+        <result property="knd" column="KND"/>
+        <result property="kndTrNm" column="kndTrNm"/>
+        <result property="unit" column="UNIT"/>
+        <result property="unitNm" column="unitNm"/>
+        <result property="modlNm" column="MODL_NM"/>
+        <result property="modlTrNm" column="modlTrNm"/>
+        <result property="rm" column="RM"/>
+        <result property="registSttusValue" column="REGIST_STTUS_VALUE"/>
+        <result property="registSttusValueNm" column="registSttusValueNm"/>
+        <result property="useAt" column="USE_AT"/>
+        <result property="atchmnflId" column="ATCHMNFL_ID"/>
+        <result property="registerId" column="REGISTER_ID"/>
+        <result property="registDt" column="REGIST_DT"/>
+        <result property="lastUpdusrId" column="LAST_UPDUSR_ID"/>
+        <result property="lastUpdtDt" column="LAST_UPDT_DT"/>
+        <result property="resrcMngNo" column="RESRC_MNG_NO"/>
+        <result property="nowQy" column="NOW_QY"/>
+        <result property="lc" column="LC"/>
+    </resultMap>
+    
+    <select id="prvnbeResrcDAO.selectPrvnbeResrcListTotCnt" parameterClass="prvnbeResrcVO" resultClass="java.lang.Integer">
+			SELECT 
+				<isEqual property="searchCondition" compareValue="popup">
+				$searchKeyword2$		
+				</isEqual>
+				<isNotEqual property="searchCondition" compareValue="popup">
+				COUNT(a.SN) as cnt
+				</isNotEqual>
+			FROM
+				TPR_PRVNBE_RESRC_MNG a<isEqual property="searchCondition" compareValue="popup">, TPR_RESRC_IRDS_MODL b</isEqual>
+			WHERE 1=1
+			AND a.USE_AT = 'Y'
+			<isEqual  prepend="AND" property="wrType" compareValue="A">
+				<![CDATA[	a.REGIST_STTUS_VALUE in('A','PR63') ]]>
+			</isEqual>	
+			<isEqual  prepend="AND" property="wrType" compareValue="B">
+				<![CDATA[	a.REGIST_STTUS_VALUE != 'A'  ]]>
+			</isEqual>	
+			<isNotEmpty prepend="AND" property="searchSttusCode">
+				<![CDATA[	a.REGIST_STTUS_VALUE = #searchSttusCode# ]]>
+			</isNotEmpty>	
+			<isNotEmpty prepend="AND" property="searchResrcTyCode">
+				<![CDATA[	a.RESRC_TY_CODE = #searchResrcTyCode# ]]>
+			</isNotEmpty>	
+			<isNotEmpty prepend="AND" property="searchResrcClCode">
+				<![CDATA[	a.RESRC_CL_CODE = #searchResrcClCode# ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="searchResrcDtlClCode">
+				<![CDATA[	a.RESRC_DTL_CL_CODE = #searchResrcDtlClCode# ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="searchMkrNm">
+				<![CDATA[	a.MKR_NM LIKE '%' || #searchMkrNm# || '%' ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="searchModlNm">
+				<![CDATA[	a.MODL_NM LIKE '%' || #searchModlNm# || '%' ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="searchModlNm2">
+				<![CDATA[	REPLACE(a.MODL_NM,' ','') LIKE '%' || #searchModlNm2# || '%' ]]>
+			</isNotEmpty>
+			<isEqual property="searchCondition" compareValue="popup">
+			<isNotEmpty prepend="AND" property="insttCode">
+				<![CDATA[	b.HOLD_INSTT_CODE = #insttCode# ]]>
+			</isNotEmpty>
+				AND a.sn = b.MODL_SN
+				AND b.NOW_STTUS_VALUE not in ('PR52','PR53') 
+				AND b.NOW_QY <![CDATA[ > ]]> 0
+			</isEqual>
+	</select>
+    
+    <select id="prvnbeResrcDAO.selectPrvnbeResrcList" parameterClass="prvnbeResrcVO" resultMap="prvnbeResrc">
+    /* prvnbeResrcDAO.selectPrvnbeResrcList */
+		SELECT * FROM ( SELECT rownum rn, TB.* FROM (
+			SELECT 
+				  <isEqual property="searchCondition" compareValue="popup">DISTINCT(a.SN)</isEqual>
+				  <isNotEqual property="searchCondition" compareValue="popup">a.SN</isNotEqual>
+				, a.RESRC_TY_CODE
+				, FN_GET_CMMN_CODENM(a.RESRC_TY_CODE) AS  resrcTyCodeNm
+				, a.RESRC_CL_CODE
+				, FN_GET_CMMN_CODENM(a.RESRC_CL_CODE) AS  resrcClCodeNm
+				, a.RESRC_DTL_CL_CODE
+				, FN_GET_CMMN_CODENM(a.RESRC_DTL_CL_CODE) AS  resrcDtlClCodeNm
+				, a.MKR_NM
+				, a.KND
+				, FN_GET_CMMN_CODENM(a.KND) as kndTrNm
+				, a.UNIT
+				, FN_GET_CMMN_CODENM(a.UNIT) as unitNm
+				, a.MODL_NM
+				, FN_GET_CMMN_CODENM(a.MODL_NM) as modlTrNm
+				, a.RM
+				, a.REGIST_STTUS_VALUE
+				, (SELECT c.CODE_NM FROM TCM_CMMN_DTL_CODE c WHERE c.CODE = a.REGIST_STTUS_VALUE) AS  registSttusValueNm
+				, a.USE_AT
+				, a.ATCHMNFL_ID
+				, a.REGISTER_ID
+				, TO_CHAR(a.REGIST_DT,'YYYY-MM-DD') AS REGIST_DT
+				, a.LAST_UPDUSR_ID
+				, a.LAST_UPDT_DT
+				<isEqual property="searchCondition" compareValue="popup">
+				$searchKeyword$				
+				</isEqual>
+				<isNotEqual property="searchCondition" compareValue="popup">
+				, '' as RESRC_MNG_NO
+				, '' as NOW_QY
+				, '' as LC
+				</isNotEqual>
+			FROM TPR_PRVNBE_RESRC_MNG a<isEqual property="searchCondition" compareValue="popup">, TPR_RESRC_IRDS_MODL b, TPR_RESRC_IRDS_POSPLC c</isEqual>
+			WHERE 1=1
+			AND a.USE_AT = 'Y'	
+			<isEqual  prepend="AND" property="wrType" compareValue="A">
+				<![CDATA[	a.REGIST_STTUS_VALUE in('A','PR63') ]]>
+			</isEqual>	
+			<isEqual  prepend="AND" property="wrType" compareValue="B">
+				<![CDATA[	a.REGIST_STTUS_VALUE != 'A'  ]]>
+			</isEqual>	
+			<isNotEmpty prepend="AND" property="searchSttusCode">
+				<![CDATA[	a.REGIST_STTUS_VALUE = #searchSttusCode# ]]>
+			</isNotEmpty>	
+			<!-- <isNotEmpty prepend="AND" property="searchResrcTyCode">
+				<![CDATA[	a.RESRC_TY_CODE IN ( #searchResrcTyCode# ) ]]>
+			</isNotEmpty> -->
+
+      <isNotEmpty prepend="AND" property="searchResrcTyCode">
+        <isLessThan property="searchResrcTyCodeCnt" compareValue="1">
+          <![CDATA[ a.RESRC_TY_CODE = #searchResrcTyCode#  ]]>
+        </isLessThan>
+        <isGreaterEqual property="searchResrcTyCodeCnt" compareValue="2">
+          <iterate property="searchResrcTyCodes" prepend=" a.RESRC_TY_CODE IN " open="(" close=")" conjunction=",">
+            #searchResrcTyCodes[]#
+          </iterate>
+        </isGreaterEqual>
+      </isNotEmpty>
+      
+			<isNotEmpty prepend="AND" property="searchResrcClCode">
+        <isLessThan property="searchResrcClCodeCnt" compareValue="1">
+          <![CDATA[ a.RESRC_CL_CODE = #searchResrcClCode#  ]]>
+        </isLessThan>
+        <isGreaterEqual property="searchResrcClCodeCnt" compareValue="2">
+          <iterate property="searchResrcClCodes" prepend=" a.RESRC_CL_CODE IN " open="(" close=")" conjunction=",">
+            #searchResrcClCodes[]#
+          </iterate>
+        </isGreaterEqual>
+			</isNotEmpty>
+      <!-- <![CDATA[ a.RESRC_CL_CODE IN ( #searchResrcClCode# ) ]]> -->
+      
+			<isNotEmpty prepend="AND" property="searchResrcDtlClCode">
+				<![CDATA[	a.RESRC_DTL_CL_CODE = #searchResrcDtlClCode# ]]>
+			</isNotEmpty>
+      
+			<isNotEmpty prepend="AND" property="searchMkrNm">
+				<![CDATA[	a.MKR_NM LIKE '%' || #searchMkrNm# || '%' ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="searchModlNm">
+				<![CDATA[	a.MODL_NM LIKE '%' || #searchModlNm# || '%' ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="searchModlNm2">
+				<![CDATA[	REPLACE(a.MODL_NM,' ','') LIKE '%' || #searchModlNm2# || '%' ]]>
+			</isNotEmpty>
+			<isEqual property="searchCondition" compareValue="popup">
+  			<isNotEmpty prepend="AND" property="insttCode">
+  				<![CDATA[	b.HOLD_INSTT_CODE = #insttCode# ]]>
+  			</isNotEmpty>
+  				AND a.sn = b.MODL_SN
+  				AND B.resrc_mng_no = C.resrc_mng_no
+  				AND b.NOW_STTUS_VALUE not in ('PR52','PR53') 
+  				AND b.NOW_QY <![CDATA[ > ]]> 0
+			</isEqual>
+            ORDER BY CASE WHEN RESRC_CL_CODE = 'PR24' THEN 0 
+         		WHEN RESRC_CL_CODE = 'PR21' THEN 1
+         		WHEN RESRC_CL_CODE = 'PR25' THEN 2
+         		WHEN RESRC_CL_CODE = 'PR5' THEN 3 ELSE 4 END, a.SN DESC
+			) TB 
+		) WHERE rn BETWEEN #firstIndex# + 1 AND #firstIndex# + #recordCountPerPage#
+	</select>
+	
+	<select id="prvnbeResrcDAO.selectPrvnbeResrc" parameterClass="prvnbeResrcVO" resultMap="prvnbeResrc">
+		SELECT 
+			  SN
+			, RESRC_TY_CODE
+			, FN_GET_CMMN_CODENM(a.RESRC_TY_CODE) AS  resrcTyCodeNm
+			, RESRC_CL_CODE
+			, FN_GET_CMMN_CODENM(a.RESRC_CL_CODE) AS  resrcClCodeNm
+			, RESRC_DTL_CL_CODE
+			, FN_GET_CMMN_CODENM(a.RESRC_DTL_CL_CODE) AS  resrcDtlClCodeNm
+			, MKR_NM
+			, KND
+			, FN_GET_CMMN_CODENM(a.KND) as kndTrNm
+			, a.UNIT
+			, FN_GET_CMMN_CODENM(a.UNIT) as unitNm
+			, MODL_NM
+			, FN_GET_CMMN_CODENM(a.MODL_NM) as modlTrNm
+			, RM
+			, REGIST_STTUS_VALUE
+			, (SELECT c.CODE_NM FROM TCM_CMMN_DTL_CODE c WHERE c.CODE = a.REGIST_STTUS_VALUE) AS  registSttusValueNm
+			, USE_AT
+			, ATCHMNFL_ID
+			, REGISTER_ID
+			, TO_CHAR(REGIST_DT,'YYYY-MM-DD') AS REGIST_DT
+			, LAST_UPDUSR_ID
+			, LAST_UPDT_DT
+			, '' as RESRC_MNG_NO
+			, '' as NOW_QY
+			, '' as LC
+		FROM TPR_PRVNBE_RESRC_MNG a
+		WHERE 1=1
+		AND USE_AT = 'Y'
+		AND SN = #sn#
+	</select>
+	
+	<insert id="prvnbeResrcDAO.insertPrvnbeResrc" parameterClass="prvnbeResrcVO">
+	<![CDATA[
+		INSERT INTO TPR_PRVNBE_RESRC_MNG 
+			(   SN
+			  , RESRC_TY_CODE
+			  , RESRC_CL_CODE
+			  , RESRC_DTL_CL_CODE
+			  , MKR_NM
+			  , KND
+			  , UNIT
+			  , MODL_NM
+			  , RM
+			  , REGIST_STTUS_VALUE
+			  , USE_AT
+			  , ATCHMNFL_ID
+			  , REGISTER_ID
+			  , REGIST_DT
+			  , LAST_UPDUSR_ID
+			  , LAST_UPDT_DT )
+		VALUES ( #sn#
+				
+			  , #resrcTyCode#
+			  , #resrcClCode#
+			  , #resrcDtlClCode#
+			  , #mkrNm#
+			  , #knd#
+			  , #unit#
+			  , #modlNm#
+			  , #rm#
+			  , #wrType#
+			  , 'Y'
+			  , #atchmnflId#
+			  , #registerId#
+			  , sysdate
+			  , #lastUpdusrId#
+			  , sysdate )
+	]]>
+	</insert>
+	
+	<update id="prvnbeResrcDAO.updatePrvnbeResrc" parameterClass="prvnbeResrcVO">
+		UPDATE 
+			TPR_PRVNBE_RESRC_MNG 
+		SET 
+			RESRC_TY_CODE = #resrcTyCode#
+		  , RESRC_CL_CODE = #resrcClCode#
+		  , RESRC_DTL_CL_CODE = #resrcDtlClCode#
+		  , MKR_NM = #mkrNm#
+		  , KND = #knd#
+		  , UNIT = #unit#
+		  , MODL_NM = #modlNm#
+		  , RM = #rm#
+		  <isNotEmpty property="atchmnflId">, ATCHMNFL_ID = #atchmnflId#</isNotEmpty> 
+		  , LAST_UPDUSR_ID = #lastUpdusrId#
+		  , LAST_UPDT_DT = sysdate
+		WHERE SN = #sn#
+	</update>
+	
+	<update id="prvnbeResrcDAO.deletePrvnbeResrc" parameterClass="prvnbeResrcVO">
+		UPDATE 
+			TPR_PRVNBE_RESRC_MNG 
+		SET 
+			USE_AT = 'R'
+			, LAST_UPDUSR_ID = #lastUpdusrId#
+			, LAST_UPDT_DT = sysdate
+		WHERE SN = #sn#
+	</update>
+	
+	<select id="prvnbeResrcDAO.selectPrvnbeResrcSn" parameterClass="prvnbeResrcVO" resultClass="java.lang.String">
+		SELECT 'PRM'||LPAD(TPR_PRVNBE_RESRC_SEQ.NEXTVAL,8,'0') FROM DUAL 
+	</select>
+	
+	<update id="prvnbeResrcDAO.updatePrvnbeResrcSttusAppr" parameterClass="prvnbeResrcVO">
+		UPDATE 
+			TPR_PRVNBE_RESRC_MNG 
+		SET 
+			REGIST_STTUS_VALUE = #searchSttusCode#
+		  , LAST_UPDUSR_ID = #lastUpdusrId#
+		  , LAST_UPDT_DT = sysdate
+		WHERE SN = #sn#
+	</update>
+	<!-- <select id="prvnbeResrcDAO.selectResrcCodeList" parameterClass="prvnbeResrcVO" resultClass="egovMap">
+		SELECT /* PrvnbeResrc_SQL_Tibero.prvnbeResrcDAO.selectResrcCodeList.01 20200619 */
+               A.CODE              /* 코드(PK)     */    
+             , A.UPPER_CODE        /* 상위코드(PK) */      
+             , A.CODE_NM           /* 코드명       */     
+             , A.CODE_DC           /* 코드설명     */      
+             , A.USE_AT            /* 사용여부     */      
+             , A.FRST_REGIST_DT    /* 최초등록일시 */        
+             , A.FRST_REGISTER_ID  /* 최초등록자ID */       
+             , A.LAST_UPDT_DT      /* 최종수정일시 */        
+             , A.LAST_UPDUSR_ID    /* 최종수정자ID */
+             , A.LEVEL_VALUE       /* 레벨         */
+             , A.ORDR              /* 순서         */
+          FROM TCM_CMMN_DTL_CODE A /* 공통상세코드 */
+         WHERE 1 = 1  
+         <isNotEmpty property="resrcTyCode">
+           /* 상위코드 */
+           AND A.UPPER_CODE = #resrcTyCode#
+        </isNotEmpty>
+	</select> -->
+	
+    <select id="prvnbeResrcDAO.selectClCode" parameterClass="prvnbeResrcVO" resultClass="prvnbeResrcVO">
+         SELECT CODE,UPPER_CODE,CODE_DC, CODE_NM, USE_AT 
+         FROM  TCM_CMMN_DTL_CODE 
+         WHERE UPPER_CODE= #upperCode#
+         AND USE_AT='Y'
+    </select>
+    
+	
+    
+</sqlMap>

@@ -1,0 +1,588 @@
+package kr.co.hanshinit.NeoCMS.cop.edu.cos.service.impl;
+
+import java.io.File;
+import java.text.ParseException;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartRequest;
+
+import com.ibm.icu.text.SimpleDateFormat;
+
+import kr.co.hanshinit.NeoCMS.cmm.service.FileMngUtil;
+import kr.co.hanshinit.NeoCMS.cmm.service.FileVO;
+import kr.co.hanshinit.NeoCMS.cmm.util.DateUtil;
+import kr.co.hanshinit.NeoCMS.cmm.util.ExcelUtil;
+import kr.co.hanshinit.NeoCMS.cmm.util.ImageUtil;
+import kr.co.hanshinit.NeoCMS.cmm.util.StringUtil;
+import kr.co.hanshinit.NeoCMS.cop.edu.atd.cos.service.EduAttendCourseService;
+import kr.co.hanshinit.NeoCMS.cop.edu.atd.cos.service.EduAttendCourseVO;
+import kr.co.hanshinit.NeoCMS.cop.edu.cos.app.service.EduCourseAppService;
+import kr.co.hanshinit.NeoCMS.cop.edu.cos.service.EduCourse;
+import kr.co.hanshinit.NeoCMS.cop.edu.cos.service.EduCourseService;
+import kr.co.hanshinit.NeoCMS.cop.edu.cos.service.EduCourseVO;
+import kr.co.hanshinit.NeoCMS.cop.edu.cos.wat.service.EduCourseWaitService;
+import kr.co.hanshinit.NeoCMS.cop.edu.cos.wat.service.EduCourseWaitVO;
+import kr.co.hanshinit.NeoCMS.cop.edu.tch.service.EduTeacherService;
+import kr.co.hanshinit.NeoCMS.cop.edu.tch.service.EduTeacherVO;
+import kr.co.hanshinit.NeoCMS.uat.uia.service.LoginUtil;
+
+@Service(value="eduCourseService")
+public class EduCourseServiceImpl implements EduCourseService {
+
+	/** eduCourseDAO */
+	@Resource(name="eduCourseDAO")
+	private EduCourseDAO eduCourseDAO;
+
+	/** FileMngUtil */
+	@Resource(name="FileMngUtil")
+	private FileMngUtil fileMngUtil;
+
+	/** eduCourseAppService */
+	@Resource(name="eduCourseAppService")
+	EduCourseAppService eduCourseAppService;
+
+	/** eduAttendCourseService */
+	@Resource(name="eduAttendCourseService")
+	EduAttendCourseService eduAttendCourseService;
+
+	/** eduTeacherService */
+	@Resource(name="eduTeacherService")
+	EduTeacherService eduTeacherService;
+
+	/** eduCourseWaitService */
+	@Resource(name="eduCourseWaitService")
+	EduCourseWaitService eduCourseWaitService;
+
+	@Override
+	public int selectEduCourseKey() throws Exception {
+		// TODO Auto-generated method stub
+		return eduCourseDAO.selectEduCourseKey();
+	}
+
+	@Override
+	public void insertEduCourse(MultipartRequest multiRequest,
+			HttpServletRequest request, EduCourse eduCourse) throws Exception {
+		// TODO Auto-generated method stub
+		HttpSession session = request.getSession();
+		eduCourse.setFrstRegisterId(LoginUtil.getLoginId(session));
+		eduCourse.setFrstRegisterPnttm(DateUtil.getNowDateTime("yyyyMMddHHmmss"));
+
+		eduCourse.setRdate(DateUtil.getNowDateTime("yyyyMMddHHmmss"));
+
+		int eduCourseKey = selectEduCourseKey();
+
+		/* 첨부파일 등록 */
+		String BBS_STORE_PATH = "/DATA/course/";
+		String BBS_NTT_STORE_PATH = BBS_STORE_PATH + eduCourseKey;
+		String BBS_NTT_THUMB_STORE_PATH = BBS_NTT_STORE_PATH + "/thumb";
+		String bbsDir = fileMngUtil.realPath(request, BBS_STORE_PATH);
+		String bbsNttDir = fileMngUtil.realPath(request, BBS_NTT_STORE_PATH);
+		String bbsNttThumnDir = fileMngUtil.realPath(request, BBS_NTT_THUMB_STORE_PATH);
+		fileMngUtil.mkdir(bbsDir);
+		fileMngUtil.mkdir(bbsNttDir);
+		fileMngUtil.mkdir(bbsNttThumnDir);
+
+		//학습내용 첨부파일
+		String[] commentFileType = {"gif", "jpg", "jpeg", "png", "bmp"};
+		long maxFileSize = 3 * 1024 * 1024;	//3MB
+		// 유효성 검사 및 저장
+		List<FileVO> fileVOList = fileMngUtil.parseFileInfMulti(multiRequest.getFiles("atchmnfl_0"), bbsNttDir, maxFileSize, commentFileType, null, "", null);
+		for(FileVO fileVO:fileVOList){
+			eduCourse.setRcommentFile(fileVO.getStreFileNm());
+			eduCourse.setCommentFile(fileVO.getOrignlFileNm());
+		}
+
+		//첨부파일
+		String[] fileType = {"zip", "pdf", "hwp", "xls", "ppt", "doc", "xlsx", "pptx", "docx", "txt", "gif", "jpg", "jpeg", "png", "bmp"};
+		maxFileSize = 30 * 1024 * 1024;	//30MB
+		// 유효성 검사 및 저장
+		fileVOList = fileMngUtil.parseFileInfMulti(multiRequest.getFiles("atchmnfl_1"), bbsNttDir, maxFileSize, fileType, null, "", null);
+		for(FileVO fileVO:fileVOList){
+			eduCourse.setRfile(fileVO.getStreFileNm());
+			eduCourse.setFile(fileVO.getOrignlFileNm());
+		}
+
+		eduCourseDAO.insertEduCourse(eduCourse);
+	}
+
+  @Override
+  public List<EduCourseVO> selectEduCourseList(EduCourseVO eduCourseVO) throws Exception {
+
+    String sortSql = "";
+    if ("title".equals(eduCourseVO.getSortField())) {
+      sortSql = "ORDER BY CASE WHEN STATUS = 2 THEN 0 WHEN STATUS = 1 THEN 1 ELSE 2 END ASC, CSSDATE DESC, SDATE DESC, TITLE ASC";
+    } else if ("FEISJ14".equals(eduCourseVO.getSortField())) {
+      sortSql = "ORDER BY FRST_REGISTER_PNTTM ASC";
+    } else {
+      sortSql = "ORDER BY CASE WHEN STATUS = 2 THEN 0 WHEN STATUS = 1 THEN 1 ELSE 2 END ASC, CSSDATE DESC, SDATE DESC, RDATE DESC";
+    }
+    eduCourseVO.setSortSql(sortSql);
+
+
+    List<EduCourseVO> eduCourseList = eduCourseDAO.selectEduCourseList(eduCourseVO);
+
+    courseStatusUpdt(eduCourseList);
+
+    return eduCourseList;
+  }
+
+
+	private void courseStatusUpdt(List<EduCourseVO> eduCourseList) throws Exception, ParseException {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+		long tdate = new Date().getTime();
+
+		for(EduCourseVO temp:eduCourseList){
+			addVO(temp);
+
+			String tmpSts = "3";
+
+			long vEdate = sdf.parse(temp.getVedate()).getTime();
+			long aEdate = sdf.parse(temp.getEdate()).getTime();
+
+			if(temp.getCount()<=temp.getConfirm()){	//인원이 가득 찼으면 무조건 마감
+				tmpSts = "4";
+			}else if(tdate > vEdate && tdate > aEdate) {
+				tmpSts = "4";
+			}else{	//인원이 가득 찬게 아니면, 오늘 날짜를 기준으로 상태를 변경함. 원본 사이트에선 인원에 의해서만 상태를 변경했음, 동일하게 해야하면 아래부분 삭제.
+				//System.out.println(temp.getStatus());
+				if(!temp.getStatus().equals("3")){	//수시접수는 변경 안함
+					long sdate = sdf.parse(temp.getSdate()).getTime();
+					long edate = sdf.parse(temp.getEdate()).getTime();
+
+					if(tdate<sdate){
+						tmpSts = "1";
+					}else if(sdate<=tdate && tdate<edate && !"1".equals(temp.getApptype())){
+						tmpSts = "2";
+					}else{
+						long vSdate = sdf.parse(temp.getVsdate()).getTime();
+						if(tdate<vSdate){
+							tmpSts = "6";
+						}else{
+//							long vEdate = sdf.parse(temp.getVedate()).getTime();
+							if(tdate<vEdate){
+								tmpSts = "5";
+							}else{
+								tmpSts = "4";
+							}
+						}
+					}
+
+				}else{	//대신 수시접수는 강의 기간이 종료되면 마감됨
+					long csedate = sdf.parse(temp.getCsedate()).getTime();
+					if(tdate>csedate){
+						tmpSts = "4";
+					}
+				}
+			}
+
+			if(!tmpSts.equals(temp.getStatus())){	//이 전의 상태와 변하지 않았으면 update하지 않음.
+				temp.setStatus(tmpSts);
+				eduCourseDAO.updateEduCourseStatus(temp);
+			}
+
+		}
+	}
+
+	@Override
+	public int selectEduCourseTotCnt(EduCourseVO eduCourseVO) throws Exception {
+		// TODO Auto-generated method stub
+		return eduCourseDAO.selectEduCourseTotCnt(eduCourseVO);
+	}
+
+	@Override
+	public List<EduCourseVO> selectEduCourseList2(EduCourseVO eduCourseVO)
+			throws Exception {
+		// TODO Auto-generated method stub
+
+		String sortSql = "";
+		if( "title".equals(eduCourseVO.getSortField()) ) {
+			sortSql = "ORDER BY CASE WHEN STATUS = 2 THEN 0 ELSE 1 END ASC, SDATE ASC, CSSDATE ASC, TITLE ASC";
+		} else {
+			sortSql = "ORDER BY CASE WHEN STATUS = 2 THEN 0 ELSE 1 END ASC, SDATE ASC, CSSDATE ASC";
+		}
+		eduCourseVO.setSortSql(sortSql);
+
+		List<EduCourseVO> eduCourseList = eduCourseDAO.selectEduCourseList2(eduCourseVO);
+
+		for(EduCourseVO temp:eduCourseList){	//도서관 강좌 리스트에선 전체 접수인원만이 필요하다. 더 필요하면, 추가할 것.
+			int course = temp.getCourse();
+			int confirm = eduCourseAppService.selectEduCourseAppCnt2(course, "confirm");
+			temp.setConfirm(confirm);
+		}
+
+		return eduCourseList;
+	}
+
+	@Override
+	public int selectEduCourseTotCnt2(EduCourseVO eduCourseVO) throws Exception {
+		// TODO Auto-generated method stub
+		return eduCourseDAO.selectEduCourseTotCnt2(eduCourseVO);
+	}
+
+	@Override
+	public EduCourseVO selectEduCourse(EduCourse eduCourse, HttpServletRequest request) throws Exception {
+		// TODO Auto-generated method stub
+		EduCourseVO temp = eduCourseDAO.selectEduCourse(eduCourse);
+		if(temp!=null){
+			String filePath = fileMngUtil.realPath(request, File.separator+"DATA"+File.separator+"course"+File.separator+temp.getCourse()+File.separator+temp.getRcommentFile());
+			System.out.println("filePath ::: " + filePath);
+			if(fileMngUtil.isExistsFile(filePath)){
+				try {
+					int[] imgSize = ImageUtil.getImageSize(filePath);
+					int[] fixSize = {500, 800};
+					int[] reSize = ImageUtil.reSize_W(imgSize, fixSize);
+					temp.setImgResizeWidth(reSize[0]);
+					temp.setImgResizeHeight(reSize[1]);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			addVO(temp);
+		}
+		return temp;
+	}
+
+
+	@Override
+	public void updateEduCourse(MultipartRequest multiRequest, HttpServletRequest request, EduCourse eduCourse) throws Exception {
+		// TODO Auto-generated method stub
+		HttpSession session = request.getSession();
+		eduCourse.setLastUpdusrId(LoginUtil.getLoginId(session));
+		eduCourse.setLastUpdusrPnttm(DateUtil.getNowDateTime("yyyyMMddHHmmss"));
+
+		/* 첨부파일 등록 */
+		String BBS_STORE_PATH = "/DATA/course/";
+		String BBS_NTT_STORE_PATH = BBS_STORE_PATH + eduCourse.getCourse();
+		String BBS_NTT_THUMB_STORE_PATH = BBS_NTT_STORE_PATH + "/thumb";
+		String bbsDir = fileMngUtil.realPath(request, BBS_STORE_PATH);
+		String bbsNttDir = fileMngUtil.realPath(request, BBS_NTT_STORE_PATH);
+		String bbsNttThumnDir = fileMngUtil.realPath(request, BBS_NTT_THUMB_STORE_PATH);
+		fileMngUtil.mkdir(bbsDir);
+		fileMngUtil.mkdir(bbsNttDir);
+		fileMngUtil.mkdir(bbsNttThumnDir);
+
+		//학습내용 첨부파일
+		String[] commentFileType = {"gif", "jpg", "jpeg", "png", "bmp"};
+		long maxFileSize = 3 * 1024 * 1024;	//3MB
+		// 유효성 검사 및 저장
+		List<FileVO> fileVOList = fileMngUtil.parseFileInfMulti(multiRequest.getFiles("atchmnfl_0"), bbsNttDir, maxFileSize, commentFileType, null, "", null);
+		for(FileVO fileVO:fileVOList){
+			eduCourse.setRcommentFile(fileVO.getStreFileNm());
+			eduCourse.setCommentFile(fileVO.getOrignlFileNm());
+		}
+
+		if("1".equals(eduCourse.getDelPhoto())){
+			eduCourse.setRcommentFile("");;
+			eduCourse.setCommentFile("");
+		}
+
+		//첨부파일
+		String[] fileType = {"zip", "pdf", "hwp", "xls", "ppt", "doc", "xlsx", "pptx", "docx", "txt", "gif", "jpg", "jpeg", "png", "bmp"};
+		maxFileSize = 30 * 1024 * 1024;	//30MB
+		// 유효성 검사 및 저장
+		fileVOList = fileMngUtil.parseFileInfMulti(multiRequest.getFiles("atchmnfl_1"), bbsNttDir, maxFileSize, fileType, null, "", null);
+		for(FileVO fileVO:fileVOList){
+			eduCourse.setRfile(fileVO.getStreFileNm());
+			eduCourse.setFile(fileVO.getOrignlFileNm());
+		}
+		System.out.println("--------------del:"+eduCourse.getDelFile());
+		if("1".equals(eduCourse.getDelFile())){
+			eduCourse.setRfile("");;
+			eduCourse.setRfile("");
+		}
+
+		eduCourseDAO.updateEduCourse(eduCourse);
+	}
+
+	@Override
+	public void deleteEduCourse(EduCourse eduCourse) throws Exception {
+		// TODO Auto-generated method stub
+
+		eduCourseDAO.deleteEduCourse(eduCourse);
+	}
+
+	@Override
+	public List<EduCourseVO> selectEduCourseMap(EduCourseVO eduCourseVO)
+			throws Exception {
+		// TODO Auto-generated method stub
+		List<EduCourseVO> eduCourseMap = eduCourseDAO.selectEduCourseMap(eduCourseVO);
+		for (EduCourseVO temp : eduCourseMap) {
+			addVO(temp);
+		}
+		return eduCourseMap;
+	}
+
+	@Override
+	public List<EduCourseVO> selectEduCourseMap2(EduCourseVO eduCourseVO)
+			throws Exception {
+		// TODO Auto-generated method stub
+		List<EduCourseVO> eduCourseMap = eduCourseDAO.selectEduCourseMap2(eduCourseVO);
+		for (EduCourseVO temp : eduCourseMap) {
+			addVO(temp);
+		}
+		return eduCourseMap;
+	}
+
+
+	private void addVO(EduCourseVO temp) throws Exception {	//VO객체에 부가적인 데이터를 저장하는 매서드
+		
+			int course = temp.getCourse();
+			int confirm = eduCourseAppService.selectEduCourseAppCnt(course, "confirm");
+			temp.setConfirm(confirm);
+			int cancel = eduCourseAppService.selectEduCourseAppCnt(course, "cancel");
+			temp.setCancel(cancel);
+			int confirmByOnline = eduCourseAppService.selectEduCourseAppCnt(course, "confirmByOnline");
+			temp.setConfirmByOnline(confirmByOnline);
+			int confirmByVisit = eduCourseAppService.selectEduCourseAppCnt(course, "confirmByVisit");
+			temp.setConfirmByVisit(confirmByVisit);
+
+			EduCourseWaitVO eduCourseWaitVO = new EduCourseWaitVO();
+			eduCourseWaitVO.setCourse(course);
+			int waitCnt = eduCourseWaitService.selectEduCourseWaitTotCnt(eduCourseWaitVO);
+			temp.setWaitCnt(waitCnt);
+
+			EduAttendCourseVO eduAttendCourseVO = new EduAttendCourseVO();
+			eduAttendCourseVO.setCourse(course);
+			temp.setAttendSize(eduAttendCourseService.selectEduAttendCourseTotCnt(eduAttendCourseVO));
+	}
+
+
+	@Override
+	public int selectMaxYear() throws Exception {
+		// TODO Auto-generated method stub
+		return eduCourseDAO.selectMaxYear();
+	}
+
+	@Override
+	public int selectMinYear() throws Exception {
+		// TODO Auto-generated method stub
+		return eduCourseDAO.selectMinYear();
+	}
+
+	@Override
+	public List<EduCourseVO> selectEduCourseChk(String user)
+			throws Exception {
+		// TODO Auto-generated method stub
+		return eduCourseDAO.selectEduCourseChk(user);
+	}
+
+	@Override
+	public void copyEduCourse(HttpServletRequest request, EduCourse orgEduCourse, EduCourseVO copyEduCourseVO)
+			throws Exception {
+		// TODO Auto-generated method stub
+		/*
+		 * 원본 데이터(orgEduCourse)에 복사할 데이터(copyEduCourseVO)의 정보를 set해주고,
+		 * 변화된 원본 데이터를 insert해준다.
+		 */
+		HttpSession session = request.getSession();
+		orgEduCourse.setFrstRegisterId(LoginUtil.getLoginId(session));
+		orgEduCourse.setFrstRegisterPnttm(DateUtil.getNowDateTime("yyyyMMddHHmmss"));
+
+		int eduCourseKey = selectEduCourseKey();
+
+		orgEduCourse.setQuarter(copyEduCourseVO.getQuarter());
+
+		orgEduCourse.setStatus(copyEduCourseVO.getStatus());
+
+		String sDate = copyEduCourseVO.getSdate();
+		String eDate = copyEduCourseVO.getEdate();
+		String vsDate = copyEduCourseVO.getVsdate();
+		String veDate = copyEduCourseVO.getVedate();
+
+		sDate =sDate.substring(0,8);
+		sDate = sDate + StringUtil.nvl(orgEduCourse.getSdate()).substring(8, orgEduCourse.getSdate().length());
+
+		eDate =eDate.substring(0,8);
+		eDate = eDate + StringUtil.nvl(orgEduCourse.getEdate()).substring(8, orgEduCourse.getEdate().length());
+
+		vsDate =vsDate.substring(0,8);
+		vsDate = vsDate + StringUtil.nvl(orgEduCourse.getVsdate()).substring(8, orgEduCourse.getVsdate().length());
+
+		veDate =veDate.substring(0,8);
+		veDate = veDate + StringUtil.nvl(orgEduCourse.getVedate()).substring(8, orgEduCourse.getVedate().length());
+
+		orgEduCourse.setSdate(sDate);
+		orgEduCourse.setEdate(eDate);
+		orgEduCourse.setVsdate(vsDate);
+		orgEduCourse.setVedate(veDate);
+		orgEduCourse.setCssdate(copyEduCourseVO.getCssdate());
+		orgEduCourse.setCsedate(copyEduCourseVO.getCsedate());
+
+
+		orgEduCourse.setCourseGroup(null);
+
+		fileMngUtil.mkdir(fileMngUtil.realPath(request, "/DATA/course/"+eduCourseKey));
+
+		String from = "/DATA/course/"+orgEduCourse.getCourse()+"/"+orgEduCourse.getRfile();
+		String to = "/DATA/course/"+eduCourseKey+"/"+orgEduCourse.getRfile();
+
+		if(!"".equals(StringUtil.nvl(orgEduCourse.getRfile()))){
+
+			if(fileMngUtil.isExistsFile(fileMngUtil.realPath(request,from))){
+				fileMngUtil.copyFile(request, from, to);
+			}
+		}
+
+		from = "/DATA/course/"+orgEduCourse.getCourse()+"/"+orgEduCourse.getRcommentFile();
+		to = "/DATA/course/"+eduCourseKey+"/"+orgEduCourse.getRcommentFile();
+
+		if(!"".equals(StringUtil.nvl(orgEduCourse.getRcommentFile()))){
+			if(fileMngUtil.isExistsFile(fileMngUtil.realPath(request,from))){
+				fileMngUtil.copyFile(request, from, to);
+			}
+		}
+
+		eduCourseDAO.insertEduCourse(orgEduCourse);
+	}
+
+	@Override
+	public void insertEduCourseByExcel(MultipartRequest multiRequest,
+			HttpServletRequest request) throws Exception {
+		// TODO Auto-generated method stub
+		HttpSession session = request.getSession();
+		EduCourse eduCourse = new EduCourse();
+		eduCourse.setFrstRegisterId(LoginUtil.getLoginId(session));
+		eduCourse.setFrstRegisterPnttm(DateUtil.getNowDateTime("yyyyMMddHHmmss"));
+
+		eduCourse.setRdate(DateUtil.getNowDateTime("yyyyMMddHHmmss"));
+
+		eduCourse.setStatus("4");
+
+		List<List<String>> excelReader = ExcelUtil.excelReader(multiRequest.getFiles("courseExcel"), 0, 1, 0);
+		for (List<String> list : excelReader) {
+			eduCourse.setEducational(Integer.parseInt(list.get(0)));
+			eduCourse.setTeacher(Integer.parseInt(list.get(1)));
+			eduCourse.setCategory(list.get(2));
+			eduCourse.setTarget1(list.get(3));
+			eduCourse.setTarget2(list.get(4));
+			eduCourse.setTitle(list.get(5));
+			eduCourse.setComment(list.get(6));
+			eduCourse.setCount(Integer.parseInt(list.get(7)));
+			eduCourse.setPlace(list.get(8));
+			eduCourse.setPweekday(list.get(9));
+			eduCourse.setPtime(list.get(10));
+			eduCourse.setPrice(list.get(11));
+			eduCourse.setPrice2(list.get(12));
+			eduCourse.setHelp(list.get(13));
+			eduCourse.setSdate(list.get(14)+"0000");
+			eduCourse.setEdate(list.get(15)+"0000");
+			eduCourse.setBigo(list.get(16));
+			eduCourse.setPricetype(list.get(17));
+			eduCourse.setApptype(list.get(18));
+			eduCourse.setCssdate(list.get(19)+"000000");
+			eduCourse.setCsedate(list.get(20)+"000000");
+			eduCourse.setQuarter(list.get(21));
+			eduCourse.setLink(list.get(22));
+			eduCourse.setVsdate(list.get(23)+"0000");
+			eduCourse.setVedate(list.get(24)+"0000");
+
+			EduTeacherVO eduTeacherVO = new EduTeacherVO();
+			eduTeacherVO.setTeacher(Integer.parseInt(list.get(1)));
+			eduTeacherVO = eduTeacherService.selectEduTeacher(eduTeacherVO, request);
+			if(eduTeacherVO != null){
+				eduCourse.setTname(eduTeacherVO.getName());
+				eduCourse.setTemail(eduTeacherVO.getEmail());
+				eduCourse.setTphone(eduTeacherVO.getTelephone());
+			}else{
+				eduCourse.setTname("");
+				eduCourse.setTemail("");
+				eduCourse.setTphone("");
+			}
+			eduCourseDAO.insertEduCourse(eduCourse);
+		}
+	}
+
+	@Override
+	public List<EduCourseVO> selectMyEduCourseList(EduCourseVO eduCourseVO)
+			throws Exception {
+		// TODO Auto-generated method stub
+		//리스트를 가져올 때, 현재 상태를 봐서 update시킴
+
+		List<EduCourseVO> myEduCourseList = eduCourseDAO.selectMyEduCourseList(eduCourseVO);
+		courseStatusUpdt(myEduCourseList);
+
+		return myEduCourseList;
+	}
+
+
+	@Override
+	public int selectMyEduCourseTotCnt(EduCourseVO eduCourseVO) throws Exception {
+		// TODO Auto-generated method stub
+		return eduCourseDAO.selectMyEduCourseTotCnt(eduCourseVO);
+	}
+
+	@Override
+	public String selectMyTeacher(String user) throws Exception {
+		// TODO Auto-generated method stub
+		return eduCourseDAO.selectMyTeacher(user);
+	}
+
+	@Override
+	public void updateMyEduCourse(MultipartRequest multiRequest, HttpServletRequest request, EduCourse eduCourse) throws Exception {
+		// TODO Auto-generated method stub
+		HttpSession session = request.getSession();
+		eduCourse.setLastUpdusrId(LoginUtil.getLoginId(session));
+		eduCourse.setLastUpdusrPnttm(DateUtil.getNowDateTime("yyyyMMddHHmmss"));
+
+		/* 첨부파일 등록 */
+		String BBS_STORE_PATH = "/DATA/course/";
+		String BBS_NTT_STORE_PATH = BBS_STORE_PATH + eduCourse.getCourse();
+		String BBS_NTT_THUMB_STORE_PATH = BBS_NTT_STORE_PATH + "/thumb";
+		String bbsDir = fileMngUtil.realPath(request, BBS_STORE_PATH);
+		String bbsNttDir = fileMngUtil.realPath(request, BBS_NTT_STORE_PATH);
+		String bbsNttThumnDir = fileMngUtil.realPath(request, BBS_NTT_THUMB_STORE_PATH);
+		fileMngUtil.mkdir(bbsDir);
+		fileMngUtil.mkdir(bbsNttDir);
+		fileMngUtil.mkdir(bbsNttThumnDir);
+
+		//학습내용 첨부파일
+		String[] commentFileType = {"gif", "jpg", "jpeg", "png", "bmp"};
+		long maxFileSize = 3 * 1024 * 1024;	//3MB
+		// 유효성 검사 및 저장
+		List<FileVO> fileVOList = fileMngUtil.parseFileInfMulti(multiRequest.getFiles("atchmnfl_0"), bbsNttDir, maxFileSize, commentFileType, null, "", null);
+		for(FileVO fileVO:fileVOList){
+			eduCourse.setRcommentFile(fileVO.getStreFileNm());
+			eduCourse.setCommentFile(fileVO.getOrignlFileNm());
+		}
+
+		if("1".equals(eduCourse.getDelPhoto())){
+			eduCourse.setRcommentFile("");;
+			eduCourse.setCommentFile("");
+		}
+
+		//첨부파일
+		String[] fileType = {"zip", "pdf", "hwp", "xls", "ppt", "doc", "xlsx", "pptx", "docx", "txt", "gif", "jpg", "jpeg", "png", "bmp"};
+		maxFileSize = 30 * 1024 * 1024;	//30MB
+		// 유효성 검사 및 저장
+		fileVOList = fileMngUtil.parseFileInfMulti(multiRequest.getFiles("atchmnfl_1"), bbsNttDir, maxFileSize, fileType, null, "", null);
+		for(FileVO fileVO:fileVOList){
+			eduCourse.setRfile(fileVO.getStreFileNm());
+			eduCourse.setFile(fileVO.getOrignlFileNm());
+		}
+
+		if("1".equals(eduCourse.getDelFile())){
+			eduCourse.setRfile("");;
+			eduCourse.setRfile("");
+		}
+
+		eduCourseDAO.updateMyEduCourse(eduCourse);
+	}
+
+	@Override
+	public int selectEduCourseMaxQuarter(EduCourseVO eduCourseVO) throws Exception {
+		return eduCourseDAO.selectEduCourseMaxQuarter(eduCourseVO);
+	}
+
+	@Override
+	public Map<String, String> selectEduCourseMaxCsDate(EduCourseVO eduCourseVO) throws Exception {
+		return eduCourseDAO.selectEduCourseMaxCsDate(eduCourseVO);
+	}
+
+}

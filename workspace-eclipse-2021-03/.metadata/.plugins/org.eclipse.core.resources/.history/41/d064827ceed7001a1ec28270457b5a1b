@@ -1,0 +1,84 @@
+package egovframework.ext.prmsEqpmn.web;
+
+import java.util.List;
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import egovframework.com.cmmn.EgovMessageSource;
+import egovframework.com.cmmn.service.CmmnCodeService;
+import egovframework.com.cmmn.service.EgovFileMngService;
+import egovframework.com.cmmn.service.EgovFileMngUtil;
+import egovframework.ext.prmsEqpmn.service.PrmsEqpmnService;
+import egovframework.ext.prmsEqpmn.vo.PrmsEqpmnVO;
+import egovframework.rte.fdl.property.EgovPropertyService;
+import egovframework.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
+import egovframework.ext.resrc.skm.vo.SkmVO;
+
+@Controller
+public class PrmsEqpmnController {
+
+  /** 장비 정보 */
+  @Resource(name = "prmsEqpmnService")
+  private PrmsEqpmnService prmsEqpmnService;
+
+  @Resource(name = "egovMessageSource")
+  private EgovMessageSource egovMessageSource;
+
+  @Resource(name = "propertiesService")
+  protected EgovPropertyService propertyService;
+
+  @Resource(name = "cmmnCodeService")
+  private CmmnCodeService cmmnCodeService;
+
+  @Resource(name = "EgovFileMngUtil")
+  private EgovFileMngUtil fileUtil;
+
+  @Resource(name = "EgovFileMngService")
+  private EgovFileMngService fileMngService;
+
+  /**
+   * 민간자원시스템 장비 목록 이동
+   * 
+   * @param PrmsOrgVO - vo PrmsEqpmnVO
+   * @param model
+   * @return "/prmsEqpmn/prmsEqpmnList"
+   * @exception Exception
+   */
+  @RequestMapping(value = "/ext/prmsEqpmn/selectPrmsEqpmnList.do")
+  public String selectPrmsEqpmnList(@ModelAttribute("vo") PrmsEqpmnVO vo, ModelMap model,
+      HttpServletRequest request) throws Exception {
+    vo.setPageUnit(propertyService.getInt("pageUnit"));
+    vo.setPageSize(propertyService.getInt("pageSize"));
+
+    PaginationInfo paginationInfo = new PaginationInfo();
+    paginationInfo.setCurrentPageNo(vo.getPageIndex());
+    paginationInfo.setRecordCountPerPage(vo.getPageUnit());
+    paginationInfo.setPageSize(vo.getPageSize());
+
+    vo.setFirstIndex(paginationInfo.getFirstRecordIndex());
+    vo.setLastIndex(paginationInfo.getLastRecordIndex());
+    vo.setRecordCountPerPage(paginationInfo.getRecordCountPerPage());
+    System.out.println("------------------------------------>오류발생");
+    int totCnt = prmsEqpmnService.selectPrmsEqpmnListTotCnt(vo);
+    System.out.println("--------------------------------------------");
+    // list
+    List<PrmsEqpmnVO> list = prmsEqpmnService.selectPrmsEqpmnList(vo);
+    // 장비종류
+    String eqCode = vo.getSearchEqCode();
+
+    model.addAttribute("eqCode", eqCode);
+    model.addAttribute("resultList", list);
+    model.addAttribute("resultCnt", totCnt);
+
+    paginationInfo.setTotalRecordCount(totCnt);
+    model.addAttribute("paginationInfo", paginationInfo);
+
+    return "prmsEqpmn/prmsEqpmnList";
+  }
+
+
+
+}

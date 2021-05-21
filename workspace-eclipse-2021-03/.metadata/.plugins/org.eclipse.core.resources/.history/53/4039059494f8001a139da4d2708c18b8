@@ -1,0 +1,87 @@
+/**
+ * ajax 처리시 페이징 처리를 위해 추가 11.16
+ * @param params {currentPageNo,totalRecordCount,jsFunction,targetId}
+ */
+renderPaging = function(params){
+	console.group('ajaxPaging');
+	var returnHtml = '';
+	var targetId = params.targetId;
+	var currentPageNo = 1; //현재 페이지 번호
+	var recordCountPerPage = 10; //한페이지당 게시되는 게시물 건수
+	var pageSize = 10; //페이지 리스트에 게시되는 페이지 건수
+	var totalRecordCount; //전체 게시물 건수
+	var jsFunction = params.jsFunction;
+	
+	if(params.currentPageNo){
+		currentPageNo = params.currentPageNo;
+	}
+	
+	if(params.recordCountPerPage){
+		recordCountPerPage = params.recordCountPerPage;
+	}
+	
+	if(params.pageSize){
+		pageSize = params.pageSize;
+	}
+	
+	if(params.totalRecordCount){
+		totalRecordCount = params.totalRecordCount;
+	}
+	
+	if(params.totalRecordCount == '0'){
+		return $('#' + targetId).html('');
+	}
+	
+	var totalPageCount; //페이지 개수
+	var firstPageNoOnPageList ; //페이지 리스트의 첫 페이지 번호
+	var lastPageNoOnPageList ; //페이지 리스트의 마지막 페이지 번호
+	var firstRecordIndex ; //페이징 SQL의 조건절에 사용되는 시작 rownum.
+	var lastRecordIndex ; //페이징 SQL의 조건절에 사용되는 마지막 rownum.
+	
+	totalPageCount = parseInt(((totalRecordCount - 1) / recordCountPerPage)) + 1;
+	firstPageNoOnPageList = ((parseInt((currentPageNo - 1) / pageSize )) * pageSize) + 1;
+	lastPageNoOnPageList = firstPageNoOnPageList + pageSize - 1;
+	if (lastPageNoOnPageList > totalPageCount) {
+		lastPageNoOnPageList = totalPageCount;
+	}
+	firstRecordIndex = (currentPageNo - 1) * recordCountPerPage;
+	lastRecordIndex = currentPageNo * recordCountPerPage;
+	
+	returnHtml += '<a href="#" onclick="javascript:' + jsFunction + '(1);' + 'return false;" class="first">처음</a>';
+	if (firstPageNoOnPageList > pageSize) {
+		returnHtml += '<a href="#" onclick="javascript:' + jsFunction + '(' + (firstPageNoOnPageList-1) + ');' 
+					+ 'return false;" class="before">이전</a>';
+	} else {
+		returnHtml += '<a href="#"' + ' onclick="javascript:' + jsFunction + '(1);' 
+					+ 'return false;" class="before">이전</a>';
+	}
+	
+	for (var i = firstPageNoOnPageList; i <= lastPageNoOnPageList; i++) {
+		if (i == currentPageNo) {
+			returnHtml += '<span class="current">' + i + '</span>';
+		} else {
+			returnHtml += '<a href="#" onclick="javascript:' + jsFunction + '(' + i + ');return false;"' 
+						+ ' class="lnk">' + i + '</a>';
+		}
+	}
+	
+	if (lastPageNoOnPageList < totalPageCount) {
+		returnHtml += '<a href="#" onclick="javascript:' 
+					+ jsFunction + '(' + (firstPageNoOnPageList+pageSize) + ');' 
+					+ 'return false;" class="after">다음</a>';
+	} else {
+		returnHtml += '<a href="#" onclick="javascript:' 
+					+ jsFunction + '(' + (totalPageCount) + ');' 
+					+ 'return false;" class="after">다음</a>';
+	}
+	returnHtml += '<a href="#" onclick="javascript:' + jsFunction + '(' + (totalPageCount) + ');' 
+				+ 'return false;" class="last">마지막</a>';
+	
+	//$('#' + targetId).html(returnHtml);
+
+	window.pageReducerCallback = jsFunction;
+	setTimeout(function(){
+		CmmnUtil.pagination( targetId, currentPageNo, totalRecordCount);
+	},500);
+	console.groupEnd('ajaxPaging');
+};

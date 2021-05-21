@@ -1,0 +1,53 @@
+package com.koem.vms.waterdepth.dto;
+
+import java.sql.Timestamp;
+
+public class AreaDTO  {
+	private int areaIdx;
+	private String areaName;
+	private String areaGeometry;
+	private Timestamp createDate;
+	
+	public AreaDTO() {
+		// TODO Auto-generated constructor stub
+	}
+	
+	public int getAreaIdx() {
+		return areaIdx;
+	}
+
+	public void setAreaIdx(int areaIdx) {
+		this.areaIdx = areaIdx;
+	}
+
+	public String getAreaName() {
+		return areaName;
+	}
+
+	public void setAreaName(String areaName) {
+		this.areaName = areaName;
+	}
+
+	public String getAreaGeometry() {
+		return areaGeometry;
+	}
+
+	public void setAreaGeometry(String areaGeometry) {
+		this.areaGeometry = areaGeometry;
+	}
+
+	public Timestamp getCreateDate() {
+		return createDate;
+	}
+
+	public void setCreateDate(Timestamp createDate) {
+		this.createDate = createDate;
+	}
+
+	@Override
+	public String toString() {
+		return "AreaDTO [areaIdx=" + areaIdx + ", areaName=" + areaName + ", areaGeometry=" + areaGeometry
+				+ ", createDate=" + createDate + "]";
+	}
+	
+}

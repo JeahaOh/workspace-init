@@ -1,0 +1,883 @@
+/**
+ * 
+ */
+var selectFlag = 0;
+
+var accPointMap = new Map();
+var prescatMap = new Map();
+var scatPointArray=[];
+//var scatLineLayer;
+var sendButton;
+var searchButton;
+var scatDataGrid;
+var scatDataGridSource = [];
+var resortFlag = false;
+
+$(document).ready(function(){
+	
+	//사고 시작위치, 끝위치 포인트 레이어
+	var accPoint = new ol.layer.Vector({
+	    source: new ol.source.Vector({}),
+	    opacity : 1,
+	    zIndex : 2,
+	    style: new ol.style.Style({
+	    	fill: new ol.style.Fill({
+	    		color: '#ff0000'
+	    		
+	    	}),
+	    	stroke: new ol.style.Stroke({
+	    		color: '#CC0000',
+	        	width: 2
+	        	
+	    	}),
+	    	image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+//			      color: '#FF0000',
+		       crossOrigin: 'anonymous',
+		       src: WEB_ROOT_URL+'/images/dot_bg.png',
+		       anchor : [0.34,0.97]
+		    }))
+//	    	image: new ol.style.Circle({
+//	    		radius: 7,
+//	    		fill: new ol.style.Fill({
+//	    			color: '#ff0000'
+//	    			
+//	    		})
+//	    	})
+	    }),
+	    crossOrigin: 'anonymous'
+	});
+	
+	layerManager.addLayer({name:"accPoint", visible: true, layer:accPoint});
+	
+	var koreaCoastLine = new ol.layer.Tile({
+	 	source : new ol.source.TileWMS({
+	 		urls:mpcGeoServerURL,
+	 		params: {
+	 		         LAYERS		: 'mpc:tpp_coastline'
+	 		},
+			crossOrigin: 'anonymous'
+	 	}),
+	 	maxResolution : 40,
+	 	zIndex : 1,
+	 	visible : true
+	});
+	
+	layerManager.addLayer({name:"koreaCoastLine", visible: true, layer:koreaCoastLine});
+
+	//선택된 prescat을 표출하기 위한 Tile 레이어
+	var searchPreSCAT = new ol.layer.Tile({
+	 	source : new ol.source.TileWMS({
+	 		urls: mpcGeoServerURL,
+	 		params: {
+	 		         LAYERS		: 'mpc:tpp_refrn_relm'
+	 		},
+			crossOrigin: 'anonymous'
+	 	}),
+	 	maxResolution : 40,
+	 	zIndex : 1
+	});
+	
+	layerManager.addLayer({name:"searchPreSCAT", visible: false, layer:searchPreSCAT});
+	
+	//prescat을 찾기위한 vector레이어
+	var preSCAT_Layer = new ol.layer.Vector({
+		source: new ol.source.Vector({
+			url: mpcGeoServerURL[new Date().getMilliseconds()%mpcGeoServerURL.length].replace('wms','ows')+'?service=WFS&request=GetFeature&typeName=mpc:tpp_refrn_relm&outputFormat=application%2Fjson',		
+//			url: "http://192.168.1.42:8080/geoserver/kcg/ows?service=WFS&request=GetFeature&typeName=kcg:tpp_refrn_relm&outputFormat=application%2Fjson",
+			format: new ol.format.GeoJSON()
+		}),
+		zIndex : 1,
+		maxResolution : 40,
+		style: new ol.style.Style({
+	    	fill: new ol.style.Fill({
+	    		color: '#ff0000'
+	    		
+	    	}),
+	    	stroke: new ol.style.Stroke({
+	    		color: '#CC0000',
+	        	width: 5
+	        	
+	    	}),
+	    	image: new ol.style.Circle({
+	    		radius: 3,
+	    		fill: new ol.style.Fill({
+	    			color: '#ff0000'
+	    			
+	    		})
+	    	})
+	    }),
+	    crossOrigin: 'anonymous'
+	});
+	
+	layerManager.addLayer({name:"preSCAT_Layer", visible: false, layer:preSCAT_Layer});
+	
+//	var preSCAT_Layer = new ol.layer.Tile({
+//		source : new ol.source.TileWMS({
+//			urls: ["http://192.168.1.42:8080/geoserver/kcg/wms"],
+//			params: {
+//			         LAYERS		: 'kcg:tpp_refrn_relm',
+//			},
+//			crossOrigin: 'anonymous'
+//		}),
+//		zIndex : 1,
+//		visible : true
+//	})
+//	
+//	layerManager.addLayer({name:"preSCAT_Layer", visible: false, layer:preSCAT_Layer});
+
+	var preSCAT_SelectLayer = new ol.layer.Tile({
+		source : new ol.source.TileWMS({
+			urls: mpcGeoServerURL,
+			params: {
+			         LAYERS		: 'mpc:tpp_refrn_relm',
+			         STYLES		: 'REFRN_SELECT_SYLE'
+			},
+			crossOrigin: 'anonymous'
+		}),
+	    zIndex : 0,
+	    visible : true
+	});
+	
+	layerManager.addLayer({name:"preSCAT_SelectLayer", visible: false, layer:preSCAT_SelectLayer});
+	
+	
+	layerManager.getLayer("koreaCoastLine").layer.getSource().on('tileloadstart', function(e) {
+//		console.log(e);
+	});
+
+	layerManager.getLayer("koreaCoastLine").layer.getSource().on('tileloadend', function(e) {
+//		console.log(e);
+		GetProgress().Hide();
+	});
+
+	//시작위치, 끝위치 찍는 함수
+	map.on('singleclick', function(evt) {
+		map.forEachLayerAtPixel(evt.pixel, function(layer){
+			if (layer === layerManager.getLayer("koreaCoastLine").layer){
+				if (selectFlag < 2) {
+					geometry = evt.coordinate;
+					var point = new ol.Feature({
+						geometry: new ol.geom.Point(geometry),
+						name : "accPoint"+selectFlag
+					})
+					layerManager.getLayer("accPoint").layer.getSource().addFeature(point);
+					
+					var view = map.getView();
+		            var viewResolution = view.getResolution();
+		            var source = layer.getSource();
+		            
+		            //JSON url생성
+		            var url = source.getGetFeatureInfoUrl(
+		            		evt.coordinate, viewResolution, view.getProjection(),
+		            		{'INFO_FORMAT': 'application/json', 'FEATURE_COUNT': 1}
+		            );
+		            
+		            $.ajax({
+		                type: 'GET',
+		                url: url,
+		                dataType: "json",
+		                success: function (data) {
+		    				accPointMap.set(selectFlag, data.features[0]);
+		    				
+		    				 if (selectFlag == 1) {
+		    					 
+ 		 	                 	 layerManager.setLayerVisible("preSCAT_Layer", true);
+ 		 	                 	
+    		 	               	 GetProgress().Show("로딩중");
+    		 	               	 
+		    					 //시작점 끝점 비교하여 순서 바꾸기
+	    		            	 if (Number(accPointMap.get(0).properties.slnum) > Number(accPointMap.get(1).properties.slnum)) {
+	    		            	 	var save = accPointMap.get(1);
+	    		            	 	accPointMap.set(1, accPointMap.get(0));
+	    		            	 	accPointMap.set(0, save);
+	    		            	 	resortFlag = true;
+								 }
+	    		            	 
+	    		            	 var areanum = Number(accPointMap.get(0).properties.areanum);
+	    		            	 var bgSlnum = Number(accPointMap.get(0).properties.slnum);
+	    		            	 var edSlnum = Number(accPointMap.get(1).properties.slnum);
+	    		            	 
+	    		            	  $.ajax({
+	    		 	                 type: 'GET',
+	    		 	                 url: mpcGeoServerURL[new Date().getMilliseconds()%mpcGeoServerURL.length].replace('wms','ows')+'?service=WFS&request=GetFeature&typeName=mpc:tpp_coastline&outputFormat=application%2Fjson',
+	    		 	                 data : {
+	    		 	                 	"CQL_FILTER" : "areanum ="+areanum+"&& slnum>="+bgSlnum+"&& slnum<="+edSlnum
+	    		 	                 },
+	    		 	                 dataType: "json",
+	    		 	                 success: function (data) {
+	    		 	                 	
+	    		 	                 	//조회된 좌표값 오름차순으로 정렬
+	    		 	                 	data.features.sort(function (now,next){
+	    		 	                 		var nowPoint = Number(now.properties.slnum);
+	    		 	                 		var nextPoint = Number(next.properties.slnum);
+	    		 	                 		return nowPoint < nextPoint ? -1 : nowPoint > nextPoint ? 1 : 0;
+	    		 	                 	});
+	    		 	                 	
+//		    		 	                 	map.removeLayer(koreaCoastLineLayer); //해안선 레이어 삭제
+	    		 	                 	layerManager.setLayerVisible("koreaCoastLine", false);
+	    		 	                 	
+	    		 	                 	//scat선 그리기
+	    		 	                 	for (var i = 0; i < data.features.length; i++) {
+	    		 	                 		if (i == 0) {			//처음에는 시작점을 먼저 넣는다.
+	    		 	                 			if (resortFlag) {
+	    		 	                 				scatPointArray.push(layerManager.getLayer("accPoint").layer.getSource().getFeatures()[1].getGeometry().getCoordinates());
+								 				}else{
+								 					scatPointArray.push(layerManager.getLayer("accPoint").layer.getSource().getFeatures()[0].getGeometry().getCoordinates());
+								 				}
+								 			}
+								 			
+	    		 	                 		scatPointArray.push(funcDataToMapPos(data.features[i].geometry.coordinates));
+	    		 	                 		
+	    		 	                 		if (i == data.features.length-1) {	//마지막 지점이 들어가면 끝점을 넣는다.
+	    		 	                 			if (resortFlag) {
+	    		 	                 				scatPointArray.push(layerManager.getLayer("accPoint").layer.getSource().getFeatures()[0].getGeometry().getCoordinates());
+								 				}else{
+								 					scatPointArray.push(layerManager.getLayer("accPoint").layer.getSource().getFeatures()[1].getGeometry().getCoordinates());
+								 				}
+	    		 	                 			
+								 			}
+								 		}
+	    		 	                 	
+	    		 	                 	//scat 라인 레이어 선언
+	    		 	                 	var scatLineLayer = new ol.layer.Vector({
+	    		 	                 		source: new ol.source.Vector({
+	    		 	                 			features: [new ol.Feature({
+	    		 	                 				geometry: new ol.geom.LineString(scatPointArray),
+	    		 	                 				name: 'SCATLine'
+	    		 	                 			})]
+	    		 	                 		}),
+	    		 	                 		zIndex : 4,
+	    		 	                 		maxResolution : 40,
+	    		 	                 		style: new ol.style.Style({
+	    		 	                 	    	fill: new ol.style.Fill({
+	    		 	                 	    		color: '#00FF00'
+	    		 	                 	    		
+	    		 	                 	    	}),
+	    		 	                 	    	stroke: new ol.style.Stroke({
+	    		 	                 	    		color: '#00FF00',
+	    		 	                 	    		lineDash : [10, 10],
+	    		 	                 	        	width: 3
+	    		 	                 	        	
+	    		 	                 	    	}),
+	    		 	                 	    	image: new ol.style.Circle({
+	    		 	                 	    		radius: 3,
+	    		 	                 	    		fill: new ol.style.Fill({
+	    		 	                 	    			color: '#00FF00'
+	    		 	                 	    			
+	    		 	                 	    		})
+	    		 	                 	    	})
+	    		 	                 	    }),
+	    		 	                 	  crossOrigin: 'anonymous'
+	    		 	                 	});
+	    		 	                 	
+//	    		 	                 	map.addLayer(scatLineLayer);
+	    		 	                 	layerManager.addLayer({name:"scatLineLayer", visible: true, layer:scatLineLayer});
+	    		 	                 	
+
+	    		 	                 	
+	    		 	                 },
+	    		 	                 error: function (request, status, error) {
+	    		 	                    DevExpress.ui.notify("데이터 통신중 오류가 발생하였습니다..", "error", 1500);
+	    		 	                    GetProgress().Hide();
+	    		 	                 },
+	    		 	                 complete : function() {
+	    		 	                	searchButton.dxButton("instance").option("disabled",false);
+	    		 	                	GetProgress().Hide();
+	    		 	                 }
+	    		            	  });
+		    				 }
+		    				 selectFlag++;
+		                },
+		                error: function (request, status, error) {
+		                    DevExpress.ui.notify("데이터 통신중 오류가 발생하였습니다..", "error", 1500);
+		                }
+		            });
+				}
+			}
+		});
+	});
+	
+	$("#popupPreScatSend").dxPopup({
+		height : 400,
+		width : 300,
+		dragEnabled : true,
+		resizeEnabled : false,
+		shading : false,
+		showCloseButton : false,
+		showTitle : true,
+		visible : true,
+		title : "구획정보",
+		onHiding : function(e){
+
+		},
+		titleTemplate : function(titleElement) {
+			createTitle(titleElement,"구획정보","popupPreScatSend");
+	    },
+		contentTemplate : function(contentElement) {
+					 
+			 $("<div style='margin-top:5px;'>").dxForm({
+				 items : [{
+					 itemType:'simple',
+					 template : function(data, itemElement){
+						 scatDataGrid = $("<div>").dxDataGrid({
+							 height : 310,
+							 width : 280,
+							 showBorders : true,
+							 hint : false,
+							 rowAlternationEnabled : true,
+							 allowColumnResizing : false,
+				             noDataText:'데이터 없음',
+				             loadPanel:{
+				                 enabled: true,
+				                 height: 70,
+				                 indicatorSrc: "",
+				                 showIndicator: true,
+				                 showPane: false,
+				                 text: "",
+				                 visible: true,
+				                 width: 100
+				            },
+				            paging : {
+								enabled : true,
+								pageSize : 9
+							},
+							pager : {
+				               infoText:"페이지 {0}/{1} ({2}개)",
+							   showInfo : true,
+							   visible : true
+							},
+							caption : "주변위치정보",
+							columns : [{
+								caption : "위치",
+								dataField : "key",
+								alignment : "center",
+								allowSorting : true
+								
+							}],
+							scrolling : {
+								mode : "stantard",
+								preloadEnabled : false,
+								scrollByContent : true,
+								scrollByThumb : true,
+								useNative : "auto",
+								showScrollbar : "onScroll"
+							},
+							searchPanel : {
+								visible : false,
+								width : 240,
+								placeholder : "Search..."
+							},
+							selection : {
+								mode : "single"
+							},
+							"export" : {
+								enabled : false,
+								allowExportSelectedData : false
+							},
+							onRowClick : function(e) {
+//								console.log(e);
+								var filterParamsPreSCAT = {
+								          'FILTER': null,
+								          'CQL_FILTER': null,
+								          'FEATUREID': null
+								};
+								filterParamsPreSCAT["CQL_FILTER"] = "area_code='"+e.data.value.getProperties().area_code+"' AND slnum = '"+e.data.value.getProperties().slnum+"'";
+//								layerManager.getLayer("preSCAT_SelectLayer").layer.getSource().updateParams(filterParamsPreSCAT);
+								
+								layerManager.updateWMSLayer("preSCAT_SelectLayer", filterParamsPreSCAT);
+								
+								if (!layerManager.getLayerVisible("preSCAT_SelectLayer")) {
+									layerManager.setLayerVisible("preSCAT_SelectLayer",true);
+								}
+								ChangeLocation(funcMapToDataPos(e.data.value.getGeometry().getCoordinates()[0]), 15, 0);
+							}
+							
+						 }).appendTo(itemElement);
+					 }
+
+				 }],
+				 accessKey : null,
+				 activeStateEnabled : true,
+				 alignItemLabels : true,
+				 alignItemLabelsInAllGroups : true,
+				 hoverStateEnabled : false,
+				 labelLocation : "left",
+				 optionalMark : "optional",
+				 scrollingEnabled : false,
+				 showColonAfterLabel : false,
+				 showOptionalMark : false,
+				 visible : true,
+				 width : 620
+			 }).appendTo(contentElement);
+			 
+			 sendButton = $("<div style='float:right; margin-top:10px;'>").dxButton({
+				 text : '전송',
+				 disabled : true,
+				 onClick : function(e){
+//					 $.ajax({
+//				        type: 'POST',
+////				        url: WEB_ROOT_URL+'/recivedDataTest.do',
+//				        url: recURL,
+//				        data :{
+//				        	"accBeginPoint" : funcMapToDataPos(accPointLayer.getSource().getFeatures()[0].getGeometry().getCoordinates()),		//사고 시작위치 좌표
+//				        	"accEndPoint" : funcMapToDataPos(accPointLayer.getSource().getFeatures()[1].getGeometry().getCoordinates()),		//사고 종료위치 좌표
+//				        	"accBeginId" : accPointMap.get(0).id,
+//				        	"accEndId" : accPointMap.get(1).id,
+//				        	"preSCATIdArray" : prescatMap.keys()
+//				        },
+//				        traditional : true,
+//				        dataType: "json",
+//				        success: function (data) {
+//				        	window.close();
+//				        },
+//				        error: function (request, status, error) {
+//				            DevExpress.ui.notify("데이터 통신중 오류가 발생하였습니다..", "error", 1500);
+//				        }
+//				    });
+					var list = [];
+					
+					for (var i = 0; i < prescatMap.size(); i++) {
+						var data = prescatMap.get(prescatMap.keys()[i]).getProperties();
+						list.push("tpp_refrn_relm."+data.area_code+"."+data.slnum);
+					}
+					
+					var $form = $('<form></form>');
+				    $form.attr('action', recURL);
+				    $form.attr('method', 'post');
+				    $form.appendTo('body');
+				    
+					var bgPoint = ((!resortFlag)? funcMapToDataPos(layerManager.getLayer("accPoint").layer.getSource().getFeatures()[0].getGeometry().getCoordinates()):funcMapToDataPos(layerManager.getLayer("accPoint").layer.getSource().getFeatures()[1].getGeometry().getCoordinates()));
+					var edPoint = ((!resortFlag)? funcMapToDataPos(layerManager.getLayer("accPoint").layer.getSource().getFeatures()[1].getGeometry().getCoordinates()):funcMapToDataPos(layerManager.getLayer("accPoint").layer.getSource().getFeatures()[0].getGeometry().getCoordinates()));
+				    
+					var idx = $('<input name="accBeginPoint" type="hidden" value="'+bgPoint+'">');
+				    var accEndPoint = $('<input name="accEndPoint" type="hidden" value="'+edPoint+'">');
+				    var accBeginId = $('<input name="accBeginId" type="hidden" value="tpp_coastline.'+accPointMap.get(0).properties.areanum+'.'+accPointMap.get(0).properties.slnum+'">');
+				    var accEndId = $('<input name="accEndId" type="hidden" value="tpp_coastline.'+accPointMap.get(1).properties.areanum+'.'+accPointMap.get(1).properties.slnum+'">');
+				    var preSCATIdArray = $('<input name="preSCATIdArray" type="hidden" value="'+list+'">');
+				    
+				    
+				    
+				    $form.append(idx).append(accEndPoint).append(accBeginId).append(accEndId).append(preSCATIdArray);
+				    $form.submit();
+				 }
+			 }).appendTo(contentElement);
+			 
+			 searchButton = $("<div style='float:right; margin-top:10px;'>").dxButton({
+				 text : '구획찾기',
+				 disabled : true,
+				 onClick : function(e){
+					 GetProgress().Show("구획 검색중");
+//					 $("#popupPreScatSend").dxPopup("instance").hide();
+					 setTimeout(function () {  tracePreSCAT(); }, 100);
+				 }
+			 }).appendTo(contentElement);
+			 
+			 $("<div style='float:right; margin-top:10px;'>").dxButton({
+				 text : '초기화',
+				 onClick : function(e){
+					 funReset();
+				 }
+			 }).appendTo(contentElement);
+			 
+			 $("<div style='float:right; margin-top:10px;'>").dxButton({
+				 text : '범례',
+				 onClick : function(e){
+					 if (legendPrescatPopup.dxPopup("instance").option("visible")) {
+						 legendPrescatPopup.dxPopup("instance").hide();
+					 }else{
+						 legendPrescatPopup.dxPopup("instance").show();
+					 }
+				 }
+			 }).appendTo(contentElement);
+			 
+		}
+	});
+	
+	if (Number(accLat)>90 || Number(accLon)>180 || Number(accLat)<-90 || Number(accLon)<-180) {
+		DevExpress.ui.notify("위치가 잘못 입력되었습니다.", "error", 1500);
+	}else{
+		accSpotLayer = new ol.layer.Vector({
+		    source: new ol.source.Vector({})
+		});
+		
+		var featureA = new ol.Feature({
+			geometry: new ol.geom.Point(funcDataToMapPos([Number(accLon), Number(accLat)]))
+		});
+		
+		featureA.setStyle(new ol.style.Style({
+		    image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+//		      color: '#FF0000',
+		      crossOrigin: 'anonymous',
+		      src: WEB_ROOT_URL+'/images/dot.png'
+		      }))
+		}));
+		
+		accSpotLayer.getSource().addFeature(featureA);
+		
+		map.addLayer(accSpotLayer);
+		
+		GetProgress().Show("해안선 로딩중");
+	}
+
+});
+
+//scat선에 가까운 prescat선 찾기
+function tracePreSCAT(){
+	for (var i = 0; i < layerManager.getLayer("scatLineLayer").layer.getSource().getFeatures()[0].getGeometry().getCoordinates().length; i++) {
+ 		var layer = layerManager.getLayer("preSCAT_Layer").layer.getSource().getClosestFeatureToCoordinate(layerManager.getLayer("scatLineLayer").layer.getSource().getFeatures()[0].getGeometry().getCoordinates()[i]);
+ 		if (layer != null) {
+ 			if(prescatMap.get(layer.getId()) == null || prescatMap.get(layer.getId()) == undefined){
+ 				prescatMap.set(layer.getId(), layer);
+ 			}
+		}
+	}
+	
+	for (var i = 0; i < prescatMap.keys().length; i++) {
+		scatDataGridSource.push({
+			"key":prescatMap.get(prescatMap.keys()[i]).getProperties().area_nm,
+			"value":prescatMap.get(prescatMap.keys()[i])
+			});
+	}
+	
+	layerManager.setLayerVisible("preSCAT_Layer", false);
+	layerManager.setLayerVisible("searchPreSCAT", true);
+	
+	selectionPreSCAT();
+	
+	sendButton.dxButton("instance").option("disabled",false);
+	searchButton.dxButton("instance").option("disabled",true);
+	scatDataGrid.dxDataGrid("instance").option("dataSource", scatDataGridSource);
+	
+	GetProgress().Hide();
+	
+	legendPrescatPopup.dxPopup("instance").show();
+}
+
+// tracePreSCAT()으로 찾은 prescat 선 표출
+function selectionPreSCAT(){
+	var filterParams = {
+	        'FILTER': null,
+	        'CQL_FILTER': '',
+	        'FEATUREID': null
+	};
+	
+	for (var i = 0; i < prescatMap.keys().length; i++) {
+//		filterParams["FEATUREID"] = prescatMap.keys()+",";
+		if (i==prescatMap.keys().length-1) {
+			filterParams["CQL_FILTER"] += "area_code = '"+prescatMap.get(prescatMap.keys()[i]).getProperties().area_code+"' AND slnum = '"+prescatMap.get(prescatMap.keys()[i]).getProperties().slnum+"'";
+		}else{
+			filterParams["CQL_FILTER"] += "area_code = '"+prescatMap.get(prescatMap.keys()[i]).getProperties().area_code+"' AND slnum = '"+prescatMap.get(prescatMap.keys()[i]).getProperties().slnum+"' OR ";
+		}
+	}
+	
+//	layerManager.getLayer("searchPreSCAT").layer.getSource().updateParams(filterParams);
+//	clearWMSLayer("searchPreSCAT");
+	
+	layerManager.updateWMSLayer("searchPreSCAT", filterParams);
+	
+	if (!layerManager.getLayerVisible("searchPreSCAT")) {
+		layerManager.setLayerVisible("searchPreSCAT",true);
+	}
+}
+
+function funReset(){
+	resortFlag = false;
+	
+	//레이어 파라메터 초기화변수
+	var filterReset = {
+	        'FILTER': null,
+	        'CQL_FILTER': null,
+	        'FEATUREID': null
+	      };
+
+	if (selectFlag==2) {
+		layerManager.setLayerVisible("koreaCoastLine",true);
+	}
+	
+//	layerManager.getLayer("searchPreSCAT").layer.getSource().updateParams(filterReset);		//검색된 참조영역 레이어 파라메터 초기화
+//	clearWMSLayer("searchPreSCAT");
+//	layerManager.getLayer("preSCAT_SelectLayer").layer.getSource().updateParams(filterReset);		//선택된 참조영역 레이어 파라메터 초기화
+//	clearWMSLayer("preSCAT_SelectLayer");
+	
+	layerManager.updateWMSLayer("searchPreSCAT", filterReset);
+	layerManager.updateWMSLayer("preSCAT_SelectLayer", filterReset);
+	
+	if (layerManager.getLayerVisible("searchPreSCAT")) {					//검색된 참조영역 레이어 제거
+		layerManager.setLayerVisible("searchPreSCAT", false);		
+	}
+	
+	layerManager.setLayerVisible("preSCAT_SelectLayer",false);			
+	
+	while(layerManager.getLayer("accPoint").layer.getSource().getFeatures().length > 0){
+		layerManager.getLayer("accPoint").layer.getSource().removeFeature(layerManager.getLayer("accPoint").layer.getSource().getFeatures()[0]);	
+	}
+	
+	if (layerManager.getLayer("scatLineLayer") != undefined || layerManager.getLayer("scatLineLayer").layer != null) {
+		layerManager.setLayerVisible("preSCAT_Layer", false);
+		if (layerManager.getLayer("scatLineLayer").layer.getSource().getFeatures().length>0) {
+			layerManager.getLayer("scatLineLayer").layer.getSource().removeFeature(layerManager.getLayer("scatLineLayer").layer.getSource().getFeatures()[0]);
+		}
+	}
+	
+	scatPointArray = [];
+	scatDataGridSource = [];
+	
+	selectFlag = 0;
+	
+	accPointMap.clear();
+	prescatMap.clear();
+	
+	searchButton.dxButton("instance").option("disabled",true);
+	sendButton.dxButton("instance").option("disabled",true);
+	scatDataGrid.dxDataGrid("instance").option("dataSource", null);
+}
+
+//사고 시작위치, 끝위치 포인트 레이어
+//var accPointVector = new ol.source.Vector();
+//var accPointLayer = new ol.layer.Vector({
+//    source: accPointVector,
+//    opacity : 1,
+//    zIndex : 2,
+//    style: new ol.style.Style({
+//    	fill: new ol.style.Fill({
+//    		color: '#ff0000'
+//    		
+//    	}),
+//    	stroke: new ol.style.Stroke({
+//    		color: '#CC0000',
+//        	width: 2
+//        	
+//    	}),
+//    	image: new ol.style.Circle({
+//    		radius: 7,
+//    		fill: new ol.style.Fill({
+//    			color: '#ff0000'
+//    			
+//    		})
+//    	})
+//    })
+//});
+
+//해안선 레이어
+//var koreaCoastLineLayer = new ol.layer.Tile({
+// 	source : new ol.source.TileWMS({
+// 		urls: mpcGeoServerURL,
+// 		params: {
+// 		         LAYERS		: 'mpc:tpp_coastline'
+// 		},
+//		crossOrigin: 'anonymous'
+// 	}),
+// 	maxResolution : 40,
+// 	zIndex : 1,
+// 	visible : true
+//});
+
+//선택된 prescat을 표출하기 위한 Tile 레이어
+//var tracePreSCATLayer = new ol.layer.Tile({
+// 	source : new ol.source.TileWMS({
+// 		urls: mpcGeoServerURL,
+// 		params: {
+// 		         LAYERS		: 'mpc:tpp_refrn_relm'
+// 		},
+//		crossOrigin: 'anonymous'
+// 	}),
+// 	maxResolution : 40,
+// 	zIndex : 1,
+// 	visible : true
+//});
+
+//prescat을 찾기위한 vector레이어
+//var preSCATLayer = new ol.layer.Vector({
+//	source: new ol.source.Vector({
+//		url: mpcGeoServerURL[new Date().getMilliseconds()%mpcGeoServerURL.length].replace('wms','ows')+'?service=WFS&request=GetFeature&typeName=mpc:tpp_refrn_relm&outputFormat=application%2Fjson',		
+////		url: geoServerURL.replace('wms','ows')+'?service=WFS&version=1.3.0&request=GetFeature&typeName=Test:tpp_refrn_relm&outputFormat=application%2Fjs',
+//		format: new ol.format.GeoJSON()
+//	}),
+//	zIndex : 1,
+//	maxResolution : 40,
+//	visible : true,
+//	style: new ol.style.Style({
+//    	fill: new ol.style.Fill({
+//    		color: '#ff0000'
+//    		
+//    	}),
+//    	stroke: new ol.style.Stroke({
+//    		color: '#CC0000',
+//        	width: 5
+//        	
+//    	}),
+//    	image: new ol.style.Circle({
+//    		radius: 3,
+//    		fill: new ol.style.Fill({
+//    			color: '#ff0000'
+//    			
+//    		})
+//    	})
+//    })
+//});
+
+//참조영역 선택 레이어
+//var preSCAT_SelectLayer = new ol.layer.Tile({
+//	source : new ol.source.TileWMS({
+//		urls: mpcGeoServerURL,
+//		params: {
+//		         LAYERS		: 'mpc:tpp_refrn_relm',
+//		         STYLES		: 'mpc:tpp_refrn_select_style'
+//		},
+//		crossOrigin: 'anonymous'
+//	}),
+//    zIndex : 0,
+//	visible : false
+//});
+
+//맵에 넣기
+//map.addLayer(accPointLayer);
+//map.addLayer(koreaCoastLineLayer);
+//map.addLayer(preSCAT_SelectLayer);
+
+//koreaCoastLineLayer.getSource().on('tileloadstart', function(e) {
+////	console.log(e);
+//});
+//
+//koreaCoastLineLayer.getSource().on('tileloadend', function(e) {
+////	console.log(e);
+//	GetProgress().Hide();
+//});
+//
+////시작위치, 끝위치 찍는 함수
+//map.on('singleclick', function(evt) {
+//	map.forEachLayerAtPixel(evt.pixel, function(layer){
+//		if (layer === koreaCoastLineLayer){
+//			if (selectFlag < 2) {
+//				geometry = evt.coordinate;
+//				var point = new ol.Feature({
+//					geometry: new ol.geom.Point(geometry),
+//					name : "accPoint"+selectFlag
+//				})
+//				accPointLayer.getSource().addFeature(point);
+//				
+//				var view = map.getView();
+//	            var viewResolution = view.getResolution();
+//	            var source = layer.getSource();
+//	            
+//	            //JSON url생성
+//	            var url = source.getGetFeatureInfoUrl(
+//	            		evt.coordinate, viewResolution, view.getProjection(),
+//	            		{'INFO_FORMAT': 'application/json', 'FEATURE_COUNT': 1}
+//	            );
+//	            
+//	            $.ajax({
+//	                type: 'GET',
+//	                url: url,
+//	                dataType: "json",
+//	                success: function (data) {
+//	    				accPointMap.set(selectFlag, data.features[0]);
+//	    				
+//	    				 if (selectFlag == 1) {
+//	    					 GetProgress().Show("SCAT 로딩중");
+//	    					 //시작점 끝점 비교하여 순서 바꾸기
+//    		            	 if (Number(accPointMap.get(0).id.split(".")[2]) > Number(accPointMap.get(1).id.split(".")[2])) {
+//    		            	 	var save = accPointMap.get(1);
+//    		            	 	accPointMap.set(1, accPointMap.get(0));
+//    		            	 	accPointMap.set(0, save);
+//    		            	 	resortFlag = true;
+//							 }
+//    		            	 
+//    		            	 var areanum = Number(accPointMap.get(0).id.split(".")[1]);
+//    		            	 var bgSlnum = Number(accPointMap.get(0).id.split(".")[2]);
+//    		            	 var edSlnum = Number(accPointMap.get(1).id.split(".")[2]);
+//    		            	 
+//    		            	  $.ajax({
+//    		 	                 type: 'GET',
+//    		 	                 url: mpcGeoServerURL[new Date().getMilliseconds()%mpcGeoServerURL.length].replace('wms','ows')+'?service=WFS&request=GetFeature&typeName=mpc:tpp_coastline&outputFormat=application%2Fjson',
+//    		 	                 data : {
+//    		 	                 	"CQL_FILTER" : "areanum ="+areanum+"&& slnum>="+bgSlnum+"&& slnum<="+edSlnum
+//    		 	                 },
+//    		 	                 dataType: "json",
+//    		 	                 success: function (data) {
+//    		 	                 	
+//    		 	                 	//조회된 좌표값 오름차순으로 정렬
+//    		 	                 	data.features.sort(function (now,next){
+//    		 	                 		var nowPoint = Number(now.id.split(".")[2]);
+//    		 	                 		var nextPoint = Number(next.id.split(".")[2]);
+//    		 	                 		return nowPoint < nextPoint ? -1 : nowPoint > nextPoint ? 1 : 0;
+//    		 	                 	});
+//    		 	                 	
+//    		 	                 	map.removeLayer(koreaCoastLineLayer); //해안선 레이어 삭제
+//    		 	                 	map.addLayer(preSCATLayer);		//참조영역 검색 레이어 추가
+//    		 	                 	
+//    		 	                 	//scat선 그리기
+//    		 	                 	for (var i = 0; i < data.features.length; i++) {
+//    		 	                 		if (i == 0) {			//처음에는 시작점을 먼저 넣는다.
+//    		 	                 			if (resortFlag) {
+//    		 	                 				scatPointArray.push(accPointLayer.getSource().getFeatures()[1].getGeometry().getCoordinates());
+//							 				}else{
+//							 					scatPointArray.push(accPointLayer.getSource().getFeatures()[0].getGeometry().getCoordinates());
+//							 				}
+//							 			}
+//							 			
+//    		 	                 		scatPointArray.push(funcDataToMapPos(data.features[i].geometry.coordinates));
+//    		 	                 		
+//    		 	                 		if (i == data.features.length-1) {	//마지막 지점이 들어가면 끝점을 넣는다.
+//    		 	                 			if (resortFlag) {
+//    		 	                 				scatPointArray.push(accPointLayer.getSource().getFeatures()[0].getGeometry().getCoordinates());
+//							 				}else{
+//							 					scatPointArray.push(accPointLayer.getSource().getFeatures()[1].getGeometry().getCoordinates());
+//							 				}
+//    		 	                 			
+//							 			}
+//							 		}
+//    		 	                 	
+//    		 	                 	//scat 라인 레이어 선언
+//    		 	                 	scatLineLayer = new ol.layer.Vector({
+//    		 	                 		source: new ol.source.Vector({
+//    		 	                 			features: [new ol.Feature({
+//    		 	                 				geometry: new ol.geom.LineString(scatPointArray),
+//    		 	                 				name: 'SCATLine'
+//    		 	                 			})]
+//    		 	                 		}),
+//    		 	                 		zIndex : 4,
+//    		 	                 		maxResolution : 40,
+//    		 	                 		style: new ol.style.Style({
+//    		 	                 	    	fill: new ol.style.Fill({
+//    		 	                 	    		color: '#00FF00'
+//    		 	                 	    		
+//    		 	                 	    	}),
+//    		 	                 	    	stroke: new ol.style.Stroke({
+//    		 	                 	    		color: '#00FF00',
+//    		 	                 	    		lineDash : [10, 10],
+//    		 	                 	        	width: 3
+//    		 	                 	        	
+//    		 	                 	    	}),
+//    		 	                 	    	image: new ol.style.Circle({
+//    		 	                 	    		radius: 3,
+//    		 	                 	    		fill: new ol.style.Fill({
+//    		 	                 	    			color: '#00FF00'
+//    		 	                 	    			
+//    		 	                 	    		})
+//    		 	                 	    	})
+//    		 	                 	    })
+//    		 	                 	});
+//    		 	                 	
+//    		 	                 	map.addLayer(scatLineLayer);
+//    		 	                 	
+//    		 	                 },
+//    		 	                 error: function (request, status, error) {
+//    		 	                     DevExpress.ui.notify("데이터 통신중 오류가 발생하였습니다..", "error", 1500);
+//    		 	                 },
+//    		 	                 complete : function() {
+//    		 	                	GetProgress().Hide();
+//    		 	                 }
+//    		            	  });
+//	    				 }
+//	    				 selectFlag++;
+//	                },
+//	                error: function (request, status, error) {
+//	                    DevExpress.ui.notify("데이터 통신중 오류가 발생하였습니다..", "error", 1500);
+//	                }
+//	            });
+//			}
+//		}
+//	});
+//});
+

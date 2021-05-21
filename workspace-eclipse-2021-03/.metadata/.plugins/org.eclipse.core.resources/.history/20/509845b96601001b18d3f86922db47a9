@@ -1,0 +1,126 @@
+package egovframework.board.bug.vo;
+
+import egovframework.com.cmmn.CmmnAbstractVO;
+
+public class Bug extends CmmnAbstractVO {
+  String date;
+  String locNav;
+  String cmmnt;
+  String url;
+  String pathname;
+  String query;
+  String prvPage;
+  String fileNm;
+  String msg;
+  String lineAt;
+  String errorStack;
+  String formCont;
+  String reporter;
+  
+  public Bug() { super(); }
+  public Bug(String date, String locNav, String cmmnt, String url, String pathname, String query,
+      String prvPage, String fileNm, String msg, String lineAt, String errorStack, String formCont,
+      String reporter) {
+    super();
+    this.date = date;
+    this.locNav = locNav;
+    this.cmmnt = cmmnt;
+    this.url = url;
+    this.pathname = pathname;
+    this.query = query;
+    this.prvPage = prvPage;
+    this.fileNm = fileNm;
+    this.msg = msg;
+    this.lineAt = lineAt;
+    this.errorStack = errorStack;
+    this.formCont = formCont;
+    this.reporter = reporter;
+  }
+  public String getDate() {
+    return date;
+  }
+  public void setDate(String date) {
+    this.date = date;
+  }
+  public String getLocNav() {
+    return locNav;
+  }
+  public void setLocNav(String locNav) {
+    this.locNav = locNav;
+  }
+  public String getCmmnt() {
+    return cmmnt;
+  }
+  public void setCmmnt(String cmmnt) {
+    this.cmmnt = cmmnt;
+  }
+  public String getUrl() {
+    return url;
+  }
+  public void setUrl(String url) {
+    this.url = url;
+  }
+  public String getPathname() {
+    return pathname;
+  }
+  public void setPathname(String pathname) {
+    this.pathname = pathname;
+  }
+  public String getQuery() {
+    return query;
+  }
+  public void setQuery(String query) {
+    this.query = query;
+  }
+  public String getPrvPage() {
+    return prvPage;
+  }
+  public void setPrvPage(String prvPage) {
+    this.prvPage = prvPage;
+  }
+  public String getFileNm() {
+    return fileNm;
+  }
+  public void setFileNm(String fileNm) {
+    this.fileNm = fileNm;
+  }
+  public String getMsg() {
+    return msg;
+  }
+  public void setMsg(String msg) {
+    this.msg = msg;
+  }
+  public String getLineAt() {
+    return lineAt;
+  }
+  public void setLineAt(String lineAt) {
+    this.lineAt = lineAt;
+  }
+  public String getErrorStack() {
+    return errorStack;
+  }
+  public void setErrorStack(String errorStack) {
+    this.errorStack = errorStack;
+  }
+  public String getFormCont() {
+    return formCont;
+  }
+  public void setFormCont(String formCont) {
+    this.formCont = formCont;
+  }
+  public String getReporter() {
+    return reporter;
+  }
+  public void setReporter(String reporter) {
+    this.reporter = reporter;
+  }
+  @Override
+  public String toString() {
+    return "Bug [date=" + date + ", locNav=" + locNav + ", cmmnt=" + cmmnt + ", url=" + url
+        + ", pathname=" + pathname + ", query=" + query + ", prvPage=" + prvPage + ", fileNm="
+        + fileNm + ", msg=" + msg + ", lineAt=" + lineAt + ", errorStack=" + errorStack
+        + ", formCont=" + formCont + ", reporter=" + reporter + "]";
+  }
+  
+  
+}

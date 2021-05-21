@@ -1,0 +1,55 @@
+package kr.co.hanshinit.NeoCMS.cop.sns.web;
+
+import javax.annotation.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+import kr.co.hanshinit.NeoCMS.cop.sns.service.SnsService;
+import kr.co.hanshinit.NeoCMS.cop.sns.service.SnsVO;
+
+/**
+ * SNS 스케쥴러 테스트 환경에서의 주석 처리.
+ *
+ * @author jeaha
+ */
+@Component
+public class SnsComponent {
+  
+  Logger logger = LoggerFactory.getLogger(this.getClass());
+
+  @Resource(name = "snsService")
+  private SnsService snsService;
+
+  /* 트위터 스케쥴 */
+  @Scheduled(cron = "0 5 01 * * ?")
+  public void updateTwitterData() throws Exception {
+    SnsVO snsVO = new SnsVO();
+    snsService.updateTwitterData(snsVO);
+  }
+
+  /* 페이스북 스케쥴 */
+  @Scheduled(cron = "0 10 01 * * ?")
+  public void updateFaceBookData() throws Exception {
+    SnsVO snsVO = new SnsVO();
+    snsService.updateFaceBookData(snsVO);
+  }
+
+  /* 블로그 스케쥴 */
+  @Scheduled(cron = "0 50 01 * * ?")
+  public void updateBlogData() throws Exception {
+    logger.error("\n\n\n\n\n\t>> updateBlogData <<\n\n\n\n\n\n");
+    SnsVO snsVO = new SnsVO();
+    snsService.updateBlogData(snsVO);
+    logger.error("\n\n\n\n\n\t>> updateBlogData <<\n\n\n\n\n\n");
+  }
+
+  /* 유튜브 스케쥴 */
+  @Scheduled(cron = "0 55 01 * * ?")
+  public void updateYoutubeData() throws Exception {
+    logger.error("\n\n\n\n\n\t>> updateYoutubeData <<\n\n\n\n\n");
+    SnsVO snsVO = new SnsVO();
+    snsService.updateYoutubeData(snsVO);
+    logger.error("\n\n\n\n\n\t>> updateYoutubeData <<\n\n\n\n\n\n");
+  }
+}

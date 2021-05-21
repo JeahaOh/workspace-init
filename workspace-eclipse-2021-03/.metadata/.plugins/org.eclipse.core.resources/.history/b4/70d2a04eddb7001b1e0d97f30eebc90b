@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:task="http://www.springframework.org/schema/task"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context-3.1.xsd
+        http://www.springframework.org/schema/task
+        http://www.springframework.org/schema/task/spring-task-3.1.xsd">
+
+  <!--
+    /**
+     * 20210331
+     * 누가 시발 스케쥴러를 이 따위로 짜 놓냐..
+     * 일단 주석 처리 후 나중에 처리하도록 한다...
+     */
+  -->
+
+  <task:annotation-driven />
+
+
+    <!-- 공통 적용 -->
+    <bean id="scheduler" class="kr.co.hanshinit.NeoCMS.cmm.scheduler.Scheduler" />
+    <task:scheduler id="baseScheduler" pool-size="10" />
+
+    <!-- 날씨정보
+    <task:scheduled-tasks scheduler="baseScheduler">
+        <task:scheduled ref="scheduler" method="weatherData" cron="0 0 */1 * * ?"/>
+    </task:scheduled-tasks>
+    -->
+
+    <!-- 미세먼지정보
+    <task:scheduled-tasks scheduler="baseScheduler">
+        <task:scheduled ref="scheduler" method="airData" cron="0 5 */1 * * ?"/>
+    </task:scheduled-tasks>
+    -->
+
+    <!-- facebook
+    <task:scheduled-tasks scheduler="baseScheduler">
+        <task:scheduled ref="scheduler" method="facebookData1" cron="0 1 */1 * * ?"/>
+    </task:scheduled-tasks>
+    -->
+
+    <!-- facebook
+    <task:scheduled-tasks scheduler="baseScheduler">
+        <task:scheduled ref="scheduler" method="facebookData2" cron="0 2 */1 * * ?"/>
+    </task:scheduled-tasks>
+    -->
+
+    <!-- facebook
+    
+    <task:scheduled ref="scheduler" method="facebookData3" cron="1 * * * * ?"/>
+    -->
+    <task:scheduled-tasks scheduler="baseScheduler">
+      <task:scheduled ref="scheduler" method="facebookData3" cron="0 3 */1 * * ?"/>
+    </task:scheduled-tasks>
+
+    <!-- facebook
+    <task:scheduled-tasks scheduler="baseScheduler">
+        <task:scheduled ref="scheduler" method="facebookData4" cron="0 4 */1 * * ?"/>
+    </task:scheduled-tasks>
+    -->
+
+    <!-- facebook
+    <task:scheduled-tasks scheduler="baseScheduler">
+        <task:scheduled ref="scheduler" method="facebookData5" cron="0 5 */1 * * ?"/>
+    </task:scheduled-tasks>
+
+    <task:scheduled-tasks scheduler="baseScheduler">
+        <task:scheduled ref="scheduler" method="blogData" cron="0 0 */1 * * ?"/>
+    </task:scheduled-tasks>
+    -->
+
+    <!-- FACEBOOK : 소사청소년수련관
+      <task:scheduled ref="scheduler" method="crawlSosayouthFB" cron="1 * * * * ?"/>
+    <task:scheduled-tasks scheduler="baseScheduler">
+      <task:scheduled ref="scheduler" method="crawlSosayouthFB" cron="1 6 */1 * * ?"/>
+    </task:scheduled-tasks>
+    -->
+
+    <!-- 인스타그램 -->
+    <!--
+    <task:scheduled-tasks scheduler="baseScheduler">
+        <task:scheduled ref="scheduler" method="instagramData" cron="0 0 * * * ?" />
+    </task:scheduled-tasks>
+    -->
+
+    <!--
+    <bean id="WeatherAPIScheduler" class="kr.co.hanshinit.NeoCMS.cop.weather.WeatherAPIScheduler" />
+
+    <task:scheduled-tasks>
+          <task:scheduled ref="WeatherAPIScheduler" method="updateApiDataScheduler" cron="0 0/30 * * * ?"/>
+      </task:scheduled-tasks>
+
+    <bean id="oldErntCancelScheduler" class="kr.co.hanshinit.NeoCop.cop.erntApplcnt.ErntScheduler" />
+
+    <task:scheduled-tasks>
+          <task:scheduled ref="oldErntCancelScheduler" method="oldErntCancelScheduler" cron="0 6,26,46 * * * ?"/>
+      </task:scheduled-tasks>
+    -->
+</beans>

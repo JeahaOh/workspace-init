@@ -1,0 +1,479 @@
+package egovframework.acdntStat.web;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import egovframework.acdntStat.service.AcdntStatService;
+import egovframework.acdntStat.service.PrevmntStatService;
+import egovframework.acdntStat.vo.PrevmntStatVO;
+import egovframework.com.cmmn.util.EgovStringUtil;
+import egovframework.com.cmmn.web.CmmnAbstractController;
+import egovframework.prvntn.pollutnMttrMng.service.CntkprsAcmsltService;
+import egovframework.rte.psl.dataaccess.util.EgovMap;
+
+/**
+ * 예방조치통계 Controller 클래스
+ *
+ * @author hjh
+ * @since 2018.07.06
+ * @version 1.0
+ * @see
+ *
+ *      <pre>
+ * << 개정이력(Modification Information) >>
+ *
+ *      수정일     수정자          수정내용
+ *   -----------  --------   ---------------------
+ *   2018.07.06    hjh          최초 생성
+ *
+ *      </pre>
+ */
+@Controller
+public class PrevmntStatController extends CmmnAbstractController {
+
+  @Resource(name = "prevmntStatService")
+  private PrevmntStatService prevmntStatService;
+
+  @Resource(name = "acdntStatService")
+  private AcdntStatService acdntStatService;
+
+  @Resource(name = "cntkprsAcmsltService")
+  private CntkprsAcmsltService cntkprsAcmsltService;
+
+  /**
+   * 해경서별 이적현황 자체이적/외부이적별 통계 조회 화면으로 이동
+   *
+   * @param prevmntStatVO
+   * @param model
+   * @param request
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(
+      value = {"/acdntStat/prevmntStat/nmpaRespmtStat.do", "/ext/prevmntStat/nmpaRespmtStat.do"})
+  public String nmpaRespmtStat(@ModelAttribute("prevmntStatVO") PrevmntStatVO prevmntStatVO,
+      ModelMap model, HttpServletRequest request) throws Exception {
+
+    if (EgovStringUtil.isEmpty(prevmntStatVO.getSearchRespmtSe())) {
+      prevmntStatVO.setSearchRespmtSe("O"); // 기본값 자체이적
+    }
+    if (prevmntStatVO.getSearchAcdntYear() == null) {
+      prevmntStatVO.setSearchAcdntYear(DateFormatUtils.format(new Date(), "yyyy"));
+
+    }
+    model.addAttribute("searchYearList", cntkprsAcmsltService.makeYearList2());
+    model.addAttribute("colList", prevmntStatService.selectInsttList(prevmntStatVO));
+    model.addAttribute("rowList", acdntStatService.makeMtList());
+    model.addAttribute("list", prevmntStatService.selectNmpaRespmtStatList(prevmntStatVO));
+    return "/acdntStat/prevmntStat/nmpaRespmtStat";
+  }
+
+  /**
+   * 해경서별 이적현황 오염사고/오염사고외별 통계 조회 화면으로 이동
+   *
+   * @param prevmntStatVO
+   * @param model
+   * @param request
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(value = {"/acdntStat/prevmntStat/nmpaRespmtAcdntStat.do",
+      "/ext/prevmntStat/nmpaRespmtAcdntStat.do"})
+  public String nmpaRespmtAcdntStat(@ModelAttribute("prevmntStatVO") PrevmntStatVO prevmntStatVO,
+      ModelMap model, HttpServletRequest request) throws Exception {
+
+    if (EgovStringUtil.isEmpty(prevmntStatVO.getSearchContamSe())) {
+      prevmntStatVO.setSearchContamSe("Y"); // 기본값 사고유뮤 'Y'
+    }
+    if (prevmntStatVO.getSearchAcdntYear() == null) {
+      prevmntStatVO.setSearchAcdntYear(DateFormatUtils.format(new Date(), "yyyy"));
+
+    }
+    model.addAttribute("searchYearList", cntkprsAcmsltService.makeYearList2());
+    model.addAttribute("colList", prevmntStatService.selectInsttList(prevmntStatVO));
+    model.addAttribute("rowList", acdntStatService.makeMtList());
+    model.addAttribute("list", prevmntStatService.selectNmpaRespmtStatList(prevmntStatVO));
+    return "/acdntStat/prevmntStat/nmpaRespmtAcdntStat";
+  }
+
+  /**
+   * 해경서별 이적현황 선종별 통계 조회 화면으로 이동
+   *
+   * @param prevmntStatVO
+   * @param model
+   * @param request
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(value = {"/acdntStat/prevmntStat/nmpaRespmtVslkndStat.do",
+      "/ext/prevmntStat/nmpaRespmtVslkndStat.do"})
+  public String nmpaRespmtVslkndStat(@ModelAttribute("prevmntStatVO") PrevmntStatVO prevmntStatVO,
+      ModelMap model, HttpServletRequest request) throws Exception {
+
+    if (EgovStringUtil.isEmpty(prevmntStatVO.getSearchOcenPollutnAcdntAt())) {
+      prevmntStatVO.setSearchOcenPollutnAcdntAt("Y"); // 기본값 사고유뮤 'Y'
+    }
+    if (prevmntStatVO.getSearchAcdntYear() == null) {
+      prevmntStatVO.setSearchAcdntYear(DateFormatUtils.format(new Date(), "yyyy"));
+
+    }
+    model.addAttribute("searchYearList", cntkprsAcmsltService.makeYearList2());
+    model.addAttribute("colList", prevmntStatService.selectInsttList(prevmntStatVO));
+    model.addAttribute("rowList", acdntStatService.makeMtList());
+    model.addAttribute("rowList_Vslknd", prevmntStatService.selectVslkndList(prevmntStatVO));
+    model.addAttribute("list", prevmntStatService.selectNmpaRespmtVslkndStatList(prevmntStatVO));
+    return "/acdntStat/prevmntStat/nmpaRespmtVslkndStat";
+  }
+
+  /**
+   * 해경서별 이적현황 유종별 통계 조회 화면으로 이동
+   *
+   * @param prevmntStatVO
+   * @param model
+   * @param request
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(value = {"/acdntStat/prevmntStat/nmpaRespmtOlkndStat.do",
+      "/ext/prevmntStat/nmpaRespmtOlkndStat.do"})
+  public String nmpaRespmtOlkndStat(@ModelAttribute("prevmntStatVO") PrevmntStatVO prevmntStatVO,
+      ModelMap model, HttpServletRequest request) throws Exception {
+
+    if (EgovStringUtil.isEmpty(prevmntStatVO.getSearchOcenPollutnAcdntAt())) {
+      prevmntStatVO.setSearchOcenPollutnAcdntAt("Y"); // 기본값 사고유뮤 'Y'
+    }
+    if (prevmntStatVO.getSearchAcdntYear() == null) {
+      prevmntStatVO.setSearchAcdntYear(DateFormatUtils.format(new Date(), "yyyy"));
+    }
+    model.addAttribute("searchYearList", cntkprsAcmsltService.makeYearList2());
+    model.addAttribute("colList", prevmntStatService.selectInsttList(prevmntStatVO));
+    model.addAttribute("rowList", acdntStatService.makeMtList());
+    model.addAttribute("rowList_RespmtOlKnd",
+        prevmntStatService.selectRespmtOlKndList(prevmntStatVO));
+    model.addAttribute("list", prevmntStatService.selectNmpaRespmtOlkndStatList(prevmntStatVO));
+    return "/acdntStat/prevmntStat/nmpaRespmtOlkndStat";
+  }
+
+  /**
+   * 해경서별 봉쇄현황 에어벤트봉쇄/파공봉쇄별 통계 조회 화면으로 이동
+   *
+   * @param prevmntStatVO
+   * @param model
+   * @param request
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(
+      value = {"/acdntStat/prevmntStat/nmpaBlkadeStat.do", "/ext/prevmntStat/nmpaBlkadeStat.do"})
+  public String nmpaBlkadeStat(@ModelAttribute("prevmntStatVO") PrevmntStatVO prevmntStatVO,
+      ModelMap model, HttpServletRequest request) throws Exception {
+
+    if (prevmntStatVO.getSearchAcdntYear() == null) {
+      prevmntStatVO.setSearchAcdntYear(DateFormatUtils.format(new Date(), "yyyy"));
+    }
+
+    model.addAttribute("searchYearList", cntkprsAcmsltService.makeYearList2());
+    model.addAttribute("colList", prevmntStatService.selectInsttList(prevmntStatVO));
+    model.addAttribute("rowList", acdntStatService.makeMtList());
+
+    model.addAttribute("list", prevmntStatService.selectNmpaBlkadeStatList(prevmntStatVO));
+
+    return "/acdntStat/prevmntStat/nmpaBlkadeStat";
+  }
+
+  /**
+   * 해경서별 봉쇄현황 오염사고/오염사고외별 통계 조회 화면으로 이동
+   *
+   * @param prevmntStatVO
+   * @param model
+   * @param request
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(value = {"/acdntStat/prevmntStat/nmpaBlkadeAcdntStat.do",
+      "/ext/prevmntStat/nmpaBlkadeAcdntStat.do"})
+  public String nmpaBlkadeAcdntStat(@ModelAttribute("prevmntStatVO") PrevmntStatVO prevmntStatVO,
+      ModelMap model, HttpServletRequest request) throws Exception {
+
+    if (EgovStringUtil.isEmpty(prevmntStatVO.getSearchOcenPollutnAcdntAt())) {
+      prevmntStatVO.setSearchOcenPollutnAcdntAt("Y"); // 기본값 사고유뮤 'Y'
+    }
+    if (prevmntStatVO.getSearchAcdntYear() == null) {
+      prevmntStatVO.setSearchAcdntYear(DateFormatUtils.format(new Date(), "yyyy"));
+    }
+    model.addAttribute("searchYearList", cntkprsAcmsltService.makeYearList2());
+    model.addAttribute("colList", prevmntStatService.selectInsttList(prevmntStatVO));
+    model.addAttribute("rowList", acdntStatService.makeMtList());
+
+    model.addAttribute("list", prevmntStatService.selectNmpaBlkadeStatList(prevmntStatVO));
+
+    return "/acdntStat/prevmntStat/nmpaBlkadeAcdntStat";
+  }
+
+  /**
+   * 해경서별 신고포상금 건수 통계 조회 화면으로 이동
+   *
+   * @param prevmntStatVO
+   * @param model
+   * @param request
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(value = {"/acdntStat/prevmntStat/nmpaSttemntRwardamtStat.do",
+      "/ext/prevmntStat/nmpaSttemntRwardamtStat.do"})
+  public String nmpaSttemntRwardamtStat(
+      @ModelAttribute("prevmntStatVO") PrevmntStatVO prevmntStatVO, ModelMap model,
+      HttpServletRequest request) throws Exception {
+
+    if (prevmntStatVO.getSearchAcdntYear() == null) {
+      prevmntStatVO.setSearchAcdntYear(DateFormatUtils.format(new Date(), "yyyy"));
+
+    }
+
+    model.addAttribute("searchYearList", cntkprsAcmsltService.makeYearList());
+    model.addAttribute("colList", prevmntStatService.selectInsttList(prevmntStatVO));
+    model.addAttribute("rowList", acdntStatService.makeMtList());
+
+    model.addAttribute("list", prevmntStatService.selectNmpaSttemntRwardamtStatList(prevmntStatVO));
+
+    return "/acdntStat/prevmntStat/nmpaSttemntRwardamtStat";
+  }
+
+  /**
+   * 해경서별 신고포상금 지급액 통계 조회 화면으로 이동
+   *
+   * @param prevmntStatVO
+   * @param model
+   * @param request
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(value = {"/acdntStat/prevmntStat/nmpaSttemntRwardamtCmpnstnAmountStat.do",
+      "/ext/prevmntStat/nmpaSttemntRwardamtCmpnstnAmountStat.do"})
+  public String nmpaSttemntRwardamtCmpnstnAmountStat(
+      @ModelAttribute("prevmntStatVO") PrevmntStatVO prevmntStatVO, ModelMap model,
+      HttpServletRequest request) throws Exception {
+
+    if (prevmntStatVO.getSearchAcdntYear() == null) {
+      prevmntStatVO.setSearchAcdntYear(DateFormatUtils.format(new Date(), "yyyy"));
+
+    }
+
+    model.addAttribute("searchYearList", cntkprsAcmsltService.makeYearList());
+    model.addAttribute("colList", prevmntStatService.selectInsttList(prevmntStatVO));
+    model.addAttribute("rowList", acdntStatService.makeMtList());
+
+    model.addAttribute("list", prevmntStatService.selectNmpaSttemntRwardamtStatList(prevmntStatVO));
+
+    return "/acdntStat/prevmntStat/nmpaSttemntRwardamtCmpnstnAmountStat";
+  }
+
+  /**
+   * 해경서별 방제비용 건수 통계 조회 화면으로 이동
+   *
+   * @param prevmntStatVO
+   * @param model
+   * @param request
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(value = {"/acdntStat/prevmntStat/nmpaPrvnbeCtCntStat.do",
+      "/ext/prevmntStat/nmpaPrvnbeCtCntStat.do"})
+  public String nmpaPrvnbeCtStat(@ModelAttribute("prevmntStatVO") PrevmntStatVO prevmntStatVO,
+      ModelMap model, HttpServletRequest request) throws Exception {
+
+    model.addAttribute("searchYearList", cntkprsAcmsltService.makeYearList());
+    model.addAttribute("colList", prevmntStatService.selectInsttList(prevmntStatVO));
+    model.addAttribute("rowList", acdntStatService.makeMtList());
+
+//    if (prevmntStatVO.getSearchAcdntYear() == null) {
+//		prevmntStatVO.setSearchAcdntYear(DateFormatUtils.format(new Date(), "yyyy"));
+//	}
+    
+    model.addAttribute("list", prevmntStatService.selectNmpaPrvnbeCtStatList(prevmntStatVO));
+    
+    return "/acdntStat/prevmntStat/nmpaPrvnbeCtCntStat";
+  }
+
+  /**
+   * 해경서별 방제비용 부과액 통계 조회 화면으로 이동
+   *
+   * @param prevmntStatVO
+   * @param model
+   * @param request
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(value = {"/acdntStat/prevmntStat/nmpaPrvnbeCtSumStat.do",
+      "/ext/prevmntStat/nmpaPrvnbeCtSumStat.do"})
+  public String nmpaPrvnbeCtSumStat(@ModelAttribute("prevmntStatVO") PrevmntStatVO prevmntStatVO,
+      ModelMap model, HttpServletRequest request) throws Exception {
+    model.addAttribute("searchYearList", cntkprsAcmsltService.makeYearList());
+    model.addAttribute("colList", prevmntStatService.selectInsttList(prevmntStatVO));
+    model.addAttribute("rowList", acdntStatService.makeMtList());
+    
+    if (prevmntStatVO.getSearchAcdntYear() == null) {
+		prevmntStatVO.setSearchAcdntYear(DateFormatUtils.format(new Date(), "yyyy"));
+	}
+    
+    model.addAttribute("list", prevmntStatService.selectNmpaPrvnbeCtStatList(prevmntStatVO));
+    
+    return "/acdntStat/prevmntStat/nmpaPrvnbeCtSumStat";
+  }
+
+  /**
+   * 유출방지실적 통계 조회 조회 화면으로 이동
+   *
+   * @param prevmntStatVO
+   * @param model
+   * @param request
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(value = {"/acdntStat/prevmntStat/effluxPrevmntAcmsltStat.do",
+      "/ext/prevmntStat/effluxPrevmntAcmsltStat.do"})
+  public String effluxPrevmntAcmsltStat(
+      @ModelAttribute("prevmntStatVO") PrevmntStatVO prevmntStatVO, ModelMap model,
+      HttpServletRequest request) throws Exception {
+    if (prevmntStatVO.getSearchAcdntYear() == null) {
+      prevmntStatVO.setSearchAcdntYear(DateFormatUtils.format(new Date(), "yyyy"));
+
+    }
+
+    model.addAttribute("searchYearList", cntkprsAcmsltService.makeYearList2());
+    model.addAttribute("list", prevmntStatService.selectEffluxPrevmntAcmsltStatList(prevmntStatVO));
+    return "/acdntStat/prevmntStat/effluxPrevmntAcmsltStat";
+  }
+
+  /**
+   * 오염물질 이적조치 통계 조회 화면으로 이동
+   *
+   * @param prevmntStatVO
+   * @param model
+   * @param request
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(value = {"/acdntStat/prevmntStat/pollutnMttrRespmtStat.do",
+      "/ext/prevmntStat/pollutnMttrRespmtStat.do"})
+  public String pollutnMttrRespmtStat(@ModelAttribute("prevmntStatVO") PrevmntStatVO prevmntStatVO,
+      ModelMap model, HttpServletRequest request) throws Exception {
+    if (prevmntStatVO.getSearchAcdntYear() == null) {
+      prevmntStatVO.setSearchAcdntYear(DateFormatUtils.format(new Date(), "yyyy"));
+    }
+
+    model.addAttribute("searchYearList", cntkprsAcmsltService.makeYearList2());
+    model.addAttribute("colList", prevmntStatService.selectVslkndList(prevmntStatVO));
+    model.addAttribute("list", prevmntStatService.selectPollutnMttrRespmtStatList(prevmntStatVO));
+    return "/acdntStat/prevmntStat/pollutnMttrRespmtStat";
+  }
+  
+  @ResponseBody
+  @RequestMapping(value = "/acdntStat/prevmntStat/pollutnMttrRespmtStatColList.do")
+  public EgovMap pollutnMttrRespmtStatColList(@ModelAttribute("prevmntStatVO") PrevmntStatVO prevmntStatVO,
+    HttpServletRequest request) throws Exception {
+  if (prevmntStatVO.getSearchAcdntYear() == null) {
+    prevmntStatVO.setSearchAcdntYear(DateFormatUtils.format(new Date(), "yyyy"));
+  }
+  EgovMap data = new EgovMap();
+  List<EgovMap> vslKndList;
+  List<EgovMap> dataList;
+  
+  try {
+    vslKndList = prevmntStatService.selectVslkndList(prevmntStatVO);
+  } catch ( Exception e ) {
+    vslKndList = new ArrayList<EgovMap>();
+  }
+  
+  try {
+    dataList = prevmntStatService.selectPollutnMttrRespmtStatList(prevmntStatVO);
+  } catch( Exception e ) {
+    dataList = new ArrayList<EgovMap>();
+  }
+  
+  data.put("vslKndList", vslKndList);
+  data.put("dataList", dataList);
+  
+  return data;
+  }
+  
+  
+
+  /**
+   * 해경서별 이적현황 유종별 통계 조회 화면으로 이동
+   *
+   * @param prevmntStatVO
+   * @param model
+   * @param request
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(value = {"/acdntStat/prevmntStat/pollutnRespmtOlkndStat.do",
+      "/ext/prevmntStat/pollutnRespmtOlkndStat.do"})
+  public String pollutnRespmtOlkndStat(@ModelAttribute("prevmntStatVO") PrevmntStatVO prevmntStatVO,
+      ModelMap model, HttpServletRequest request) throws Exception {
+    if (prevmntStatVO.getSearchAcdntYear() == null) {
+      prevmntStatVO.setSearchAcdntYear(DateFormatUtils.format(new Date(), "yyyy"));
+    }
+
+    model.addAttribute("searchYearList", cntkprsAcmsltService.makeYearList2());
+    model.addAttribute("colList", prevmntStatService.selectRespmtOlKndList(prevmntStatVO));
+    model.addAttribute("list", prevmntStatService.selectPollutnRespmtOlkndStatList(prevmntStatVO));
+    return "/acdntStat/prevmntStat/pollutnRespmtOlkndStat";
+  }
+
+  /**
+   * 유출구봉쇄조치(개소) 통계 조회 화면으로 이동
+   *
+   * @param prevmntStatVO
+   * @param model
+   * @param request
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(
+      value = {"/acdntStat/prevmntStat/blkadeCntStat.do", "/ext/prevmntStat/blkadeCntStat.do"})
+  public String blkadeCntStat(@ModelAttribute("prevmntStatVO") PrevmntStatVO prevmntStatVO,
+      ModelMap model, HttpServletRequest request) throws Exception {
+
+    if (prevmntStatVO.getSearchAcdntYear() == null) {
+      prevmntStatVO.setSearchAcdntYear(DateFormatUtils.format(new Date(), "yyyy"));
+    }
+
+    model.addAttribute("searchYearList", cntkprsAcmsltService.makeYearList2());
+    model.addAttribute("list", prevmntStatService.selectBlkadeStatList(prevmntStatVO));
+    return "/acdntStat/prevmntStat/blkadeCntStat";
+  }
+
+  /**
+   * 유출구봉쇄조치(척) 통계 조회 화면으로 이동
+   *
+   * @param prevmntStatVO
+   * @param model
+   * @param request
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(
+      value = {"/acdntStat/prevmntStat/blkadeStat.do", "/ext/prevmntStat/blkadeStat.do"})
+  public String blkadeStat(@ModelAttribute("prevmntStatVO") PrevmntStatVO prevmntStatVO,
+      ModelMap model, HttpServletRequest request) throws Exception {
+
+    if (prevmntStatVO.getSearchAcdntYear() == null) {
+      prevmntStatVO.setSearchAcdntYear(DateFormatUtils.format(new Date(), "yyyy"));
+    }
+
+    model.addAttribute("searchYearList", cntkprsAcmsltService.makeYearList2());
+    model.addAttribute("list", prevmntStatService.selectBlkadeStatList(prevmntStatVO));
+    return "/acdntStat/prevmntStat/blkadeStat";
+  }
+
+}

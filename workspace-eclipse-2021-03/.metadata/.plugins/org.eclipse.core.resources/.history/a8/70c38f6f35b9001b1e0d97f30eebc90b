@@ -1,0 +1,502 @@
+package kr.co.hanshinit.NeoCMS.cop.mvote.qestnar.mvoteRspns.service.impl;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import egovframework.rte.fdl.cmmn.EgovAbstractServiceImpl;
+import kr.co.hanshinit.NeoCMS.cmm.util.DateUtil;
+import kr.co.hanshinit.NeoCMS.cmm.util.StringUtil;
+import kr.co.hanshinit.NeoCMS.cop.mvote.login.MvoteLoginUtil;
+import kr.co.hanshinit.NeoCMS.cop.mvote.qestnar.mvoteItm.service.MvoteQestn;
+import kr.co.hanshinit.NeoCMS.cop.mvote.qestnar.mvoteItm.service.impl.MvoteQestnarItmDAO;
+import kr.co.hanshinit.NeoCMS.cop.mvote.qestnar.mvoteRspns.service.MvoteObjctRspns;
+import kr.co.hanshinit.NeoCMS.cop.mvote.qestnar.mvoteRspns.service.MvoteRespond;
+import kr.co.hanshinit.NeoCMS.cop.mvote.qestnar.mvoteRspns.service.MvoteRspns;
+import kr.co.hanshinit.NeoCMS.cop.mvote.qestnar.mvoteRspns.service.MvoteRspnsService;
+import kr.co.hanshinit.NeoCMS.cop.mvote.qestnar.mvoteRspns.service.MvoteSbjctRspns;
+
+
+@Service("mvoteRspnsService")
+public class MvoteRspnsServiceImpl extends EgovAbstractServiceImpl implements MvoteRspnsService {
+  
+  Logger logger = LoggerFactory.getLogger(this.getClass());
+  
+	@Resource(name="mvoteRspnsDAO")
+	private MvoteRspnsDAO mvoteRspnsDAO;
+	
+	@Resource(name="mvoteQestnarItmDAO")
+	private MvoteQestnarItmDAO mvoteQestnarItmDAO;
+
+	@Override
+	public Map<Integer, List<MvoteObjctRspns>> selectObjctRspnsList(int mvoteNo) throws Exception {
+		List<MvoteObjctRspns> resultList = mvoteRspnsDAO.selectObjctRspnsList(mvoteNo);
+		if(resultList != null && resultList.size() > 0){
+			Map<Integer, List<MvoteObjctRspns>> result = new HashMap<Integer, List<MvoteObjctRspns>>();
+			for(MvoteObjctRspns mvoteObjctRspns: resultList)
+			{
+				if(result.containsKey(mvoteObjctRspns.getMvoteQestnNo())){
+					result.get(mvoteObjctRspns.getMvoteQestnNo()).add(mvoteObjctRspns);
+				}
+				else
+				{
+					List<MvoteObjctRspns>temp = new ArrayList<MvoteObjctRspns>();
+					temp.add(mvoteObjctRspns);
+					result.put(mvoteObjctRspns.getMvoteQestnNo(), temp);
+				}
+			}
+			return result;
+
+		}
+		return null;
+	}
+
+	@Override
+	public Map<Integer, MvoteObjctRspns> selectObjctAnswerCntList(int mvoteNo) throws Exception {
+		// TODO Auto-generated method stub
+		return mvoteRspnsDAO.selectObjctAnswerCntList(mvoteNo);
+	}
+
+	@Override
+	public Map<Integer, List<MvoteSbjctRspns>> selectSbjctRspnsList(int mvoteNo) throws Exception {
+		List<MvoteSbjctRspns> resultList = mvoteRspnsDAO.selectSbjctRspnsList(mvoteNo);
+		if(resultList != null && resultList.size() > 0){
+			Map<Integer, List<MvoteSbjctRspns>> result = new HashMap<Integer, List<MvoteSbjctRspns>>();
+			for(MvoteSbjctRspns mvoteSbjctRspns: resultList)
+			{
+				if(result.containsKey(mvoteSbjctRspns.getMvoteQestnNo())){
+					result.get(mvoteSbjctRspns.getMvoteQestnNo()).add(mvoteSbjctRspns);
+				}
+				else
+				{
+					List<MvoteSbjctRspns>temp = new ArrayList<MvoteSbjctRspns>();
+					temp.add(mvoteSbjctRspns);
+					result.put(mvoteSbjctRspns.getMvoteQestnNo(), temp);
+				}
+			}
+			return result;
+
+		}
+		return null;
+	}
+	
+	
+
+//	@Override
+//	public void insertMvoteObjctRspns(HttpServletRequest request,MvoteObjctRspns mvoteObjctRspns) throws Exception {
+//		// TODO Auto-generated method stub
+//		mvoteObjctRspns.setFrstRegisterPnttm(DateUtil.getNowDateTime("yyyyMMddHHmmss"));
+//		mvoteObjctRspns.setFrstRegisterId(MvoteLoginUtil.getLoginNcnm(request.getSession()));
+//
+//	}
+//
+//	@Override
+//	public void insertMvoteSbjctRspns(HttpServletRequest request,MvoteSbjctRspns mvoteSbjctRspns) throws Exception {
+//		mvoteSbjctRspns.setFrstRegisterPnttm(DateUtil.getNowDateTime("yyyyMMddHHmmss"));
+//		mvoteSbjctRspns.setFrstRegisterId(MvoteLoginUtil.getLoginNcnm(request.getSession()));
+//	}
+//
+//	@Override
+//	public void insertMvoteRespond(HttpServletRequest request,MvoteRespond mvoteRespond) throws Exception {
+//		mvoteRespond.setFrstRegisterPnttm(DateUtil.getNowDateTime("yyyyMMddHHmmss"));
+//		mvoteRespond.setFrstRegisterId(MvoteLoginUtil.getLoginNcnm(request.getSession()));
+//	}
+
+	@Override
+	public int selectDuplQestnar(MvoteRespond mvoteRespond) throws Exception {
+		// TODO Auto-generated method stub
+		return mvoteRspnsDAO.selectDuplQestnar(mvoteRespond);
+	}
+
+	@Override
+	public void insertMvoteRspns(HttpServletRequest request, MvoteRspns mvoteRspns, MvoteRespond mvoteRespond) throws Exception {
+		int respondNo = mvoteRspnsDAO.selectMvoteRespondKey();
+		mvoteRespond.setRespondNo(respondNo);
+		mvoteRespond.setFrstRegisterPnttm(DateUtil.getNowDateTime("yyyyMMddHHmmss"));
+		mvoteRespond.setFrstRegisterId(MvoteLoginUtil.getLoginNcnm(request.getSession()));
+		mvoteRespond.setArea(mvoteRspns.getArea());
+		mvoteRespond.setDetailArea(mvoteRspns.getDetailArea());
+		mvoteRespond.setLifyea(mvoteRspns.getLifyea());
+		mvoteRespond.setSexdstn(mvoteRspns.getSexdstn());
+		mvoteRespond.setVoteTtmAge(getVoteTtmAge(mvoteRspns.getLifyea()));
+
+		mvoteRspnsDAO.insertMvoteRespond(mvoteRespond);
+		if(mvoteRspns.getObjctList()!=null && mvoteRspns.getObjctList().size() >0)
+		{
+			for(MvoteObjctRspns mvoteObjctRspns : mvoteRspns.getObjctList())
+			{
+				if(mvoteObjctRspns.getMvoteAnswerNo() != 0)
+				{
+					mvoteObjctRspns.setFrstRegisterPnttm(DateUtil.getNowDateTime("yyyyMMddHHmmss"));
+					mvoteObjctRspns.setFrstRegisterId(MvoteLoginUtil.getLoginNcnm(request.getSession()));
+					mvoteObjctRspns.setRespondNo(respondNo);
+					mvoteRspnsDAO.insertMvoteObjctRspns(mvoteObjctRspns);
+				}
+
+
+				if(mvoteObjctRspns.getChkAnswerNo() != null)
+				{
+					if(mvoteObjctRspns.getChkAnswerNo().length > 0)
+					{
+						String objctRspns = mvoteObjctRspns.getObjctRspns();
+						for(int i = 0; i < mvoteObjctRspns.getChkAnswerNo().length; i++)
+						{
+							int qestnarAnswerNo = mvoteObjctRspns.getChkAnswerNo()[i];
+							if(mvoteObjctRspns.getObjctRspnsLc() != qestnarAnswerNo){
+								mvoteObjctRspns.setObjctRspns("");
+							}else {
+								mvoteObjctRspns.setObjctRspns(objctRspns);
+							}
+							mvoteObjctRspns.setFrstRegisterPnttm(DateUtil.getNowDateTime("yyyyMMddHHmmss"));
+							mvoteObjctRspns.setFrstRegisterId(MvoteLoginUtil.getLoginNcnm(request.getSession()));
+							mvoteObjctRspns.setRespondNo(respondNo);
+							mvoteObjctRspns.setMvoteAnswerNo(qestnarAnswerNo);
+							mvoteRspnsDAO.insertMvoteObjctRspns(mvoteObjctRspns);
+						}
+					}
+					else
+					{
+						mvoteObjctRspns.setFrstRegisterId(MvoteLoginUtil.getLoginNcnm(request.getSession()));
+						mvoteObjctRspns.setFrstRegisterPnttm(DateUtil.getNowDateTime("yyyyMMddHHmmss"));
+						mvoteObjctRspns.setRespondNo(respondNo);
+						mvoteRspnsDAO.insertMvoteObjctRspns(mvoteObjctRspns);
+					}
+				}
+			}
+		}
+
+		if(mvoteRspns.getSbjctList()!=null && mvoteRspns.getSbjctList().size() >0)
+		{
+			for(MvoteSbjctRspns mvoteSbjctRspns : mvoteRspns.getSbjctList())
+			{
+				if(!"".equals(StringUtil.nvl(mvoteSbjctRspns.getSbjctRspns()).trim())){
+					mvoteSbjctRspns.setFrstRegisterId(MvoteLoginUtil.getLoginNcnm(request.getSession()));
+					mvoteSbjctRspns.setFrstRegisterPnttm(DateUtil.getNowDateTime("yyyyMMddHHmmss"));
+					mvoteSbjctRspns.setRespondNo(respondNo);
+					mvoteRspnsDAO.insertMvoteSbjctRspns(mvoteSbjctRspns);
+				}
+			}
+		}
+	}
+
+
+	private String getVoteTtmAge(String lifeyea) {
+		String nowYear = DateUtil.getNowDateTime("yyyy");
+		if(lifeyea == null) {
+			return "0";
+		}
+		String voteTtmAge = Integer.toBinaryString(Integer.parseInt(nowYear) - Integer.parseInt(lifeyea) + 1);
+		return voteTtmAge;
+	}
+
+	@Override
+	public int selectDuplMvoteQestnar(MvoteRespond mvoteRespond) throws Exception {
+		// TODO Auto-generated method stub
+		return mvoteRspnsDAO.selectDuplMvoteQestnar(mvoteRespond);
+	}
+	
+	
+  @Override
+  public Map<String, Map<String, List<MvoteRespond>>> selectObjctRspnsTotList( 
+    MvoteRespond mvoteRespond
+  ) throws Exception {
+
+    //  변수명 씨발 이따위로 짓냐?
+    Map<String, Map<String, List<MvoteRespond>>> returnResult = new HashMap<String, Map<String, List<MvoteRespond>>>();
+    Map<String, List<MvoteRespond>> totalresult = new HashMap<String, List<MvoteRespond>>();
+    Map<String, List<MvoteRespond>> tempresult = new HashMap<String, List<MvoteRespond>>();
+    Map<String, List<MvoteRespond>> tempresult2 = new HashMap<String, List<MvoteRespond>>();
+    Map<String, List<MvoteRespond>> tempresult3 = new HashMap<String, List<MvoteRespond>>();
+    Map<String, List<MvoteRespond>> tempresult4 = new HashMap<String, List<MvoteRespond>>();
+
+    List<MvoteRespond> respondList = new ArrayList<MvoteRespond>();
+    MvoteRespond mvoteRespond2 = new MvoteRespond();
+
+    MvoteQestn mvoteQestn = new MvoteQestn();
+    mvoteQestn.setMvoteNo(mvoteRespond.getMvoteNo());
+    mvoteQestn.setMvoteQestnNo(mvoteRespond.getMvoteQestnNo());
+
+    MvoteQestn resultList = mvoteQestnarItmDAO.selectMvoteQestn(mvoteQestn);
+
+    // 전체통계
+    List<MvoteRespond> selectAllRspns = mvoteRspnsDAO.selectQesAllRspnsList(mvoteRespond);
+    int totCnt = 0;
+    for (int i = 0; i < selectAllRspns.size(); i++) {
+      totCnt += selectAllRspns.get(i).getTotCnt();
+    }
+    for (int i = 0; i < selectAllRspns.size(); i++) {
+      double totPt =
+          Math.round((double) selectAllRspns.get(i).getTotCnt() / (double) totCnt * 100.0);
+      // selectAllRspns.get(i).setTotPt((double)selectAllRspns.get(i).getTotCnt()/(double)totCnt *
+      // 100.0);
+      if (Double.isNaN(totPt))
+        selectAllRspns.get(i).setTotPt(0);
+      else
+        selectAllRspns.get(i).setTotPt(totPt);
+
+      selectAllRspns.get(i).setAllTotCnt(totCnt);
+    }
+
+
+    // 패널그롭별 통계
+    List<MvoteRespond> pnlgrpRspnsList = mvoteRspnsDAO.selectQesPanelRspnsList(mvoteRespond);
+
+    for (int j = 0; j < resultList.getAnswerList().size(); j++) {
+
+      for (int i = 0; i < pnlgrpRspnsList.size(); i++) {
+
+        if (pnlgrpRspnsList.get(i).getMvoteAnswerNo() == resultList.getAnswerList().get(j)
+            .getMvoteAnswerNo()) {
+          mvoteRespond2 = new MvoteRespond();
+          mvoteRespond2.setCode(pnlgrpRspnsList.get(i).getCode());
+          mvoteRespond2.setTotCnt(pnlgrpRspnsList.get(i).getTotCnt());
+          respondList.add(mvoteRespond2);
+        }
+      }
+      tempresult.put(
+          "answer" + Integer.toString(resultList.getAnswerList().get(j).getMvoteAnswerNo()),
+          respondList);
+      respondList = new ArrayList<MvoteRespond>();
+    }
+
+    // 비회원 통계
+    List<MvoteRespond> noPanelRspnsList = mvoteRspnsDAO.selectQesNoPanelRspnsList(mvoteRespond);
+
+    for (int j = 0; j < resultList.getAnswerList().size(); j++) {
+
+      for (int i = 0; i < noPanelRspnsList.size(); i++) {
+
+        if (noPanelRspnsList.get(i).getMvoteAnswerNo() == resultList.getAnswerList().get(j)
+            .getMvoteAnswerNo()) {
+          mvoteRespond2 = new MvoteRespond();
+          mvoteRespond2.setCode(noPanelRspnsList.get(i).getCode());
+          mvoteRespond2.setTotCnt(noPanelRspnsList.get(i).getTotCnt());
+          respondList.add(mvoteRespond2);
+        }
+      }
+      tempresult4.put(
+          "answer" + Integer.toString(resultList.getAnswerList().get(j).getMvoteAnswerNo()),
+          respondList);
+      respondList = new ArrayList<MvoteRespond>();
+    }
+
+    // 성별 통계
+    List<MvoteRespond> sexRspnsList = mvoteRspnsDAO.selectQesSexRspnsList(mvoteRespond);
+
+    // 연령별 통계
+    List<MvoteRespond> ageRspnsList = mvoteRspnsDAO.selectQesAgeRspnsList(mvoteRespond);
+
+    // 상세지역
+    List<MvoteRespond> dtAreaRspnsList = mvoteRspnsDAO.selectQesDtAreaRspnsList(mvoteRespond);
+    List<MvoteRespond> areaRspnsList = mvoteRspnsDAO.selectQesAreaRspnsList(mvoteRespond);
+
+
+    int totLimit = resultList.getAnswerList().size();
+    for (int j = 0; j < totLimit; j++) {
+      respondList = new ArrayList<MvoteRespond>();
+      for (int i = 0; i < dtAreaRspnsList.size(); i++) {
+
+        if (dtAreaRspnsList.get(i).getMvoteAnswerNo() == resultList.getAnswerList().get(j).getMvoteAnswerNo()) {
+          mvoteRespond2 = new MvoteRespond();
+          mvoteRespond2.setCode(dtAreaRspnsList.get(i).getCode());
+          mvoteRespond2.setTotCnt(dtAreaRspnsList.get(i).getTotCnt());
+          respondList.add(mvoteRespond2);
+        }
+      }
+      
+      
+
+      //System.out.println(tempresult2);
+      tempresult2.put(
+          "answer" + Integer.toString(resultList.getAnswerList().get(j).getMvoteAnswerNo()),
+          respondList);
+      respondList = new ArrayList<MvoteRespond>();
+    }
+
+    respondList = new ArrayList<MvoteRespond>();
+    for (int j = 0; j < totLimit; j++) {
+      respondList = new ArrayList<MvoteRespond>();
+      for (int i = 0; i < areaRspnsList.size(); i++) {
+
+        if (areaRspnsList.get(i).getMvoteAnswerNo() == resultList.getAnswerList().get(j)
+            .getMvoteAnswerNo()) {
+          mvoteRespond2 = new MvoteRespond();
+          // System.out.println(areaRspnsList.get(i).getMvoteAnswerNo()+"/////"+resultList.get(0).getAnswerList().get(j).getMvoteAnswerNo());
+          mvoteRespond2.setCode(areaRspnsList.get(i).getCode());
+          mvoteRespond2.setTotCnt(areaRspnsList.get(i).getTotCnt());
+          respondList.add(mvoteRespond2);
+        }
+      }
+      tempresult3.put(
+          "answer" + Integer.toString(resultList.getAnswerList().get(j).getMvoteAnswerNo()),
+          respondList);
+    }
+
+    totalresult.put("ALL", selectAllRspns);
+    totalresult.put("SEX", sexRspnsList);
+    totalresult.put("AGE", ageRspnsList);
+
+    returnResult.put("allSexAge", totalresult);
+    returnResult.put("pnlgrp", tempresult);
+    returnResult.put("dtArea", tempresult2);
+    returnResult.put("area", tempresult3);
+    returnResult.put("noPnlgrp", tempresult4);
+
+    // System.out.println("\n\n"+tempresult3);
+
+    return returnResult;
+  }
+	
+	
+  @Override
+  public Map<String, List<MvoteRespond>> selectRspnsTotList(int mvoteNo) throws Exception {
+    logger.debug("\n\t>> MvoteRspnsServiceImpl.selectRspnsTotList {} BGN <<", mvoteNo);
+
+    Map<String, List<MvoteRespond>> totalresult = new HashMap<String, List<MvoteRespond>>();
+
+    // 전체통계
+    List<MvoteRespond> selectAllRspns = mvoteRspnsDAO.selectAllRspnsList(mvoteNo);
+
+    int totCnt = selectAllRspns.get(0).getTotCnt();
+    double totPt = 0.0;
+
+
+    for (int i = 0; i < selectAllRspns.size(); i++) {
+      totPt = Math.round((double) totCnt / (double) totCnt * 100.0);
+      if (Double.isNaN(totPt))
+        selectAllRspns.get(i).setTotPt(0);
+      else
+        selectAllRspns.get(i).setTotPt(totPt);
+    }
+
+
+
+    // 패널그롭별 성별 통계
+    List<MvoteRespond> pnlgrpSexRspnsList = mvoteRspnsDAO.selectPnlgrpRspnsList(mvoteNo, totCnt);
+
+    for (int i = 0; i < pnlgrpSexRspnsList.size(); i++) {
+      totPt = Math.round((double) pnlgrpSexRspnsList.get(i).getTotCnt() / (double) totCnt * 100.0);
+      if (Double.isNaN(totPt))
+        pnlgrpSexRspnsList.get(i).setTotPt(0);
+      else
+        pnlgrpSexRspnsList.get(i).setTotPt(totPt);
+    }
+
+    List<MvoteRespond> selectSexRspnsList = mvoteRspnsDAO.selectSexRspnsList(mvoteNo, totCnt);
+    for (int i = 0; i < selectSexRspnsList.size(); i++) {
+      double mtotPt =
+          Math.round((double) selectSexRspnsList.get(i).getmCount() / (double) totCnt * 100.0);
+      double ftotPt =
+          Math.round((double) selectSexRspnsList.get(i).getfCount() / (double) totCnt * 100.0);
+      if (Double.isNaN(mtotPt))
+        selectSexRspnsList.get(i).setMpt(0);
+      else
+        selectSexRspnsList.get(i).setMpt(mtotPt);
+      if (Double.isNaN(ftotPt))
+        selectSexRspnsList.get(i).setFpt(0);
+      else
+        selectSexRspnsList.get(i).setFpt(ftotPt);
+    }
+
+    // 연령대별 통계
+    MvoteRespond ageRspns = mvoteRspnsDAO.selectAgeRspnsList(mvoteNo, totCnt);
+    String[] cnt = ageRspns.getTotName().split(",");
+    List<MvoteRespond> ageRspnsList = new ArrayList<MvoteRespond>();
+    for (int i = 0; i < cnt.length; i++) {
+      MvoteRespond ageRspns2 = new MvoteRespond();
+      ageRspns2.setCode(" ");
+      if (i == 0)
+        ageRspns2.setTotName("10세미만");
+      else if (i == 1)
+        ageRspns2.setTotName("10~19세");
+      else if (i == 2)
+        ageRspns2.setTotName("20~29세");
+      else if (i == 3)
+        ageRspns2.setTotName("30~39세");
+      else if (i == 4)
+        ageRspns2.setTotName("40~49세");
+      else if (i == 5)
+        ageRspns2.setTotName("50~59세");
+      else if (i == 6)
+        ageRspns2.setTotName("60세이상");
+      ageRspns2.setTotCnt(Integer.parseInt(cnt[i]));
+      totPt = Math.round((double) ageRspns2.getTotCnt() / (double) totCnt * 100.0);
+      if (Double.isNaN(totPt))
+        ageRspns2.setTotPt(0);
+      else
+        ageRspns2.setTotPt(totPt);
+      ageRspnsList.add(ageRspns2);
+    }
+    if (cnt.length < 1) {
+      for (int i = 0; i < 7; i++) {
+        MvoteRespond ageRspns2 = new MvoteRespond();
+        ageRspns2.setCode(" ");
+        if (i == 0)
+          ageRspns2.setTotName("10세미만");
+        else if (i == 1)
+          ageRspns2.setTotName("10~19세");
+        else if (i == 2)
+          ageRspns2.setTotName("20~29세");
+        else if (i == 3)
+          ageRspns2.setTotName("30~39세");
+        else if (i == 4)
+          ageRspns2.setTotName("40~49세");
+        else if (i == 5)
+          ageRspns2.setTotName("50~59세");
+        else if (i == 6)
+          ageRspns2.setTotName("60세이상");
+        ageRspns2.setTotCnt(0);
+        totPt = Math.round((double) ageRspns2.getTotCnt() / (double) totCnt * 100.0);
+        if (Double.isNaN(totPt))
+          ageRspns2.setTotPt(0);
+        else
+          ageRspns2.setTotPt(totPt);
+        ageRspnsList.add(ageRspns2);
+      }
+    }
+
+    // 상세지역, 타지역별 통계
+    List<MvoteRespond> areaRspnsList = mvoteRspnsDAO.selectAreaRspnsList(mvoteNo, totCnt);
+
+    for (int i = 0; i < areaRspnsList.size(); i++) {
+      totPt = Math.round((double) areaRspnsList.get(i).getTotCnt() / (double) totCnt * 100.0);
+      if (Double.isNaN(totPt))
+        areaRspnsList.get(i).setTotPt(0);
+      else
+        areaRspnsList.get(i).setTotPt(totPt);
+    }
+
+    totalresult.put("ALL", selectAllRspns);
+    totalresult.put("PANEL", pnlgrpSexRspnsList);
+    totalresult.put("SEX", selectSexRspnsList);
+    totalresult.put("AGE", ageRspnsList);
+    totalresult.put("AREA", areaRspnsList);
+
+
+    logger.debug("\n\t>> MvoteRspnsServiceImpl.selectRspnsTotList END <<");
+    
+    return totalresult;
+  }
+	
+	
+	
+	@Override
+	public List<MvoteSbjctRspns> selectSbjctRspnsDtList(MvoteRespond mvoteRespond) throws Exception
+	{
+	
+		return mvoteRspnsDAO.selectSbjctRspnsDtList(mvoteRespond);
+	}
+	
+	@Override
+	public List<MvoteRespond> selectRspnsUserList(MvoteRespond mvoteRespond) throws Exception
+	{
+	
+		return mvoteRspnsDAO.selectRspnsUserList(mvoteRespond);
+	}
+	
+}

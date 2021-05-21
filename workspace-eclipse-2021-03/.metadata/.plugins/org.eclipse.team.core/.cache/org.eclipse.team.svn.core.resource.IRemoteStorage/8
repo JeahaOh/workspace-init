@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="mvoteQestnarItm">
+	<typeAlias alias="mvoteQestn" type="kr.co.hanshinit.NeoCMS.cop.mvote.qestnar.mvoteItm.service.MvoteQestn" />
+	<typeAlias alias="mvoteAnswer" type="kr.co.hanshinit.NeoCMS.cop.mvote.qestnar.mvoteItm.service.MvoteAnswer" />
+
+	<resultMap id="mvoteQestnMap" class="mvoteQestn" groupBy="mvoteQestnNo">
+		<result property="mvoteQestnNo" column="MVOTE_QESTN_NO" columnIndex="1"/>
+		<result property="mvoteNo" column="MVOTE_NO" columnIndex="2"/>
+		<result property="qestn" column="QESTN" columnIndex="3"/>
+		<result property="qestnDc" column="QESTN_DC" columnIndex="4"/>
+		<result property="qestnTy" column="QESTN_TY" columnIndex="5"/>
+		<result property="multiAnswerAt" column="MULTI_ANSWER_AT" columnIndex="6"/>
+		<result property="mummAnswerCo" column="MUMM_ANSWER_CO" columnIndex="7"/>
+		<result property="answerCo" column="ANSWER_CO" columnIndex="8"/>
+		<result property="ordr" column="ORDR" columnIndex="9"/>
+		<result property="frstRegisterPnttm" column="FRST_REGISTER_PNTTM" columnIndex="10"/>
+		<result property="frstRegisterId" column="FRST_REGISTER_ID" columnIndex="11"/>
+		<result property="lastUpdusrPnttm" column="LAST_UPDUSR_PNTTM" columnIndex="12"/>
+		<result property="lastUpdusrId" column="LAST_UPDUSR_ID" columnIndex="13"/>
+		<result property="widthAt" column="WIDTH_AT" columnIndex="14"/>
+		<result property="answerList" resultMap="mvoteQestnarItm.qestnarAnswerMap"/>
+	</resultMap>
+
+	<resultMap id="mvoteQestnAllMap" class="mvoteQestn" >
+		<result property="mvoteQestnNo" column="MVOTE_QESTN_NO" columnIndex="1"/>
+		<result property="mvoteNo" column="MVOTE_NO" columnIndex="2"/>
+		<result property="qestn" column="QESTN" columnIndex="3"/>
+		<result property="qestnDc" column="QESTN_DC" columnIndex="4"/>
+		<result property="qestnTy" column="QESTN_TY" columnIndex="5"/>
+		<result property="multiAnswerAt" column="MULTI_ANSWER_AT" columnIndex="6"/>
+		<result property="mummAnswerCo" column="MUMM_ANSWER_CO" columnIndex="7"/>
+		<result property="answerCo" column="ANSWER_CO" columnIndex="8"/>
+		<result property="ordr" column="ORDR" columnIndex="9"/>
+		<result property="frstRegisterPnttm" column="FRST_REGISTER_PNTTM" columnIndex="10"/>
+		<result property="frstRegisterId" column="FRST_REGISTER_ID" columnIndex="11"/>
+		<result property="lastUpdusrPnttm" column="LAST_UPDUSR_PNTTM" columnIndex="12"/>
+		<result property="lastUpdusrId" column="LAST_UPDUSR_ID" columnIndex="13"/>
+		<result property="answerList" resultMap="mvoteQestnarItm.qestnarAnswerMap"/>
+	</resultMap>
+
+
+
+
+    <resultMap id="qestnarAnswerMap" class="kr.co.hanshinit.NeoCMS.cop.mvote.qestnar.mvoteItm.service.MvoteAnswer">
+		<result property="mvoteAnswerNo" column="MVOTE_ANSWER_NO" columnIndex="12"/>
+		<result property="answer" column="ANSWER" columnIndex="13"/>
+		<result property="answerTy" column="ANSWER_TY" columnIndex="14"/>
+		<result property="fileNm" column="FILE_NM" columnIndex="15"/>
+		<result property="storePath" column="STORE_PATH" columnIndex="16"/>
+		<result property="storeFlieNm" column="STORE_FLIE_NM" columnIndex="17"/>
+		<result property="ordr" column="AN_ORDR" columnIndex="18"/>
+    </resultMap>
+
+
+
+
+
+	<select id="mvoteQestnarItmDAO.selectMvoteQestnAllList"  parameterClass="Integer" resultMap="mvoteQestnAllMap">
+		SELECT A.*,
+			   B.MVOTE_ANSWER_NO, B.ANSWER, B.ANSWER_TY,
+			   B.FILE_NM , B.STORE_FLIE_NM,
+			   B.STORE_PATH,
+			   B.ORDR AS AN_ORDR
+		FROM TN_MVOTE_QESTN A, TN_MVOTE_ANSWER B
+		WHERE A.MVOTE_QESTN_NO = B.MVOTE_QESTN_NO (+)
+		AND A.MVOTE_NO = #mvoteNo#
+		ORDER BY A.MVOTE_QESTN_NO, A.ORDR ASC, B.ORDR ASC
+	</select>
+
+	<select id="mvoteQestnarItmDAO.selectMvoteQestnList"  parameterClass="Integer" resultMap="mvoteQestnMap">
+		SELECT A.*,
+			   B.MVOTE_ANSWER_NO, B.ANSWER, B.ANSWER_TY,
+			   B.FILE_NM , B.STORE_FLIE_NM,
+			   B.STORE_PATH,
+			   B.ORDR AS AN_ORDR
+		FROM TN_MVOTE_QESTN A, TN_MVOTE_ANSWER B
+		WHERE A.MVOTE_QESTN_NO = B.MVOTE_QESTN_NO (+)
+		AND A.MVOTE_NO = #mvoteNo#
+		ORDER BY A.ORDR ASC, B.ORDR ASC
+	</select>
+
+	<select id="mvoteQestnarItmDAO.selectMvoteQestn" parameterClass="mvoteQestn" resultMap="mvoteQestnMap">
+		SELECT A.*,
+			   B.MVOTE_ANSWER_NO, B.ANSWER, B.ANSWER_TY,
+			   B.FILE_NM , B.STORE_FLIE_NM,
+			   B.STORE_PATH,
+			     B.ORDR AS AN_ORDR
+		FROM TN_MVOTE_QESTN A, TN_MVOTE_ANSWER B
+		WHERE A.MVOTE_QESTN_NO = B.MVOTE_QESTN_NO (+)
+		AND A.MVOTE_QESTN_NO = #mvoteQestnNo#
+		ORDER BY B.ORDR ASC
+	</select>
+
+
+	<select id="mvoteQestnarItmDAO.selectQestnMaxOrdr" parameterClass="Integer" resultClass="Integer">
+		SELECT NVL(MAX(ORDR),0) FROM TN_MVOTE_QESTN
+		WHERE MVOTE_NO = #mvoteNo#
+	</select>
+
+	<select id="mvoteQestnarItmDAO.selectAnswerMaxOrdr" parameterClass="Integer" resultClass="Integer">
+		SELECT NVL(MAX(ORDR)+1,0) FROM TN_MVOTE_ANSWER
+		WHERE MVOTE_QESTN_NO = #mvoteQestnNo#
+	</select>
+
+
+	<select id="mvoteQestnarItmDAO.selectMvoteQestnNoNextVal" resultClass="Integer">
+		SELECT TN_MVOTE_QESTN_SEQ.NEXTVAL FROM DUAL
+	</select>
+
+
+	<insert id="mvoteQestnarItmDAO.insertMvoteQestn" parameterClass="mvoteQestn">
+	INSERT INTO TN_MVOTE_QESTN
+	(
+	MVOTE_QESTN_NO
+	, MVOTE_NO
+	, QESTN
+	, QESTN_DC
+	, QESTN_TY
+	, MULTI_ANSWER_AT
+	,MUMM_ANSWER_CO
+	, ANSWER_CO
+	, ORDR
+	, FRST_REGISTER_PNTTM
+	, FRST_REGISTER_ID
+	, WIDTH_AT
+	)
+VALUES(
+#mvoteQestnNo#,
+#mvoteNo#,
+#qestn#,
+#qestnDc#,
+#qestnTy#,
+#multiAnswerAt#,
+#mummAnswerCo#,
+#answerCo#,
+#ordr#,
+#frstRegisterPnttm#,
+#frstRegisterId#,
+#widthAt#
+)
+	</insert>
+
+	<insert id="mvoteQestnarItmDAO.insertMvoteAnswer" parameterClass="mvoteAnswer">
+	INSERT INTO TN_MVOTE_ANSWER
+	(
+	 MVOTE_QESTN_NO
+	, ANSWER
+	, ANSWER_TY
+	, FILE_NM, STORE_PATH
+	, STORE_FLIE_NM
+	, ORDR
+	, FRST_REGISTER_PNTTM
+	, FRST_REGISTER_ID
+	)
+	 VALUES(
+	#mvoteQestnNo#,
+	#answer#,
+	#answerTy#,
+	#fileNm#,
+	#storePath#,
+	#storeFlieNm#,
+	#ordr#,
+	#frstRegisterPnttm#,
+	#frstRegisterId#
+	)
+	</insert>
+
+	<update id="mvoteQestnarItmDAO.updateMvoteQestn" parameterClass="mvoteQestn">
+		UPDATE TN_MVOTE_QESTN
+		SET
+			QESTN= #qestn#,
+			QESTN_DC= #qestnDc#,
+			QESTN_TY= #qestnTy#,
+			MULTI_ANSWER_AT= #multiAnswerAt#,
+			MUMM_ANSWER_CO = #mummAnswerCo#,
+			ANSWER_CO= #answerCo#,
+			ORDR= #ordr#,
+			WIDTH_AT=#widthAt#,
+			LAST_UPDUSR_PNTTM= #lastUpdusrPnttm#,
+			LAST_UPDUSR_ID= #lastUpdusrId#
+		WHERE MVOTE_QESTN_NO= #mvoteQestnNo#
+	</update>
+	<update id="mvoteQestnarItmDAO.updateMvoteAnswer"    parameterClass="mvoteAnswer">
+		UPDATE TN_MVOTE_ANSWER
+		SET
+			ANSWER= #answer#,
+			ANSWER_TY= #answerTy#,
+			FILE_NM= #fileNm#,
+			STORE_PATH= #storePath#,
+			STORE_FLIE_NM= #storeFlieNm#,
+			ORDR= #ordr#
+		WHERE MVOTE_ANSWER_NO= #mvoteAnswerNo#
+	</update>
+
+	<update id="mvoteQestnarItmDAO.updateMvoteQestnSort" parameterClass="mvoteQestn">
+			UPDATE TN_MVOTE_QESTN
+		SET
+			ORDR= #ordr#,
+			LAST_UPDUSR_PNTTM= #lastUpdusrPnttm#,
+			LAST_UPDUSR_ID= #lastUpdusrId#
+		WHERE MVOTE_QESTN_NO= #mvoteQestnNo#
+	</update>
+
+
+	<update id="mvoteQestnarItmDAO.updateMvoteAnswerSort" parameterClass="mvoteAnswer">
+		UPDATE TN_MVOTE_ANSWER
+		SET
+			ORDR= #ordr#
+		WHERE MVOTE_ANSWER_NO= #mvoteAnswerNo#
+	</update>
+
+	<delete id="mvoteQestnarItmDAO.deleteMvoteQestn" parameterClass="mvoteQestn">
+		DELETE FROM TN_MVOTE_QESTN WHERE MVOTE_QESTN_NO= #mvoteQestnNo#
+	</delete>
+
+
+
+	<delete id="mvoteQestnarItmDAO.deleteMvoteAnswer" parameterClass="mvoteAnswer">
+		DELETE FROM TN_MVOTE_ANSWER WHERE MVOTE_ANSWER_NO= #mvoteAnswerNo#
+	</delete>
+
+
+	<delete id="mvoteQestnarItmDAO.deleteMvoteAnswerByQestnNo" parameterClass="mvoteQestn">
+		DELETE FROM TN_MVOTE_ANSWER WHERE MVOTE_QESTN_NO = #mvoteQestnNo#
+	</delete>
+
+	<insert id="mvoteQestnarItmDAO.insertMvoteQestnCopy"  parameterClass="mvoteQestn">
+	<selectKey keyProperty="mvoteQestnNo" resultClass="Integer">
+	SELECT TN_MVOTE_QESTN_SEQ.NEXTVAL FROM DUAL
+</selectKey>
+INSERT INTO TN_MVOTE_QESTN
+	(
+	MVOTE_QESTN_NO
+	, MVOTE_NO
+	, QESTN
+	, QESTN_DC
+	, QESTN_TY
+	, MULTI_ANSWER_AT
+	,MUMM_ANSWER_CO
+	, ANSWER_CO
+	, ORDR
+	, FRST_REGISTER_PNTTM
+	, FRST_REGISTER_ID
+	)
+VALUES(
+#mvoteQestnNo#,
+#mvoteNo#,
+#qestn#,
+#qestnDc#,
+#qestnTy#,
+#multiAnswerAt#,
+#mummAnswerCo#,
+#answerCo#,
+#ordr#,
+#frstRegisterPnttm#,
+#frstRegisterId#
+)
+
+</insert>
+
+
+</sqlMap>

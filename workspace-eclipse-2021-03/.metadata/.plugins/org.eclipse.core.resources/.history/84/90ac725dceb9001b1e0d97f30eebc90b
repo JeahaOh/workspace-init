@@ -1,0 +1,594 @@
+package kr.co.hanshinit.NeoCMS.cop.edu.cos.web;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+import com.ibm.icu.text.SimpleDateFormat;
+import egovframework.com.cmm.LoginVO;
+import kr.co.hanshinit.NeoCMS.cmm.service.CmmUseService;
+import kr.co.hanshinit.NeoCMS.cmm.stereotype.Interceptor;
+import kr.co.hanshinit.NeoCMS.cmm.util.SessionUtil;
+import kr.co.hanshinit.NeoCMS.cmm.util.StringUtil;
+import kr.co.hanshinit.NeoCMS.cop.edc.service.EducationalService;
+import kr.co.hanshinit.NeoCMS.cop.edc.service.EducationalVO;
+import kr.co.hanshinit.NeoCMS.cop.edu.cos.app.service.EduCourseApp;
+import kr.co.hanshinit.NeoCMS.cop.edu.cos.app.service.EduCourseAppService;
+import kr.co.hanshinit.NeoCMS.cop.edu.cos.app.service.EduCourseAppVO;
+import kr.co.hanshinit.NeoCMS.cop.edu.cos.service.EduCourse;
+import kr.co.hanshinit.NeoCMS.cop.edu.cos.service.EduCourseService;
+import kr.co.hanshinit.NeoCMS.cop.edu.cos.service.EduCourseVO;
+import kr.co.hanshinit.NeoCMS.cop.edu.plc.service.EduPlace;
+import kr.co.hanshinit.NeoCMS.cop.edu.plc.service.EduPlaceService;
+import kr.co.hanshinit.NeoCMS.cop.edu.plc.service.EduPlaceVO;
+import kr.co.hanshinit.NeoCMS.cop.edu.tch.service.EduTeacherService;
+import kr.co.hanshinit.NeoCMS.cop.edu.tch.service.EduTeacherVO;
+import kr.co.hanshinit.NeoCMS.site.service.SiteService;
+import kr.co.hanshinit.NeoCMS.tag.pagination.NeoPaginationInfo;
+import kr.co.hanshinit.NeoCMS.uat.uia.service.LoginUtil;
+
+@Controller
+public class CourseWebController {
+  
+  Logger logger = LoggerFactory.getLogger(this.getClass());
+	
+	/** siteService **/
+	@Resource(name="siteService")
+	private SiteService siteService;
+	
+	/** cmmUseService */
+	@Resource(name="cmmUseService")
+	private CmmUseService cmmUseService;
+	
+	/** eduCourseService */
+	@Resource(name="eduCourseService")
+	private EduCourseService eduCourseService;
+	
+	/** eduCourseService */
+	@Resource(name="eduCourseAppService")
+	private EduCourseAppService eduCourseAppService;
+	
+	/** eduTeacherService */
+	@Resource(name="eduTeacherService")
+	private EduTeacherService eduTeacherService;
+	
+	/** eduPlaceService */
+	@Resource(name="eduPlaceService")
+	private EduPlaceService eduPlaceService;
+	
+	/** EducationalService */
+	@Resource(name="edcService")
+	private EducationalService edcService;
+	
+  @Interceptor("templateBinding")
+  @RequestMapping(value = "/{siteId}/courseList.do", method = RequestMethod.GET)
+  public String courseList(
+    ModelMap model
+    , @PathVariable("siteId") String siteId
+    , EduCourseVO eduCourseVO
+    , HttpServletRequest request
+  ) throws Exception {
+    
+
+    // 접수 상태
+    Map<String, String> ests01 = cmmUseService.selectCmmnDetailCodeMap("ESTS01");
+    model.addAttribute("ests01", ests01);
+
+    // 강사소개분류
+    Map<String, String> fei01 = cmmUseService.selectCmmnDetailCodeMap("FEI01");
+    model.addAttribute("fei01", fei01);
+
+    // 강좌 대상
+    Map<String, String> ctrg01 = cmmUseService.selectCmmnDetailCodeMap("CTRG01");
+    model.addAttribute("ctrg01", ctrg01);
+
+    Date today = new Date();
+    model.addAttribute("today", today);
+
+    if ("A".equals(StringUtil.nvl(eduCourseVO.getSrcQuarter()))) {
+      eduCourseVO
+          .setSrcQuarter(String.valueOf(eduCourseService.selectEduCourseMaxQuarter(eduCourseVO)));
+    }
+
+    if ("FEISJ14".equals(eduCourseVO.getSrcCategory())) {
+      eduCourseVO.setPageUnit(999999999);
+      eduCourseVO.setSortField("FEISJ14");
+    } else {
+      eduCourseVO.setPageUnit(4);
+      eduCourseVO.setSortField("title");
+    }
+
+    // 페이징
+    int totCnt = eduCourseService.selectEduCourseTotCnt(eduCourseVO);
+
+    NeoPaginationInfo neoPaginationInfo = eduCourseVO.getNeoPaginationInfo(totCnt);
+    model.addAttribute("paginationInfo", neoPaginationInfo);
+
+    logger.debug("\n\t>> eduCourseList BGN <<");
+    List<EduCourseVO> eduCourseList = eduCourseService.selectEduCourseList(eduCourseVO);
+    model.addAttribute("eduCourseList", eduCourseList);
+    logger.debug("\n\t>> eduCourseList END << : {}", eduCourseList.size());
+    
+    for( EduCourseVO vo : eduCourseList ) {
+      logger.debug("\n{}\n", ToStringBuilder.reflectionToString(vo, ToStringStyle.MULTI_LINE_STYLE));
+    }
+
+    // 검색 조건 반환
+    model.addAttribute("eduCourseVO", eduCourseVO);
+    
+    if ("FEISJ14".equals(eduCourseVO.getSrcCategory())) {
+      return "NeoCMS/cop/edu/cos/webCourseList3";
+    } else {
+      return "NeoCMS/cop/edu/cos/webCourseList";
+    }
+  }
+/*	
+	@RequestMapping(value="/{siteId}/courseRegist.do", method=RequestMethod.GET)
+	public String courseRegist(ModelMap model
+			, @PathVariable("siteId") String siteId
+			, EduCourseVO eduCourseVO
+			, HttpServletRequest request
+			) throws Exception{
+		
+		// 접수 상태
+		Map<String, String> ests01 = cmmUseService.selectCmmnDetailCodeMap("ESTS01");
+		model.addAttribute("ests01", ests01);
+		
+		//강사소개분류
+        Map<String, String> fei01 = cmmUseService.selectCmmnDetailCodeMap("FEI01");
+        model.addAttribute("fei01",fei01);
+        
+        //강좌 대상
+        Map<String, String> ctrg01 = cmmUseService.selectCmmnDetailCodeMap("CTRG01");
+        model.addAttribute("ctrg01",ctrg01);
+		
+		Date today = new Date();
+        model.addAttribute("today", today);
+        
+        //교육장소
+        List<EduPlace> eduPlaceMap = eduPlaceService.selectEduPlaceMap(new EduPlaceVO());
+        model.addAttribute("eduPlaceMap", eduPlaceMap);
+        
+        //검색 조건 반환
+  		model.addAttribute("eduCourseVO", eduCourseVO);
+		
+		return "NeoCMS/cop/edu/cos/courseRegist";
+	}
+	
+	@RequestMapping(value="/{siteId}/courseRegist.do", method=RequestMethod.POST)
+	public String courseRegistDo(ModelMap model
+			, @PathVariable("siteId") String siteId
+			, EduCourse eduCourse
+			, HttpServletRequest request
+			, final MultipartHttpServletRequest multiRequest
+			) throws Exception{
+		
+		eduCourseService.insertEduCourse(multiRequest, multiRequest, eduCourse);
+		
+		return cmmUseService.redirectMsg(model, "등록되었습니다.", "/{siteId}/courseList.do");
+	}
+ */	
+	@Interceptor("templateBinding")
+	@RequestMapping(value="/{siteId}/courseUpdt.do", method=RequestMethod.GET)
+	public String courseUpdt(ModelMap model
+			, @PathVariable("siteId") String siteId
+			, EduCourseVO eduCourseVO
+			, HttpServletRequest request
+			) throws Exception{
+		
+		EduCourseVO eduCourse = eduCourseService.selectEduCourse(eduCourseVO, request);
+		model.addAttribute("eduCourse", eduCourse);
+		
+		// 접수 상태
+		Map<String, String> ests01 = cmmUseService.selectCmmnDetailCodeMap("ESTS01");
+		model.addAttribute("ests01", ests01);
+		
+		//강사소개분류
+        Map<String, String> fei01 = cmmUseService.selectCmmnDetailCodeMap("FEI01");
+        model.addAttribute("fei01",fei01);
+        
+        //강좌 대상
+        Map<String, String> ctrg01 = cmmUseService.selectCmmnDetailCodeMap("CTRG01");
+        model.addAttribute("ctrg01",ctrg01);
+		
+		Date today = new Date();
+        model.addAttribute("today", today);
+        
+        //교육장소
+        List<EduPlace> eduPlaceMap = eduPlaceService.selectEduPlaceMap(new EduPlaceVO());
+        model.addAttribute("eduPlaceMap", eduPlaceMap);
+        
+        //기관현황
+        EducationalVO edcVO = new EducationalVO();
+        edcVO.setAuth("Y");
+        edcVO.setFirstIndex(0);
+        edcVO.setLastIndex(edcService.selectEdcTotCnt(edcVO));
+        List<EducationalVO> edcList = edcService.selectEdcList(edcVO);
+        model.addAttribute("edcList", edcList);
+        
+        List<EduCourseVO> eduCourseList = eduCourseService.selectEduCourseMap(new EduCourseVO());
+        model.addAttribute("eduCourseList", eduCourseList);
+        
+        List<EduCourseVO> eduCourseList2 = eduCourseService.selectEduCourseList2(new EduCourseVO());
+        model.addAttribute("eduCourseList2", eduCourseList2);
+        
+        //검색 조건 반환
+  		model.addAttribute("eduCourseVO", eduCourseVO);
+		
+		return "NeoCMS/cop/edu/cos/webCourseUpdt";
+	}
+	
+	@Interceptor("templateBinding")
+	@RequestMapping(value="/{siteId}/courseUpdt.do", method=RequestMethod.POST)
+	public String courseUpdt(ModelMap model
+			, @PathVariable("siteId") String siteId
+			, @RequestParam("key") int key
+			, EduCourseVO eduCourseVO
+			, HttpServletRequest request
+			, final MultipartHttpServletRequest multiRequest
+			) throws Exception{
+		
+		eduCourseService.updateEduCourse(multiRequest, multiRequest, eduCourseVO);
+		
+		return cmmUseService.redirectMsg(model, "수정되었습니다.", "/"+siteId+"/courseView.do?key="+key+"&course="+eduCourseVO.getCourse());
+	}
+	
+	@Interceptor("templateBinding")
+	@RequestMapping(value="/{siteId}/courseDel.do", method=RequestMethod.GET)
+	public String courseDel(ModelMap model
+			, @PathVariable("siteId") String siteId
+			, @RequestParam("key") int key
+			, EduCourseVO eduCourseVO
+			, HttpServletRequest request
+			) throws Exception {
+		
+		eduCourseService.deleteEduCourse(eduCourseVO);
+		
+		return cmmUseService.redirectMsg(model, "삭제되었습니다.", "/"+siteId+"/sub.do?key="+key);
+	}
+	
+	@Interceptor("templateBinding")
+	@RequestMapping(value="/{siteId}/courseView.do", method=RequestMethod.GET)
+	public String courseView(ModelMap model
+			, @PathVariable("siteId") String siteId
+			, EduCourseVO eduCourseVO
+			, EduCourseAppVO eduCourseAppVO
+			, EduTeacherVO eduTeacherVO
+			, HttpServletRequest request
+			) throws Exception{
+
+		EduCourseVO eduCourse = eduCourseService.selectEduCourse(eduCourseVO, request);
+		eduCourse.setComment(StringUtil.html2text(eduCourse.getComment()));
+		eduCourse.setBigo(StringUtil.html2text(eduCourse.getBigo()));
+		model.addAttribute("eduCourse", eduCourse);
+		
+		//강사소개분류
+        Map<String, String> fei01 = cmmUseService.selectCmmnDetailCodeMap("FEI01");
+        model.addAttribute("fei01",fei01);
+        
+        //강좌 대상
+        Map<String, String> ctrg01 = cmmUseService.selectCmmnDetailCodeMap("CTRG01");
+        model.addAttribute("ctrg01",ctrg01);
+        
+        //기관 분류
+		Map<String, String> ctg01 = cmmUseService.selectCmmnDetailCodeMap("CTG01");
+		model.addAttribute("ctg01", ctg01);
+		
+		Map<String, String> ests01 = cmmUseService.selectCmmnDetailCodeMap("ESTS01");
+		model.addAttribute("ests01", ests01);
+        
+        //기관 정보
+        EducationalVO edcVO = new EducationalVO();
+        edcVO.setEducational(eduCourse.getEducational());
+        EducationalVO educationalVO = edcService.selectEdc(edcVO, request);
+        
+        model.addAttribute("educationalVO", educationalVO);
+		
+        //검색 조건 반환
+  		model.addAttribute("eduCourseVO", eduCourseVO);
+
+  		eduTeacherVO.setTeacher(eduCourse.getTeacher());
+		EduTeacherVO eduTeacher = eduTeacherService.selectEduTeacher(eduTeacherVO, request);
+		model.addAttribute("eduTeacher", eduTeacher);
+
+
+		String user = LoginUtil.getLoginId(request.getSession());
+		eduCourseAppVO.setUser(user);
+
+		EduCourseApp eduCourseApp = eduCourseAppService.selectEduCourseApp2(eduCourseAppVO);
+  		model.addAttribute("eduCourseApp", eduCourseApp);
+
+		
+		return "NeoCMS/cop/edu/cos/webCourseView";
+	}
+
+	@Interceptor("templateBinding")
+	@RequestMapping(value="/{siteId}/onlineCourseView.do", method=RequestMethod.GET)
+	public String onlineCourseView(ModelMap model
+			, @PathVariable("siteId") String siteId
+			, @RequestParam("key") int key
+			, EduCourseVO eduCourseVO
+			, EduCourseAppVO eduCourseAppVO
+			, EduTeacherVO eduTeacherVO
+			, HttpServletRequest request
+			) throws Exception {
+		
+		model.addAttribute("eduCourseAppVO", eduCourseAppVO);
+		
+		Date today = new Date();
+		model.addAttribute("today", today);
+		
+		EduCourse tmpEduCourse = new EduCourse();
+		tmpEduCourse.setCourse(eduCourseAppVO.getCourse());
+		
+		EduCourseVO eduCourse = eduCourseService.selectEduCourse(eduCourseVO, request);
+		eduCourse.setComment(StringUtil.html2text(eduCourse.getComment()));
+		eduCourse.setBigo(StringUtil.html2text(eduCourse.getBigo()));
+		eduCourse.setSttl(StringUtil.html2text(eduCourse.getSttl()));
+
+		EducationalVO edcVO = new EducationalVO();
+		edcVO.setEducational(eduCourse.getEducational());
+		EducationalVO educational = edcService.selectEdc(edcVO, request);
+		model.addAttribute("educational", educational);
+		
+		model.addAttribute("eduCourse", eduCourse);
+
+		String user = LoginUtil.getLoginId(request.getSession());
+		eduCourseAppVO.setUser(user);
+
+		if("".equals(user))
+			return cmmUseService.redirectMsg(model, "로그인 페이지로 이동합니다.", "/"+siteId+"/login.do?key=29");
+		
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+		String[] ptime = eduCourse.getPtime().split(":");
+		
+		long sdate = sdf.parse(eduCourse.getCssdate().substring(0,8) + ptime[0] + ptime[1] + "00" ).getTime();
+		long edate = sdf.parse(eduCourse.getCsedate().substring(0,8) + ptime[2] + ptime[3] + "00").getTime();
+		long ndate = sdf.parse(sdf.format(new Date()).toString()).getTime();
+		
+		if(ndate < sdate || ndate > edate)
+			return cmmUseService.redirectMsg(model, "교육 기간이 아닙니다.", "/"+siteId+"/courseList.do?key="+key+"&srcEdu="+eduCourseVO.getSrcEdu()+"&srcCategory="+eduCourseVO.getSrcCategory());
+
+		EduCourseApp eduCourseApp = eduCourseAppService.selectEduCourseApp2(eduCourseAppVO);
+
+		if(!"0".equals(eduCourseApp.getStatus()))
+			return cmmUseService.redirectMsg(model, "수강신청 후 시청하실 수 있습니다.", "/"+siteId+"/courseView.do?key="+key+"&course="+eduCourseAppVO.getCourse());
+
+		model.addAttribute("eduCourseApp", eduCourseApp);
+		
+		//강사소개분류
+        Map<String, String> fei01 = cmmUseService.selectCmmnDetailCodeMap("FEI01");
+        model.addAttribute("fei01",fei01);
+        
+        //강좌 대상
+        Map<String, String> ctrg01 = cmmUseService.selectCmmnDetailCodeMap("CTRG01");
+        model.addAttribute("ctrg01",ctrg01);
+        
+        //기관 분류
+		Map<String, String> ctg01 = cmmUseService.selectCmmnDetailCodeMap("CTG01");
+		model.addAttribute("ctg01", ctg01);
+                
+        model.addAttribute("educationalVO", educational);
+		
+  		model.addAttribute("eduCourseVO", eduCourseVO);
+		
+		return "NeoCMS/cop/edu/cos/webOnlineCourseView";
+	}
+	
+	/** 도서관용 List를 출력하기 위한 두 번째 함수. 모두다 2를 붙임, DdcLib DB로부터 데이터 출력. */
+	@Interceptor("templateBinding")
+	@RequestMapping(value="/{siteId}/courseList2.do", method=RequestMethod.GET)
+	public String courseList2(ModelMap model
+			, @PathVariable("siteId") String siteId
+			, EduCourseVO eduCourseVO
+			, HttpServletRequest request
+			) throws Exception{
+		
+		// 접수 상태
+		Map<String, String> ests01 = cmmUseService.selectCmmnDetailCodeMap2("ESTS01");
+		model.addAttribute("ests01", ests01);
+		
+		//강사소개분류
+        Map<String, String> fei01 = cmmUseService.selectCmmnDetailCodeMap2("FEI01");
+        model.addAttribute("fei01",fei01);
+        
+        //강좌 대상
+        Map<String, String> ctrg01 = cmmUseService.selectCmmnDetailCodeMap2("CTRG01");
+        model.addAttribute("ctrg01",ctrg01);
+		
+		Date today = new Date();
+        model.addAttribute("today", today);
+        eduCourseVO.setSortField("title");
+    	//페이징 
+    	int totCnt = eduCourseService.selectEduCourseTotCnt2(eduCourseVO);
+    	NeoPaginationInfo neoPaginationInfo = eduCourseVO.getNeoPaginationInfo(totCnt);
+    	model.addAttribute("paginationInfo", neoPaginationInfo);
+    	
+    	List<EduCourseVO> eduCourseList = eduCourseService.selectEduCourseList2(eduCourseVO);
+    	model.addAttribute("eduCourseList", eduCourseList);
+    	
+    	 //기관현황
+        EducationalVO edcVO = new EducationalVO();
+        edcVO.setAuth("Y");
+        List<EducationalVO> edcList = edcService.selectEdcList2(edcVO);
+        Map<Integer, String> edcMap = new HashMap<Integer, String>();
+        for(EducationalVO temp:edcList){
+        	edcMap.put(temp.getEducational(), temp.getTitle());
+        }
+        model.addAttribute("edcMap", edcMap);
+		
+		//검색 조건 반환
+		model.addAttribute("eduCourseVO", eduCourseVO);
+		
+		return "NeoCMS/cop/edu/cos/webCourseList2";
+	}
+	
+	@Interceptor("templateBinding")
+	@RequestMapping(value="/{siteId}/myEduCourseList.do", method=RequestMethod.GET)
+	public String myEduCourseList(ModelMap model
+			, @PathVariable("siteId") String siteId
+			, EduCourseVO eduCourseVO
+			, HttpServletRequest request
+			, @RequestParam("key") int key
+			, HttpSession session
+			) throws Exception{
+		
+		LoginVO loginVO = (LoginVO)SessionUtil.getSessionValue(session, "loginVO");
+		
+		if(loginVO ==null ){
+			return cmmUseService.redirectMsg(model, "로그인 페이지로 이동합니다.", "/"+siteId+"/login.do?key=29");
+		}
+		
+		// 접수 상태
+		Map<String, String> ests01 = cmmUseService.selectCmmnDetailCodeMap("ESTS01");
+		model.addAttribute("ests01", ests01);
+		
+		//강사소개분류
+        Map<String, String> fei01 = cmmUseService.selectCmmnDetailCodeMap("FEI01");
+        model.addAttribute("fei01",fei01);
+        
+        //강좌 대상
+        Map<String, String> ctrg01 = cmmUseService.selectCmmnDetailCodeMap("CTRG01");
+        model.addAttribute("ctrg01",ctrg01);
+		
+		Date today = new Date();
+        model.addAttribute("today", today);
+        
+        String user = LoginUtil.getLoginId(request.getSession());
+        String teacher = eduCourseService.selectMyTeacher(user);
+        
+        if(teacher == null){
+			return cmmUseService.backMsg(model, "강사만 볼수있습니다.");
+		}else{
+			eduCourseVO.setTeacher(Integer.parseInt(teacher));
+		}        
+        
+    	//페이징 
+    	int totCnt = eduCourseService.selectMyEduCourseTotCnt(eduCourseVO);
+    	NeoPaginationInfo neoPaginationInfo = eduCourseVO.getNeoPaginationInfo(totCnt);
+    	model.addAttribute("paginationInfo", neoPaginationInfo);
+    	
+    	List<EduCourseVO> myEduCourseList = eduCourseService.selectMyEduCourseList(eduCourseVO);
+    	model.addAttribute("myEduCourseList", myEduCourseList);
+		
+		//검색 조건 반환
+		model.addAttribute("eduCourseVO", eduCourseVO);
+		
+		return "NeoCMS/cop/edu/cos/webMyEduCourseList";
+	}
+	
+	@Interceptor("templateBinding")
+	@RequestMapping(value="/{siteId}/myCourseView.do", method=RequestMethod.GET)
+	public String myCourseView(ModelMap model
+			, @PathVariable("siteId") String siteId
+			, EduCourseVO eduCourseVO
+			, HttpServletRequest request
+			) throws Exception{
+		
+		EduCourseVO eduCourse = eduCourseService.selectEduCourse(eduCourseVO, request);
+		model.addAttribute("eduCourse", eduCourse);
+		
+		//강사소개분류
+        Map<String, String> fei01 = cmmUseService.selectCmmnDetailCodeMap("FEI01");
+        model.addAttribute("fei01",fei01);
+        
+        //강좌 대상
+        Map<String, String> ctrg01 = cmmUseService.selectCmmnDetailCodeMap("CTRG01");
+        model.addAttribute("ctrg01",ctrg01);
+        
+        //기관 분류
+		Map<String, String> ctg01 = cmmUseService.selectCmmnDetailCodeMap("CTG01");
+		model.addAttribute("ctg01", ctg01);
+        
+        //기관 정보
+        EducationalVO edcVO = new EducationalVO();
+        edcVO.setEducational(eduCourse.getEducational());
+        EducationalVO educationalVO = edcService.selectEdc(edcVO, request);
+        model.addAttribute("educationalVO", educationalVO);
+		
+        //검색 조건 반환
+  		model.addAttribute("eduCourseVO", eduCourseVO);
+		
+		return "NeoCMS/cop/edu/cos/webMyCourseView";
+	}
+	
+	@Interceptor("templateBinding")
+	@RequestMapping(value="/{siteId}/myCourseUpdt.do", method=RequestMethod.GET)
+	public String myCourseUpdt(ModelMap model
+			, @PathVariable("siteId") String siteId
+			, EduCourseVO eduCourseVO
+			, HttpServletRequest request
+			) throws Exception{
+		
+		EduCourseVO eduCourse = eduCourseService.selectEduCourse(eduCourseVO, request);
+		model.addAttribute("eduCourse", eduCourse);
+		
+		// 접수 상태
+		Map<String, String> ests01 = cmmUseService.selectCmmnDetailCodeMap("ESTS01");
+		model.addAttribute("ests01", ests01);
+		
+		//강사소개분류
+        Map<String, String> fei01 = cmmUseService.selectCmmnDetailCodeMap("FEI01");
+        model.addAttribute("fei01",fei01);
+        
+        //강좌 대상
+        Map<String, String> ctrg01 = cmmUseService.selectCmmnDetailCodeMap("CTRG01");
+        model.addAttribute("ctrg01",ctrg01);
+		
+		Date today = new Date();
+        model.addAttribute("today", today);
+        
+        //교육장소
+        List<EduPlace> eduPlaceMap = eduPlaceService.selectEduPlaceMap(new EduPlaceVO());
+        model.addAttribute("eduPlaceMap", eduPlaceMap);
+        
+        //기관현황
+        EducationalVO edcVO = new EducationalVO();
+        edcVO.setAuth("Y");
+        edcVO.setFirstIndex(0);
+        edcVO.setLastIndex(edcService.selectEdcTotCnt(edcVO));
+        List<EducationalVO> edcList = edcService.selectEdcList(edcVO);
+        model.addAttribute("edcList", edcList);
+        
+        List<EduCourseVO> eduCourseList = eduCourseService.selectEduCourseMap(new EduCourseVO());
+        model.addAttribute("eduCourseList", eduCourseList);
+        
+        List<EduCourseVO> eduCourseList2 = eduCourseService.selectEduCourseList2(new EduCourseVO());
+        model.addAttribute("eduCourseList2", eduCourseList2);
+        
+        //검색 조건 반환
+  		model.addAttribute("eduCourseVO", eduCourseVO);
+		
+		return "NeoCMS/cop/edu/cos/webMyCourseUpdt";
+	}
+	
+	@Interceptor("templateBinding")
+	@RequestMapping(value="/{siteId}/myCourseUpdt.do", method=RequestMethod.POST)
+	public String myCourseUpdt(ModelMap model
+			, @PathVariable("siteId") String siteId
+			, @RequestParam("key") int key
+			, EduCourseVO eduCourseVO
+			, HttpServletRequest request
+			, final MultipartHttpServletRequest multiRequest
+			) throws Exception{
+		
+		eduCourseService.updateMyEduCourse(multiRequest, multiRequest, eduCourseVO);
+		
+		return cmmUseService.redirectMsg(model, "수정되었습니다.", "/"+siteId+"/myEduCourseList.do?key="+key+"&course="+eduCourseVO.getCourse());
+	}
+	
+}

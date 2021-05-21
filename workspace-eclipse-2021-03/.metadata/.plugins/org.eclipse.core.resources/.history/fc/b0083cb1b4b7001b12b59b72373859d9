@@ -1,0 +1,271 @@
+package kr.co.hanshinit.NeoCMS.cop.cntrct.web;
+
+import java.util.List;
+import java.util.Map;
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import kr.co.hanshinit.NeoCMS.cmm.service.AttachmentFileUtil;
+import kr.co.hanshinit.NeoCMS.cmm.service.CmmUseService;
+import kr.co.hanshinit.NeoCMS.cmm.stereotype.Interceptor;
+import kr.co.hanshinit.NeoCMS.cmm.util.StringUtil;
+import kr.co.hanshinit.NeoCMS.cop.cntrct.service.ContractDetailVO;
+import kr.co.hanshinit.NeoCMS.cop.cntrct.service.ContractSUBVO;
+import kr.co.hanshinit.NeoCMS.cop.cntrct.service.ContractService;
+import kr.co.hanshinit.NeoCMS.cop.cntrct.service.ContractVO;
+import kr.co.hanshinit.NeoCMS.tag.pagination.NeoPaginationInfo;
+
+@Interceptor("templateBinding")
+@Controller
+public class ContractController {
+  
+  Logger logger = LoggerFactory.getLogger(this.getClass());
+
+	/** contractService */
+	@Resource(name = "contractService")
+	private ContractService contractService;
+
+	/** attachmentFileUtil */
+    @Resource(name="attachmentFileUtil")
+    private AttachmentFileUtil attachmentFileUtil;
+
+	/** cmmUseService */
+	@Resource(name="cmmUseService")
+	private CmmUseService cmmUseService;
+
+	/**
+	 *
+	 * @param siteId
+	 * @param key
+	 * @param contractVO
+	 * @param model
+	 * @param request
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping("/{siteId}/contractList.do")
+	public String contractList(@PathVariable("siteId") String siteId, @RequestParam("key") int key,
+			@ModelAttribute("contractVO") ContractVO contractVO, Model model, HttpServletRequest request) throws Exception {
+
+		String CTRT_KIND = StringUtil.xssbr(request.getParameter("CTRT_KIND"));
+		CTRT_KIND = CTRT_KIND != null ? CTRT_KIND : "A";
+		String PRIVATE_CTRT_YN = request.getParameter("PRIVATE_CTRT_YN");
+		PRIVATE_CTRT_YN = PRIVATE_CTRT_YN != null ? PRIVATE_CTRT_YN : "N";
+
+		if (contractVO.getAPPLY_DATE_S() != null) {
+			contractVO.setAPPLY_DATE_S(contractVO.getAPPLY_DATE_S().replaceAll("-", ""));
+		}
+
+		if (contractVO.getAPPLY_DATE_E() != null) {
+			contractVO.setAPPLY_DATE_E(contractVO.getAPPLY_DATE_E().replaceAll("-", ""));
+		}
+
+		// 게시물 카운트
+		int totCnt = contractService.selectContractListCnt(contractVO);
+		// 페이징 정보
+    	NeoPaginationInfo neoPaginationInfo = contractVO.getNeoPaginationInfo(totCnt);
+    	// 페이징 정보 등록
+        model.addAttribute("paginationInfo", neoPaginationInfo);
+
+		Map<String, Object> map = this.contractService.selectContractList(contractVO);
+
+		model.addAttribute("resultList", map.get("resultList"));
+		model.addAttribute("resultCnt", map.get("resultCnt"));
+		model.addAttribute("contractVO", contractVO);
+		model.addAttribute("CTRT_KIND", CTRT_KIND);
+		model.addAttribute("PRIVATE_CTRT_YN", PRIVATE_CTRT_YN);
+
+		return "NeoCMS/cop/cntrct/contractList";
+	}
+
+	/**
+	 *
+	 * @param siteId
+	 * @param key
+	 * @param contractVO
+	 * @param model
+	 * @param request
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping({ "/{siteId}/contractView.do" })
+	public String contractView(@PathVariable("siteId") String siteId, @RequestParam("key") int key,
+			@ModelAttribute("contractVO") ContractVO contractVO, Model model, HttpServletRequest request) throws Exception {
+
+		String CONTRACT_NUM = StringUtil.xssbr(request.getParameter("CONTRACT_NUM"));
+		String CTRT_KIND = StringUtil.xssbr(request.getParameter("CTRT_KIND"));
+		String PRIVATE_CTRT_YN = StringUtil.xssbr(request.getParameter("PRIVATE_CTRT_YN"));
+		List<ContractSUBVO> resultSUB = null;
+		contractVO.setCONTRACT_NUM(CONTRACT_NUM);
+
+		ContractDetailVO contractView = this.contractService.selectContractView(contractVO);
+
+		// 감독관 정보 가져오기
+		List<ContractDetailVO> manager = this.contractService.selectContractManager(contractVO);
+
+		// List<ContractModifVO> resultModif =
+		// this.contractService.selectModifyList(contractVO);
+		if ("Z".equals(PRIVATE_CTRT_YN)) {
+		    // 하도급 정보 가져오기
+			resultSUB = this.contractService.selectSUBCTRTView(contractVO);
+		}
+		model.addAttribute("resultSUB", resultSUB);   // 하도급 정보
+		model.addAttribute("result", contractView);             // 계약 정보
+		// model.addAttribute("resultModifList", resultModif);
+		model.addAttribute("CTRT_KIND", CTRT_KIND);
+		model.addAttribute("PRIVATE_CTRT_YN", PRIVATE_CTRT_YN);
+		model.addAttribute("contractVO", contractVO);
+		model.addAttribute("manager", manager);       // 감독관 정보
+
+		return "NeoCMS/cop/cntrct/contractView";
+	}
+
+	/**
+	 *
+	 * @param siteId
+	 * @param key
+	 * @param contractVO
+	 * @param model
+	 * @param request
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping({ "/{siteId}/printView.do" })
+	public String printView(@PathVariable("siteId") String siteId, @RequestParam("key") int key,
+			@ModelAttribute("contractVO") ContractVO contractVO, Model model, HttpServletRequest request) throws Exception {
+
+		String CONTRACT_NUM = StringUtil.xssbr(request.getParameter("CONTRACT_NUM"));
+		String CTRT_KIND = StringUtil.xssbr(request.getParameter("CTRT_KIND"));
+		contractVO.setCONTRACT_NUM(CONTRACT_NUM);
+		ContractDetailVO contractView = this.contractService.selectContractView(contractVO);
+
+		model.addAttribute("result", contractView);
+		model.addAttribute("CTRT_KIND", CTRT_KIND);
+		model.addAttribute("contractVO", contractVO);
+
+		return "NeoCMS/cop/cntrct/print";
+	}
+
+
+    @RequestMapping({ "/{siteId}/completionList.do" })
+    public String completionList(@PathVariable("siteId") String siteId, @RequestParam("key") int key,
+            @ModelAttribute("contractVO") ContractVO contractVO, Model model, HttpServletRequest request) throws Exception {
+
+
+        if (contractVO.getAPPLY_DATE_S() != null) {
+            contractVO.setAPPLY_DATE_S(contractVO.getAPPLY_DATE_S().replaceAll("-", ""));
+        }
+
+        if (contractVO.getAPPLY_DATE_E() != null) {
+            contractVO.setAPPLY_DATE_E(contractVO.getAPPLY_DATE_E().replaceAll("-", ""));
+        }
+
+        int totCnt = this.contractService.selectCompletListCnt(contractVO);
+        NeoPaginationInfo paginationInfo = contractVO.getNeoPaginationInfo(totCnt);
+
+        Map<String, Object> map = this.contractService.selectContractCompletList(contractVO);
+
+        model.addAttribute("resultList", map.get("resultList"));
+        model.addAttribute("resultCnt", map.get("resultCnt"));
+        model.addAttribute("contractVO", contractVO);
+        model.addAttribute("paginationInfo", paginationInfo);
+
+        return "NeoCMS/cop/cntrct/completList";
+    }
+
+    @RequestMapping({ "/{siteId}/completionView.do" })
+    public String completionView(@PathVariable("siteId") String siteId, @RequestParam("key") int key,
+            @ModelAttribute("contractVO") ContractVO contractVO, Model model, HttpServletRequest request) throws Exception {
+
+        String CONTRACT_NUM = StringUtil.xssbr(request.getParameter("CONTRACT_NUM"));
+
+        contractVO.setCONTRACT_NUM(CONTRACT_NUM);
+        ContractDetailVO contractDetailVO = this.contractService.selectCompletView(contractVO);
+        model.addAttribute("contractDetailVO", contractDetailVO);
+
+        return "NeoCMS/cop/cntrct/completView";
+    }
+
+
+    @RequestMapping({ "/{siteId}/testView.do" })
+    public String test(@PathVariable("siteId") String siteId, @RequestParam("key") int key,
+    @ModelAttribute("contractVO") ContractVO contractVO, Model model, HttpServletRequest request) throws Exception {
+
+    	return "NeoCMS/cop/cntrct/test";
+
+    }
+
+
+    /**
+    *
+    * @param siteId
+    * @param key
+    * @param contractVO
+    * @param model
+    * @param request
+    * @return
+    * @throws Exception
+    */
+   @RequestMapping("/{siteId}/contractXLXS.do")
+   public String contractXLXS(
+     @PathVariable("siteId") String siteId
+     , @RequestParam("key") int key
+     , @ModelAttribute("contractVO") ContractVO contractVO
+     , Model model
+     , HttpServletRequest request
+     , HttpServletResponse response
+   ) throws Exception {
+
+     String CTRT_KIND_CD = StringUtil.xssbr(request.getParameter("CTRT_KIND_CD"));
+     CTRT_KIND_CD = CTRT_KIND_CD != null ? CTRT_KIND_CD : "A";
+     String PRIVATE_CTRT_YN = request.getParameter("PRIVATE_CTRT_YN");
+     PRIVATE_CTRT_YN = PRIVATE_CTRT_YN != null ? PRIVATE_CTRT_YN : "N";
+     
+     logger.debug("\n\t >> CTRT_KIND_CD : {}, PRIVATE_CTRT_YN : {} <<\n\n", CTRT_KIND_CD, PRIVATE_CTRT_YN);
+
+     if (contractVO.getAPPLY_DATE_S() != null) {
+       contractVO.setAPPLY_DATE_S(contractVO.getAPPLY_DATE_S().replaceAll("-", ""));
+     }
+
+     if (contractVO.getAPPLY_DATE_E() != null) {
+       contractVO.setAPPLY_DATE_E(contractVO.getAPPLY_DATE_E().replaceAll("-", ""));
+     }
+     
+     contractVO.setFirstIndex(0);
+     contractVO.setLastIndex(99999999);
+
+     // 게시물 카운트
+     int totCnt = contractService.selectContractListCnt(contractVO);
+     // 페이징 정보
+     NeoPaginationInfo neoPaginationInfo = contractVO.getNeoPaginationInfo(totCnt);
+     // 페이징 정보 등록
+     model.addAttribute("paginationInfo", neoPaginationInfo);
+     
+     contractVO.setFirstIndex(0);
+     contractVO.setLastIndex(99999999);
+
+     Map<String, Object> map = this.contractService.selectContractList(contractVO);
+
+     model.addAttribute("resultList", map.get("resultList"));
+     model.addAttribute("resultCnt", map.get("resultCnt"));
+     model.addAttribute("contractVO", contractVO);
+     model.addAttribute("CTRT_KIND", CTRT_KIND);
+     model.addAttribute("PRIVATE_CTRT_YN", PRIVATE_CTRT_YN);
+     
+     response.setHeader("Content-Disposition", "attachment; filename=diary.xls"); 
+     response.setHeader("Content-Description", "JSP Generated Data"); 
+     response.setContentType("application/vnd.ms-excel");
+
+     return "NeoCMS/cop/cntrct/contractExcel";
+   }
+
+
+}

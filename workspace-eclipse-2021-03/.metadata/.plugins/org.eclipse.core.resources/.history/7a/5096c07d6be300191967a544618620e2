@@ -1,0 +1,193 @@
+package egovframework.let.sym.mnu.mpm.service.impl;
+
+import java.util.List;
+import egovframework.let.sym.mnu.mpm.service.MenuManageVO;
+import egovframework.rte.psl.dataaccess.EgovAbstractDAO;
+import org.springframework.stereotype.Repository;
+
+/**
+ * 메뉴관리, 메뉴생성, 사이트맵 생성에 대한 DAO 클래스를 정의한다.
+ * 
+ * @author 개발환경 개발팀 이용
+ * @since 2009.06.01
+ * @version 1.0
+ * @see
+ *
+ *      <pre>
+ * << 개정이력(Modification Information) >>
+ *
+ *   수정일      수정자           수정내용
+ *  -------    --------    ---------------------------
+ *   2009.03.20  이  용          최초 생성
+ *   2011.07.01  서준식			자기 메뉴 정보를 상위메뉴 정보로 참조하는 메뉴정보가 있는지 조회하는
+ *   							selectUpperMenuNoByPk() 메서드 추가
+ *   2011.08.31  JJY            경량환경 템플릿 커스터마이징버전 생성
+ *
+ *      </pre>
+ */
+
+@Repository("menuManageDAO")
+public class MenuManageDAO extends EgovAbstractDAO {
+
+  /* ### 메뉴관련 프로세스 ### */
+  /**
+   * MainMenu Head Menu 조회
+   * 
+   * @param vo MenuManageVO
+   * @return List
+   * @exception Exception
+   */
+  public List<?> selectMainMenuHead(MenuManageVO vo) throws Exception {
+    System.out.println("\n\t\t EXCUTE : menuManageDAO.selectMainMenuHead ->");
+    return list("menuManageDAO.selectMainMenuHead", vo);
+  }
+
+  /**
+   * MainMenu Left Menu 조회
+   * 
+   * @param vo MenuManageVO
+   * @return List
+   * @exception Exception
+   */
+
+  public List<?> selectMainMenuLeft(MenuManageVO vo) throws Exception {
+    System.out.println("\n\t\t EXCUTE : menuManageDAO.selectMainMenuLeft ->");
+    return list("menuManageDAO.selectMainMenuLeft", vo);
+  }
+
+  /**
+   * MainMenu Head MenuURL 조회
+   * 
+   * @param vo MenuManageVO
+   * @return String
+   * @exception Exception
+   */
+  public String selectLastMenuURL(MenuManageVO vo) throws Exception {
+    System.out.println("\n\t\t EXCUTE : menuManageDAO.selectLastMenuURL ->");
+    return (String) select("menuManageDAO.selectLastMenuURL", vo);
+  }
+
+  /**
+   * MainMenu Left Menu 조회
+   * 
+   * @param vo MenuManageVO
+   * @return int
+   * @exception Exception
+   */
+  public int selectLastMenuNo(MenuManageVO vo) throws Exception {
+    System.out.println("\n\t\t EXCUTE : menuManageDAO.selectLastMenuNo ->");
+    return (Integer) select("menuManageDAO.selectLastMenuNo", vo);
+  }
+
+  /**
+   * MainMenu Left Menu 조회
+   * 
+   * @param vo MenuManageVO
+   * @return int
+   * @exception Exception
+   */
+  public int selectLastMenuNoCnt(MenuManageVO vo) throws Exception {
+    System.out.println("\n\t\t EXCUTE : menuManageDAO.selectLastMenuNoCnt ->");
+    return (Integer) select("menuManageDAO.selectLastMenuNoCnt", vo);
+  }
+
+  /**
+   * MainMenu Head Menu 조회 - Anonymous
+   * 
+   * @param vo MenuManageVO
+   * @return List
+   * @exception Exception
+   */
+  public List<?> selectMainMenuHeadByAuthor(MenuManageVO vo) throws Exception {
+    System.out.println("\n\t\t EXCUTE : menuManageDAO.selectMainMenuHeadByAuthor ->");
+    return list("menuManageDAO.selectMainMenuHeadByAuthor", vo);
+  }
+
+  /**
+   * MainMenu Left Menu 조회 - Anonymous
+   * 
+   * @param vo MenuManageVO
+   * @return List
+   * @exception Exception
+   */
+  public List<?> selectMainMenuLeftByAuthor(MenuManageVO vo) throws Exception {
+    System.out.println("\n\t\t EXCUTE : menuManageDAO.selectMainMenuLeftByAuthor ->");
+    return list("menuManageDAO.selectMainMenuLeftByAuthor", vo);
+  }
+
+  public List<?> selectMidList(MenuManageVO vo) throws Exception {
+    System.out.println("\n\t\t EXCUTE : menuManageDAO.selectMidList ->");
+    return list("menuManageDAO.selectMidList", vo);
+  }
+
+  public int selectHighLevel() throws Exception {
+    System.out.println("\n\t\t EXCUTE : menuManageDAO.selectHighLevel ->");
+    return (Integer) select("menuManageDAO.selectHighLevel");
+  }
+
+  public int selectMidLevel(MenuManageVO vo) throws Exception {
+    System.out.println("\n\t\t EXCUTE : menuManageDAO.selectMidLevel ->");
+    return (Integer) select("menuManageDAO.selectMidLevel", vo);
+  }
+
+  public int selectLowLevel(MenuManageVO vo) throws Exception {
+    System.out.println("\n\t\t EXCUTE : menuManageDAO.selectLowLevel ->");
+    return (Integer) select("menuManageDAO.selectLowLevel", vo);
+  }
+
+  public int selectHighMenuNo(MenuManageVO vo) throws Exception {
+    System.out.println("\n\t\t EXCUTE : menuManageDAO.selectHighMenuNo ->");
+    return (Integer) select("menuManageDAO.selectHighMenuNo", vo);
+  }
+
+  public int selectMidMenuNo(MenuManageVO vo) throws Exception {
+    System.out.println("\n\t\t EXCUTE : menuManageDAO.selectMidMenuNo ->");
+    return (Integer) select("menuManageDAO.selectMidMenuNo", vo);
+  }
+
+  public int selectLowMenuNo(MenuManageVO vo) throws Exception {
+    System.out.println("\n\t\t EXCUTE : menuManageDAO.selectLowMenuNo ->");
+    return (Integer) select("menuManageDAO.selectLowMenuNo", vo);
+  }
+
+  public String insertMenuAuth(MenuManageVO vo) throws Exception {
+    System.out.println("\n\t\t EXCUTE : menuManageDAO.insertMenuAuth ->");
+    return (String) insert("menuManageDAO.insertMenuAuth", vo);
+  }
+
+  public int deleteMenu(MenuManageVO vo) throws Exception {
+    System.out.println("\n\t\t EXCUTE : menuManageDAO.deleteMainMenu ->");
+    return (Integer) delete("menuManageDAO.deleteMainMenu", vo);
+  }
+
+  public int deleteMenuAuth(MenuManageVO vo) throws Exception {
+    System.out.println("\n\t\t EXCUTE : menuManageDAO.deleteMainMenuAuth ->");
+    return (Integer) delete("menuManageDAO.deleteMainMenuAuth", vo);
+  }
+
+  public int selectMenuCheck(MenuManageVO vo) throws Exception {
+    System.out.println("\n\t\t EXCUTE : menuManageDAO.selectMenuCheck ->");
+    return (Integer) select("menuManageDAO.selectMenuCheck", vo);
+  }
+
+  public int updateMenu(MenuManageVO vo) throws Exception {
+    System.out.println("\n\t\t EXCUTE : menuManageDAO.updateMenu ->");
+    return (Integer) update("menuManageDAO.updateMenu", vo);
+  }
+
+  public String insertHighMenu(MenuManageVO vo) throws Exception {
+    System.out.println("\n\t\t EXCUTE : menuManageDAO.insertHighMenu ->");
+    return (String) insert("menuManageDAO.insertHighMenu", vo);
+  }
+
+  public String insertMidMenu(MenuManageVO vo) throws Exception {
+    System.out.println("\n\t\t EXCUTE : menuManageDAO.insertMidMenu ->");
+    return (String) insert("menuManageDAO.insertMidMenu", vo);
+  }
+
+  public String insertLowMenu(MenuManageVO vo) throws Exception {
+    System.out.println("\n\t\t EXCUTE : menuManageDAO.insertLowMenu ->");
+    return (String) insert("menuManageDAO.insertLowMenu", vo);
+  }
+
+}

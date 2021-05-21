@@ -1,0 +1,10 @@
+package com.koem.vms.waterdepth.service;
+
+import java.util.ArrayList;
+import org.json.JSONObject;
+
+public interface WaterDepthService {
+  ArrayList<JSONObject> getWaterDepthInRange( String polygon ) throws Exception;
+//  Map<String, List<Float>> getWaterDepthInRange( String polygon ) throws Exception;
+  
+}

@@ -1,0 +1,57 @@
+1551593087911	Copy file
+1551594953677	Copy package
+1551594967558	Copy package
+1551594976492	Delete elements
+1551594995649	Move compilation unit
+1551595002639	Delete element
+1551595255129	Move compilation unit
+1551596977338	Move file
+1551598126521	Move file
+1551598153457	Move file
+1551598171454	Move file
+1551598220850	Move file
+1551598485596	Move file
+1551598506930	Move file
+1551601730996	Move compilation unit
+1551601802490	Delete element
+1551672450528	Copy file
+1551672569253	Delete element
+1551677761498	Rename package 'egovframework.memb.DAO'
+1551677810180	Copy compilation unit
+1551677816040	Copy compilation unit
+1551677820264	Copy compilation units
+1551677824169	Copy compilation unit
+1551677840422	Rename type 'MembDAO'
+1551677850937	Rename type 'MembService'
+1551677858423	Rename type 'MembServiceImple'
+1551677864999	Rename type 'Memb'
+1551677871444	Rename type 'MembController'
+1551681096079	Delete element
+1551681400654	Delete element
+1551744448459	Move folder
+1551744929850	Move file
+1551745263850	Copy file
+1551745502104	Copy file
+1551745663635	Move file
+1551745671478	Delete element
+1551745677477	Delete element
+1551747601447	Delete element
+1551747625632	Copy file
+1551747934265	Delete element
+1551750208884	Delete element
+1551753290715	Rename resource 'message-common_ko.properties'
+1551753855664	Rename resource 'message-common_ko_KR.properties'
+1551938442526	Delete element
+1551938918916	Rename package 'egovframework.review'
+1551938927971	Delete element
+1551938955109	Rename package 'egovframework.review'
+1551938961011	Delete element
+1551938980772	Rename type 'ReviewController'
+1551938986230	Rename type 'Review'
+1551938994082	Rename type 'ReviewServiceImple'
+1551938999757	Rename type 'ReviewService'
+1551939005647	Rename type 'ReviewDAO'
+1551939021265	Rename package 'egovframework.review'
+1552003149157	Rename type 'DafaultVO'
+1552011595735	Rename resource 'rst.js'
+1552027587839	Copy file

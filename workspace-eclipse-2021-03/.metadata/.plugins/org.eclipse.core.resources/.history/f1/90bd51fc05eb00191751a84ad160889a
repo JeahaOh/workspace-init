@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?><project-modules id="moduleCoreId" project-version="1.5.0">
+    <wb-module deploy-name="KOEM_WebVMS">
+        <wb-resource deploy-path="/" source-path="/WebContent" tag="defaultRootSource"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src"/>
+        <wb-resource deploy-path="/WEB-INF/classes/" source-path="/ImportedClasses"/>
+        <dependent-module archiveName="spring-context-support-4.0.9.RELEASE.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/spring-context-support-4.0.9.RELEASE/spring-context-support-4.0.9.RELEASE">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="spring-webmvc-4.0.9.RELEASE.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/spring-webmvc-4.0.9.RELEASE/spring-webmvc-4.0.9.RELEASE">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="mybatis-spring-1.2.2.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/mybatis-spring-1.2.2/mybatis-spring-1.2.2">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="spring-aop-4.0.9.RELEASE.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/spring-aop-4.0.9.RELEASE/spring-aop-4.0.9.RELEASE">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="ST4-4.0.7.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/ST4-4.0.7/ST4-4.0.7">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="mchange-commons-java-0.2.11.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/mchange-commons-java-0.2.11/mchange-commons-java-0.2.11">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="spring-tx-4.0.9.RELEASE.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/spring-tx-4.0.9.RELEASE/spring-tx-4.0.9.RELEASE">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="spring-modules-validation-0.9.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/spring-modules-validation-0.9/spring-modules-validation-0.9">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="standard-1.1.2.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/standard-1.1.2/standard-1.1.2">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="spring-beans-4.0.9.RELEASE.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/spring-beans-4.0.9.RELEASE/spring-beans-4.0.9.RELEASE">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="quartz-2.3.0.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/quartz-2.3.0/quartz-2.3.0">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="ojdbc14.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/ojdbc14/ojdbc14">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="spring-context-4.0.9.RELEASE.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/spring-context-4.0.9.RELEASE/spring-context-4.0.9.RELEASE">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="mybatis-3.2.8.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/mybatis-3.2.8/mybatis-3.2.8">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="spring-web-4.0.9.RELEASE.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/spring-web-4.0.9.RELEASE/spring-web-4.0.9.RELEASE">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="spring-core-4.0.9.RELEASE.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/spring-core-4.0.9.RELEASE/spring-core-4.0.9.RELEASE">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="spring-jdbc-4.0.9.RELEASE.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/spring-jdbc-4.0.9.RELEASE/spring-jdbc-4.0.9.RELEASE">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="stringtemplate-3.2.1.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/stringtemplate-3.2.1/stringtemplate-3.2.1">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="spring-expression-4.0.9.RELEASE.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/spring-expression-4.0.9.RELEASE/spring-expression-4.0.9.RELEASE">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="spring-orm-4.0.9.RELEASE.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/spring-orm-4.0.9.RELEASE/spring-orm-4.0.9.RELEASE">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="netty-all-4.0.28.Final.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/netty-all-4.0.28.Final/netty-all-4.0.28.Final">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="slf4j-api-1.7.7.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/slf4j-api-1.7.7/slf4j-api-1.7.7">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <property name="context-root" value="KOEM_WebVMS"/>
+        <property name="java-output-path" value="/KOEM_WebVMS/build/classes"/>
+    </wb-module>
+</project-modules>

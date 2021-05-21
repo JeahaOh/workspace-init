@@ -1,0 +1,16 @@
+1586241914297	Delete elements
+1586316460323	Rename type 'Ship'
+1586318113827	Rename field 'mrn'
+1586340746741	Delete elements
+1586346176514	Delete elements
+1586347091358	Rename resource 'log4j2.xml'
+1586347108792	Copy file
+1586347114300	Rename resource 'log4j2.xml.origin'
+1586394165802	Delete element
+1586411556102	Rename local variable 'errMsg'
+1586412849451	Rename method 'trackingShipRecords'
+1586415374446	Rename type 'ShipDTO'
+1586415785167	Rename type 'TrackingShipPrams'
+1586422217179	Rename type 'TrackingShipPramDTO'
+1586423237120	Rename field 'idType'
+1586439219957	Rename local variable 'tableList'

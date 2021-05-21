@@ -1,0 +1,8 @@
+package egovframework.mng.bug.service;
+
+import egovframework.mng.bug.vo.Bug;
+
+public interface BugService {
+  public String bugReport(Bug bug) throws Exception;
+  
+}
