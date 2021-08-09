@@ -1,8 +1,0 @@
-package com.koem.vms.area.service;
-
-public class Snippet {
-  public static void main(String[] args) {
-    /reqWaterDepth.do
-  }
-}
-

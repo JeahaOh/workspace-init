@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?><project-modules id="moduleCoreId" project-version="1.5.0">
-    <wb-module deploy-name="KOEM_WebVMS">
-        <property name="context-root" value="KOEM_WebVMS"/>
-    </wb-module>
-</project-modules>

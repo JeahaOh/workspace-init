@@ -20,8 +20,7 @@
 		<item key="org.eclipse.ui.internal.quickaccess.QuickAccessDialogDIALOG_USE_PERSISTED_LOCATION" value="false"/>
 		<list key="textEntries">
 			<item value="2"/>
-			<item value="1"/>
-			<item value="1"/>
+			<item value="2"/>
 			<item value="1"/>
 			<item value="1"/>
 			<item value="2"/>
@@ -33,10 +32,9 @@
 			<item value="1"/>
 		</list>
 		<list key="orderedElements">
-			<item value="org.eclipse.ui.views.ProgressView"/>
 			<item value="org.eclipse.team.svn.ui.repository.RepositoriesView"/>
+			<item value="org.eclipse.ui.views.ProgressView"/>
 			<item value="org.eclipse.team.sync.views.SynchronizeView"/>
-			<item value="buildClean"/>
 			<item value="org.eclipse.oomph.p2.ui.RepositoryExplorer"/>
 			<item value="org.eclipse.debug.ui.DebugView"/>
 			<item value="org.eclipse.ui.views.ProblemView"/>
@@ -50,7 +48,6 @@
 			<item value="org.eclipse.e4.ui.parts"/>
 			<item value="org.eclipse.e4.ui.parts"/>
 			<item value="org.eclipse.e4.ui.parts"/>
-			<item value="org.eclipse.ui.actions"/>
 			<item value="org.eclipse.e4.ui.parts"/>
 			<item value="org.eclipse.e4.ui.parts"/>
 			<item value="org.eclipse.e4.ui.parts"/>
@@ -61,11 +58,11 @@
 			<item value="org.eclipse.ui.perspectives"/>
 		</list>
 		<list key="textArray">
+			<item value="svn"/>
+			<item value="re"/>
 			<item value="progress"/>
 			<item value="pro"/>
-			<item value="svn"/>
 			<item value="syn"/>
-			<item value="clean"/>
 			<item value="reposi"/>
 			<item value="debug"/>
 			<item value="de"/>
