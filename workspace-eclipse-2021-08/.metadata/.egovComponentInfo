@@ -1,0 +1,55 @@
+
+[2019.02.27 21:57:00] Installed component:	egovframework.com.cmm	공통
+[2019.02.27 21:57:00] Installed component:	egovframework.com.uat.uia	일반로그인
+[2019.02.27 21:57:00] Installed component:	egovframework.com.cop.sms	문자메시지서비스
+[2019.02.27 21:57:00] Installed component:	egovframework.com.cop.ems	메일연동 인터페이스
+[2019.02.27 21:57:00] Installed component:	egovframework.com.sym.log.lgm	로그관리
+[2019.02.27 21:57:00] Installed component:	egovframework.com.sym.log.ulg	사용로그관리
+[2019.02.27 21:57:00] Installed component:	egovframework.com.sym.log.wlg	웹로그관리
+[2019.02.27 21:57:00] Installed component:	egovframework.com.sym.log.clg	접속로그관리
+[2019.02.27 21:57:00] Installed component:	egovframework.com.sym.cal	일반달력
+[2019.02.27 21:57:00] Installed component:	egovframework.com.utl.fcc	유틸리티
+[2019.02.27 21:57:00] Installed component:	egovframework.com.utl.wed	웹에디터
+[2019.02.27 21:57:00] Installed component:	egovframework.com.utl.sim	시스템정보확인
+[2019.02.27 21:57:00] Installed component:	egovframework.com.utl.sys.dbm	DB서비스 모니터링
+[2019.02.27 21:57:00] Installed component:	egovframework.com.utl.sys.htm	HTTP서비스모니터링
+[2019.02.27 21:57:00] Installed component:	egovframework.com.utl.sys.srm	서버자원 모니터링
+[2019.02.27 21:57:00] Installed component:	egovframework.com.utl.sys.wsi	웹표준검사
+[2019.02.27 21:57:00] Installed component:	egovframework.com.utl.slm	중복로그인 방지
+[2019.03.01 01:40:44] Installed component:	egovframework.com.cmm	공통
+[2019.03.01 01:40:44] Installed component:	egovframework.com.cop.com	협업공통
+[2019.03.01 01:40:44] Installed component:	egovframework.com.uat.uia	일반로그인
+[2019.03.01 01:40:44] Installed component:	egovframework.com.sts.com	통계공통
+[2019.03.01 01:40:44] Installed component:	egovframework.com.sts.bst	게시물통계
+[2019.03.01 01:40:44] Installed component:	egovframework.com.cop.tpl	게시판 템플릿
+[2019.03.01 01:40:44] Installed component:	egovframework.com.cop.bbs	게시판
+[2019.03.01 01:40:44] Installed component:	egovframework.com.cop.cmt	댓글관리
+[2019.03.01 01:40:44] Installed component:	egovframework.com.cop.ems	메일연동 인터페이스
+[2019.03.01 01:40:44] Installed component:	egovframework.com.sym.cal	일반달력
+[2019.03.01 01:40:44] Installed component:	egovframework.com.utl.fcc	유틸리티
+[2019.03.01 01:40:44] Installed component:	egovframework.com.utl.wed	웹에디터
+[2019.03.01 01:40:44] Installed component:	egovframework.com.utl.sim	시스템정보확인
+[2019.03.01 01:40:44] Installed component:	egovframework.com.ext.jfile	JFILE
+[2019.03.02 14:50:43] Installed component:	egovframework.com.cmm	공통
+[2019.03.02 14:50:43] Installed component:	egovframework.com.cop.com	협업공통
+[2019.03.02 14:50:43] Installed component:	egovframework.com.uat.uia	일반로그인
+[2019.03.02 14:50:43] Installed component:	egovframework.com.cop.tpl	게시판 템플릿
+[2019.03.02 14:50:43] Installed component:	egovframework.com.cop.bbs	게시판
+[2019.03.02 14:50:43] Installed component:	egovframework.com.cop.cmt	댓글관리
+[2019.03.02 14:50:43] Installed component:	egovframework.com.cop.ems	메일연동 인터페이스
+[2019.03.02 14:50:43] Installed component:	egovframework.com.sym.cal	일반달력
+[2019.03.02 14:50:43] Installed component:	egovframework.com.utl.fcc	유틸리티
+[2019.03.02 14:50:43] Installed component:	egovframework.com.utl.wed	웹에디터
+[2019.03.02 14:50:43] Installed component:	egovframework.com.utl.sim	시스템정보확인
+[2019.03.02 16:45:18] Installed component:	egovframework.com.sec.rnc	실명확인/ 공공i-Pin실명확인
+[2019.03.02 16:45:18] Installed component:	egovframework.com.uss.umt	기업/사용자/회원관리
+[2019.03.02 16:45:18] Installed component:	egovframework.com.sym.ccm.zip	우편번호 주소찾기
+[2019.03.02 20:10:45] Installed component:	egovframework.com.cmm	공통
+[2019.03.02 20:10:45] Installed component:	egovframework.com.uat.uia	일반로그인
+[2019.03.02 20:10:45] Installed component:	egovframework.com.cop.ems	메일연동 인터페이스
+[2019.03.02 20:10:45] Installed component:	egovframework.com.utl.fcc	유틸리티
+[2019.03.02 20:10:45] Installed component:	egovframework.com.utl.wed	웹에디터
+[2019.03.02 20:10:45] Installed component:	egovframework.com.utl.sim	시스템정보확인
+[2019.03.02 20:15:11] Installed component:	egovframework.com.sec.rnc	실명확인/ 공공i-Pin실명확인
+[2019.03.02 20:15:11] Installed component:	egovframework.com.uss.umt	기업/사용자/회원관리
+[2019.03.02 20:15:11] Installed component:	egovframework.com.sym.ccm.zip	우편번호 주소찾기

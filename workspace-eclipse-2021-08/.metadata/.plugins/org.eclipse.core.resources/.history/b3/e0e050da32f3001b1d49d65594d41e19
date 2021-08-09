@@ -1,0 +1,164 @@
+package kr.co.hanshinit.NeoCMS.cop.edu.cos.app.service.impl;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Repository;
+import egovframework.rte.psl.dataaccess.EgovAbstractDAO;
+import kr.co.hanshinit.NeoCMS.cmm.util.StringUtil;
+import kr.co.hanshinit.NeoCMS.cop.edu.cos.app.service.EduCourseApp;
+import kr.co.hanshinit.NeoCMS.cop.edu.cos.app.service.EduCourseAppVO;
+import kr.co.hanshinit.NeoCMS.cop.edu.cos.app.service.EduCourseHist;
+
+@Repository(value="eduCourseAppDAO")
+public class EduCourseAppDAO extends EgovAbstractDAO {
+  private Logger logger = LoggerFactory.getLogger(this.getClass());
+
+	public int selectEduCourseAppKey(){
+		return (Integer) select("eduCourseAppDAO.selectEduCourseAppKey");
+	}
+
+	public EduCourseApp selectEduCourseApp(EduCourseApp eduCourseApp){
+		return (EduCourseApp) select("eduCourseAppDAO.selectEduCourseApp", eduCourseApp);
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<EduCourseApp> selectEduCourseAppList(EduCourseAppVO eduCourseAppVO){
+		return (List<EduCourseApp>) list("eduCourseAppDAO.selectEduCourseAppList", eduCourseAppVO);
+	}
+
+	@SuppressWarnings("unchecked")
+    public List<EduCourseApp> selectEduCourseAppSMSList(HashMap<String, Object> hm) {
+        return (List<EduCourseApp>) list("eduCourseAppDAO.selectEduCourseAppSMSList", hm);
+    }
+
+	public int selectEduCourseAppTotCnt(EduCourseAppVO eduCourseAppVO){
+		return (Integer) select("eduCourseAppDAO.selectEduCourseAppTotCnt", eduCourseAppVO);
+	}
+
+  public void insertEduCourseApp(EduCourseApp eduCourseApp) {
+    //logger.error("\n>> insertEduCourseApp 수강신청 <<\n{}\n\n", ToStringBuilder.reflectionToString(eduCourseApp, ToStringStyle.MULTI_LINE_STYLE));
+    try {
+      insert("eduCourseAppDAO.insertEduCourseApp", eduCourseApp);
+    } catch (Exception e ) {
+      StringUtil.printException( e , true );
+    }
+  }
+
+	public void updateEduCourseApp(EduCourseApp eduCourseApp){
+		update("eduCourseAppDAO.updateEduCourseApp", eduCourseApp);
+	}
+
+	public void deleteEduCourseApp(EduCourseApp eduCourseApp){
+		delete("eduCourseAppDAO.deleteEduCourseApp", eduCourseApp);
+	}
+
+	public int selectEduCourseAppCnt(EduCourseAppVO eduCourseAppVO){
+		return (Integer) select("eduCourseAppDAO.selectEduCourseAppCnt", eduCourseAppVO);
+	}
+
+	public int selectEduCourseAppCnt2(EduCourseAppVO eduCourseAppVO){
+		return (Integer) select("eduCourseAppDAO.selectEduCourseAppCnt2", eduCourseAppVO);
+	}
+
+	public void updateEduCourseAppStatus(EduCourseAppVO eduCourseAppVO){
+		update("eduCourseAppDAO.updateEduCourseAppStatus", eduCourseAppVO);
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<EduCourseAppVO> selectEduCourseAppTotList(EduCourseAppVO eduCourseAppVO){
+		return (List<EduCourseAppVO>) list("eduCourseAppDAO.selectEduCourseAppTotList", eduCourseAppVO);
+	}
+
+	public void updateEduCourseAppResult(EduCourseAppVO eduCourseAppVO){
+		update("eduCourseAppDAO.updateEduCourseAppResult", eduCourseAppVO);
+	}
+
+	public int selectEduCourseAppChk(EduCourseAppVO eduCourseAppVO){
+		return (Integer) select("eduCourseAppDAO.selectEduCourseAppChk", eduCourseAppVO);
+	}
+
+	public void updateEduCourseAppCancel(EduCourseAppVO eduCourseAppVO){
+		update("eduCourseAppDAO.updateEduCourseAppCancel", eduCourseAppVO);
+	}
+
+	public int selectEduCourseAppStatistics(EduCourseAppVO eduCourseAppVO){
+		int result = 0;
+		Object tmp = select("eduCourseAppDAO.selectEduCourseAppStatistics", eduCourseAppVO);
+		if(tmp!=null){
+			result = (Integer) tmp;
+		}
+		return result;
+	}
+
+	public void updateEduCourseAppCourse(EduCourseApp eduCourseApp){
+		update("eduCourseAppDAO.updateEduCourseAppCourse", eduCourseApp);
+	}
+
+	public void insertEduComp(Map<String, String> eduComp){
+		insert("eduCourseAppDAO.insertEduComp", eduComp);
+	}
+
+	public int selectEduCompRank(String srcYear){
+		int result = 0;
+		Object tmp = select("eduCourseAppDAO.selectEduCompRank", srcYear);
+		if(tmp!=null){
+			result = (Integer) tmp;
+		}
+		return  result;
+	}
+
+	public int selectEduCompApp(int app){
+		int result = 0;
+		Object tmp = select("eduCourseAppDAO.selectEduCompApp", app);
+		if(tmp!=null){
+			result = (Integer) tmp;
+		}
+		return  result;
+	}
+
+    public void insertEduCourseAppSMS(HashMap<String, String> hm) {
+        insert("eduCourseAppDAO.insertEduCourseAppSMS", hm);
+    }
+
+
+    public void updateEduCourseAppPay(EduCourseApp eduCourseApp){
+		update("eduCourseAppDAO.updateEduCourseAppPay", eduCourseApp);
+	}
+
+
+    public void updateEduCourseAppPayCancel(EduCourseApp eduCourseApp){
+		update("eduCourseAppDAO.updateEduCourseAppPayCancel", eduCourseApp);
+    }
+
+    @SuppressWarnings("unchecked")
+	public List<EduCourseApp> selectMyEduCourseAppList(EduCourseAppVO eduCourseAppVO){
+		return (List<EduCourseApp>) list("eduCourseAppDAO.selectMyEduCourseAppList", eduCourseAppVO);
+	}
+
+	public int selectMyEduCourseAppTotCnt(EduCourseAppVO eduCourseAppVO){
+		return (Integer) select("eduCourseAppDAO.selectMyEduCourseAppTotCnt", eduCourseAppVO);
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<EduCourseHist> selectEduCourseHistList(EduCourseAppVO eduCourseAppVO){
+		return (List<EduCourseHist>) list("eduCourseAppDAO.selectEduCourseHistList", eduCourseAppVO);
+	}
+
+	public void insertEduCourseHist(EduCourseHist eduCourseHist) {
+	    insert("eduCourseAppDAO.insertEduCourseHist", eduCourseHist);
+	}
+
+	public void onlineCourseAppStaUpdt(EduCourseAppVO eduCourseAppVO) {
+		update("eduCourseAppDAO.onlineCourseAppStaUpdt", eduCourseAppVO);
+	}
+
+	public EduCourseApp selectEduCourseApp2(EduCourseApp eduCourseApp) {
+		return (EduCourseApp) select("eduCourseAppDAO.selectEduCourseApp2", eduCourseApp);
+	}
+
+}

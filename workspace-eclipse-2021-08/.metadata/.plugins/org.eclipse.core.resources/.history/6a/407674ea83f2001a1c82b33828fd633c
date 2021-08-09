@@ -1,0 +1,600 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"%>
+<%@ taglib prefix="spring" uri="http://www.springframework.org/tags"%> <%-- SpringMessage 관련 --%>
+<jsp:useBean id="now" class="java.util.Date"></jsp:useBean>
+<fmt:formatDate value="${now}" pattern="yyyy" var="currentYear"></fmt:formatDate>
+<fmt:formatDate value="${now}" pattern="MM" var="currentMonth"></fmt:formatDate>
+<script type="text/javascript">
+	/* topMenu fix */
+	function fixDataOnWheel() {
+		if (event.wheelDelta < 0) {
+			DataScroll.doScroll('scrollbarDown');
+		} else {
+			DataScroll.doScroll('scrollbarUp');
+		}
+		dataOnScroll();
+	}
+
+	function dataOnScroll() {
+		right_header.scrollLeft = right_contents.scrollLeft;
+	}
+
+	/* 검색조건 */
+	function fn_totalStat() {
+		var form = document.form_totalStatFrom;
+
+		if (CmmnUtil.isEmpty($("#searchYr").val())) {
+			alert($("#searchYr").attr("title") + " 은(는) 필수 입력값입니다.");
+			$("#searchYr").focus();
+			return false;
+		}
+
+		if (CmmnUtil.isEmpty($("#searchMt").val())) {
+			alert($("#searchMt").attr("title") + " 은(는) 필수 입력값입니다.");
+			$("#searchMt").focus();
+			return false;
+		}
+
+		form.action = "<c:url value='/prvntn/mrenvVioltCrimeStat/ffnlgValueStat.do'/>";
+		form.submit();
+	}
+
+	/* 엑셀 다운로드 */
+	function excelDown() {
+		CmmnUtil.tableToExcel({
+			tableClass: "dataTable",
+			fileName: $("caption.tit").text()
+		});
+	}
+</script>
+
+
+<div class="screentit">
+	<div class="btn-group" style="padding-right: 1rem;">
+		<a href="#" class="btn btn-sm btn-outline-type03 btn-icon btn-icon-only btn-icon-print" onClick="CONTENTS2IMG();">프린트</a>
+	</div>
+	<div id="pageTit" style="display: inline;"></div>
+</div>
+
+
+
+<form:form id="form_totalStatFrom" name="form_totalStatFrom" modelAttribute="ffnlgValueStatVO" method="post" class="form">
+	<fieldset class="form-filter">
+		<div class="fieldset-body">
+			<input type="hidden" name="menuCode" value="${param.menuCode}" />
+
+			<div class="form-row">
+				<div class="form-group grid-4">
+					<label class="form-label">검색년월</label>
+					<div class="input-group">
+						<c:set var="yrs" value="${stat.searchYrList}"/>
+						<c:set var="size" value="${fn:length(yrs)}"/>
+						<select id="searchYr" name="searchYr" title="년" class="inputsrch vm custom-select" style="width: fit-content;">
+							<c:forEach var="i" begin="1" end="${size}">
+								<option value="${yrs[size - i].yr}" <c:if test="${yrs[size - i].yr == ffnlgValueStatVO.searchYr}">selected="selected"</c:if> >${yrs[size - i].yr}</option>
+							</c:forEach>
+						</select>
+						
+						<select id="searchMt" name="searchMt" title="월" class="inputsrch vm custom-select"  style="width: fit-content;">
+							<c:forEach var="item" varStatus="i" begin="1" end="12" step="1">
+								<option value="<c:if test="${item < 10}">0</c:if>${item}" <c:if test="${item == ffnlgValueStatVO.searchMt}">selected="selected"</c:if>>
+									<c:if test="${item < 10}">0</c:if><c:out value="${item}" />
+								</option>
+							</c:forEach>
+						</select>
+					</div>
+				</div>
+			</div>
+			
+		</div>
+	</fieldset>
+</form:form>
+
+
+
+
+<div class="table-bottom-btn-group">
+	<div class="btn-group btn-group-inline">
+		<a href="#" class="btn btn-sm btn-outline-type03 btn-icon btn-icon-only btn-icon-exel" onclick="javascript:excelDown(); return false;">엑셀다운로드</a>
+		<a href="#" class="btn btn-sm btn-outline-type03 btn-icon btn-icon-only btn-icon-search" onclick="fn_totalStat(); return false;">조회</a>
+	</div>
+</div>
+
+
+
+
+
+<%--
+<div class="table_top mt10 trhover">
+	<div id="right_header" class="table_top mt10 fixtable">
+		<table class="dataTable2" style="width: 1000px; table-layout:fixed;">
+			<caption class="tit">과태료</caption>
+			<colgroup>
+				<col />
+				<col />
+				<col />
+				<col />
+				<col />
+				<col />
+				<col />
+				<col />
+				<col />
+				<col />
+				<col />
+				<col />
+				<col />
+				<col />
+				<col />
+				<col />
+				<col />
+				<col />
+				<col />
+				<col />
+				<col />
+			</colgroup>
+			<thead>
+				<tr>
+					<th rowspan="3" colspan="3">구분</th>
+					<th colspan="6">징수현황</th>
+					<th colspan="8">위반내용</th>
+					<th colspan="4">발생구분</th>
+				</tr>
+				<tr>
+					<th colspan="2">부과금액</th>
+					<th colspan="2">징수</th>
+					<th colspan="2">미징수</th>
+					<th colspan="2">폐유저장용기<br>미비치</th>
+					<th colspan="2">오염방지<br>관리인 관련</th>
+					<th colspan="2">오염물질기록부<br>관련</th>
+					<th colspan="2">기타</th>
+					<th rowspan="2">선박</th>
+					<th rowspan="2">해양<br>시설</th>
+					<th rowspan="2">방제<br>유창</th>
+					<th rowspan="2">기타</th>
+				</tr>
+				<tr>
+					<th>건</th>
+					<th>금액</th>
+					<th>건</th>
+					<th>금액</th>
+					<th>건</th>
+					<th>금액</th>
+					<th>건</th>
+					<th>금액</th>
+					<th>건</th>
+					<th>금액</th>
+					<th>건</th>
+					<th>금액</th>
+					<th>건</th>
+					<th>금액</th>
+				</tr>
+			</thead>
+		</table>
+	</div>
+</div>
+
+<style>
+	.table-responsive {
+		height: 1080px;
+		overflow: auto;
+	}
+	.table {
+		width:122%;
+	}
+	table > thead {
+		
+	}
+	table > thead > tr > th {
+		border-bottom: 1px solid black;
+		position: sticky;
+		top: 0;
+	}
+	table > tbody > tr > td {
+		text-align : center;
+
+	}
+</style>
+	--%>
+<style>
+	.table-responsive {
+		height: 1080px;
+		overflow: auto;
+	}
+	.table {
+		width:122%;
+		/* border-collapse: separate; */
+	}
+	table > thead > tr > th {
+		position: sticky;
+		/* z-index: 20; */
+	}
+	table > thead > .tc {
+		position: sticky;
+		/* z-index: 20; */
+		top: 0;
+		left: 0;
+	}
+	table > thead > tr:nth-child(1) > th {
+		top: 0;
+	}
+	table > thead > tr:nth-child(2) > th {
+		top: 65px;
+	}
+	table > thead > tr:nth-child(3) > th {
+		top: 148px;
+	}
+/* 	
+	table > tbody > tr .tc {
+		position: sticky;
+		z-index: 10;
+		left : 0;
+	}
+	 */
+</style>
+
+<div class="table-responsive">
+	<table class="dataTable table table-hover">
+		<colgroup>
+			<col width="45px" />
+			<col width="45px" />
+			<col width="45px" />
+			<col width="142px" />
+			<col width="90px" />
+			<col width="142px" />
+			<col width="90px" />
+			<col width="142px" />
+			<col width="90px" />
+			<col width="142px" />
+			<col width="90px" />
+			<col width="142px" />
+			<col width="90px" />
+			<col width="142px" />
+			<col width="90px" />
+			<col width="142px" />
+			<col width="90px" />
+			<col width="142px" />
+			<col width="142px" />
+			<col width="142px" />
+			<col width="142px" />
+		</colgroup>
+		<thead>
+			<tr>
+				<th rowspan="3" colspan="3" class="tc">구분</th>
+				<th colspan="6">징수현황</th>
+				<th colspan="8">위반내용</th>
+				<th colspan="4">발생구분</th>
+			</tr>
+			<tr>
+				<th colspan="2">부과금액</th>
+				<th colspan="2">징수</th>
+				<th colspan="2">미징수</th>
+				<th colspan="2">폐유저장용기<br/>미비치</th>
+				<th colspan="2">오염방지<br/>관리인 관련</th>
+				<th colspan="2">오염물질기록부<br/>관련</th>
+				<th colspan="2">기타</th>
+				<th rowspan="2">선박</th>
+				<th rowspan="2">해양<br>시설</th>
+				<th rowspan="2">방제<br>유창</th>
+				<th rowspan="2">기타</th>
+			</tr>
+			<tr>
+				<th>건</th>
+				<th>금액</th>
+				<th>건</th>
+				<th>금액</th>
+				<th>건</th>
+				<th>금액</th>
+				<th>건</th>
+				<th>금액</th>
+				<th>건</th>
+				<th>금액</th>
+				<th>건</th>
+				<th>금액</th>
+				<th>건</th>
+				<th>금액</th>
+			</tr>
+		</thead>
+		<!-- <tbody style="overflow-y: scroll; height: 1080px;"> -->
+		<tbody>
+
+			<c:set var="totalMonthYn" value=""></c:set>
+			<c:set var="totalAllYn" value=""></c:set>
+			<c:forEach items="${stat.list}" var="col" varStatus="colStatus">
+				<c:if test="${col.dataType eq 'TOTAL_MONTH'}">
+					<c:set var="totalMonthYn" value="Y"></c:set>
+				</c:if>
+				<c:if test="${col.dataType eq 'TOTAL_ALL'}">
+					<c:set var="totalAllYn" value="Y"></c:set>
+				</c:if>
+			</c:forEach>
+
+			<c:forEach items="${stat.rowList}" var="row" varStatus="rowStatus">
+				<c:if test="${rowStatus.count eq 1}">
+					<tr>
+						<td colspan="3" class="tc border">월(총계)</td>
+						<c:if test="${totalMonthYn eq 'Y' }">
+							<c:forEach items="${stat.list}" var="col" varStatus="colStatus">
+								<c:if test="${col.dataType eq 'TOTAL_MONTH'}">
+									<td class="tr border">${col.ffnlgCnt}&ensp;건</td>
+									<td class="tr border">
+										<fmt:formatNumber value="${col.ffnlgValueSum}" type="currency" />
+									</td>
+									<td class="tr border">${col.ffnlgLevAtYCnt}&ensp;건</td>
+									<td class="tr border">
+										<fmt:formatNumber value="${col.ffnlgLevAtYPriceSum}" type="currency" />
+									</td>
+									<td class="tr border">${col.ffnlgLevAtNCnt}&ensp;건</td>
+									<td class="tr border">
+										<fmt:formatNumber value="${col.ffnlgLevAtNPriceSum}" type="currency" />
+									</td>
+									<td class="tr border">${col.violtCnACnt}&ensp;건</td>
+									<td class="tr border">
+										<fmt:formatNumber value="${col.violtCnASum}" type="currency" />
+									</td>
+									<td class="tr border">${col.violtCnBCnt}&ensp;건</td>
+									<td class="tr border">
+										<fmt:formatNumber value="${col.violtCnBSum}" type="currency" />
+									</td>
+									<td class="tr border">${col.violtCnCCnt}&ensp;건</td>
+									<td class="tr border">
+										<fmt:formatNumber value="${col.violtCnCSum}" type="currency" />
+									</td>
+									<td class="tr border">${col.violtCnDCnt}&ensp;건</td>
+									<td class="tr border">
+										<fmt:formatNumber value="${col.violtCnDSum}" type="currency" />
+									</td>
+									<td class="tr border">${col.shipCnt}&ensp;건</td>
+									<td class="tr border">${col.fcltyACnt}&ensp;건</td>
+									<td class="tr border">${col.fcltyBCnt}&ensp;건</td>
+									<td class="tr border">${col.etcCnt}&ensp;건</td>
+								</c:if>
+							</c:forEach>
+						</c:if>
+						<c:if test="${totalMonthYn ne 'Y' }">
+							<c:forEach var="item" varStatus="i" begin="1" end="18" step="1">
+								<td class="tr border">0</td>
+							</c:forEach>
+						</c:if>
+					</tr>
+
+				</c:if>
+				<c:if test="${rowStatus.count eq 1}">
+					<tr>
+						<td colspan="3" class="tc border">누계(총계)</td>
+						<c:forEach items="${stat.list}" var="col" varStatus="colStatus">
+							<c:if test="${totalAllYn eq 'Y' }">
+								<c:if test="${col.dataType eq 'TOTAL_ALL'}">
+									<td class="tr border">${col.ffnlgCnt}&ensp;건</td>
+									<td class="tr border">
+										<fmt:formatNumber value="${col.ffnlgValueSum}" type="currency" />
+									</td>
+									<td class="tr border">${col.ffnlgLevAtYCnt}&ensp;건</td>
+									<td class="tr border">
+										<fmt:formatNumber value="${col.ffnlgLevAtYPriceSum}" type="currency" />
+									</td>
+									<td class="tr border">${col.ffnlgLevAtNCnt}&ensp;건</td>
+									<td class="tr border">
+										<fmt:formatNumber value="${col.ffnlgLevAtNPriceSum}" type="currency" />
+									</td>
+									<td class="tr border">${col.violtCnACnt}&ensp;건</td>
+									<td class="tr border">
+										<fmt:formatNumber value="${col.violtCnASum}" type="currency" />
+									</td>
+									<td class="tr border">${col.violtCnBCnt}&ensp;건</td>
+									<td class="tr border">
+										<fmt:formatNumber value="${col.violtCnBSum}" type="currency" />
+									</td>
+									<td class="tr border">${col.violtCnCCnt}&ensp;건</td>
+									<td class="tr border">
+										<fmt:formatNumber value="${col.violtCnCSum}" type="currency" />
+									</td>
+									<td class="tr border">${col.violtCnDCnt}&ensp;건</td>
+									<td class="tr border">
+										<fmt:formatNumber value="${col.violtCnDSum}" type="currency" />
+									</td>
+									<td class="tr border">${col.shipCnt}&ensp;건</td>
+									<td class="tr border">${col.fcltyACnt}&ensp;건</td>
+									<td class="tr border">${col.fcltyBCnt}&ensp;건</td>
+									<td class="tr border">${col.etcCnt}&ensp;건</td>
+								</c:if>
+							</c:if>
+							<c:if test="${totalAllYn ne 'Y' }">
+								<c:forEach var="item" varStatus="i" begin="1" end="18" step="1">
+									<td class="tr border">0</td>
+								</c:forEach>
+							</c:if>
+						</c:forEach>
+					</tr>
+				</c:if>
+
+				
+				<c:if test="${row.upperCodeNm ne null }">
+					<c:set var="isText" value=""></c:set>
+					<c:set var="isDraw" value=""></c:set>
+					<c:forEach items="${stat.list}" var="col" varStatus="listStatus">
+						<c:if test="${row.upperCode eq col.upperNmpaOfeCode and col.dataType eq 'UPPER_NMPA_OFE_CODE_MONTH'}">
+							<tr <%-- 청별 월계 START --%> >
+								<td rowspan="${row.lowerCodeCnt*2 +2}" class="tc border th_depth">${row.upperCodeNm}</td>
+								<td colspan="2" class="tc th_depth">월<br/>(소계)</td>
+								<td class="tr th_depth">${col.ffnlgCnt}&ensp;건</td>
+								<td class="tr th_depth">
+									<fmt:formatNumber value="${col.ffnlgValueSum}" type="currency" />
+								</td>
+								<td class="tr th_depth">${col.ffnlgLevAtYCnt}&ensp;건</td>
+								<td class="tr th_depth">
+									<fmt:formatNumber value="${col.ffnlgLevAtYPriceSum}" type="currency" />
+								</td>
+								<td class="tr th_depth">${col.ffnlgLevAtNCnt}&ensp;건</td>
+								<td class="tr th_depth">
+									<fmt:formatNumber value="${col.ffnlgLevAtNPriceSum}" type="currency" />
+								</td>
+								<td class="tr th_depth">${col.violtCnACnt}&ensp;건</td>
+								<td class="tr th_depth">
+									<fmt:formatNumber value="${col.violtCnASum}" type="currency" />
+								</td>
+								<td class="tr th_depth">${col.violtCnBCnt}&ensp;건</td>
+								<td class="tr th_depth">
+									<fmt:formatNumber value="${col.violtCnBSum}" type="currency" />
+								</td>
+								<td class="tr th_depth">${col.violtCnCCnt}&ensp;건</td>
+								<td class="tr th_depth">
+									<fmt:formatNumber value="${col.violtCnCSum}" type="currency" />
+								</td>
+								<td class="tr th_depth">${col.violtCnDCnt}&ensp;건</td>
+								<td class="tr th_depth">
+									<fmt:formatNumber value="${col.violtCnDSum}" type="currency" />
+								</td>
+								<td class="tr th_depth">${col.shipCnt}&ensp;건</td>
+								<td class="tr th_depth">${col.fcltyACnt}&ensp;건</td>
+								<td class="tr th_depth">${col.fcltyBCnt}&ensp;건</td>
+								<td class="tr th_depth">${col.etcCnt}&ensp;건</td>
+								<c:set var="isDraw" value="Y"></c:set>
+							</tr <%-- 청별 월계 END --%> >
+						</c:if>
+						<c:if test="${row.upperCode eq col.upperNmpaOfeCode and col.dataType eq 'UPPER_NMPA_OFE_CODE_STAC'}">
+							<tr <%-- 청별 누계 START --%> >
+								<td colspan="2" class="tc th_depth">누계<br/>(소계)</td>
+								<td class="tr th_depth">${col.ffnlgCnt}&ensp;건</td>
+								<td class="tr th_depth">
+									<fmt:formatNumber value="${col.ffnlgValueSum}" type="currency" />
+								</td>
+								<td class="tr th_depth">${col.ffnlgLevAtYCnt}&ensp;건</td>
+								<td class="tr th_depth">
+									<fmt:formatNumber value="${col.ffnlgLevAtYPriceSum}" type="currency" />
+								</td>
+								<td class="tr th_depth">${col.ffnlgLevAtNCnt}&ensp;건</td>
+								<td class="tr th_depth">
+									<fmt:formatNumber value="${col.ffnlgLevAtNPriceSum}" type="currency" />
+								</td>
+								<td class="tr th_depth">${col.violtCnACnt}&ensp;건</td>
+								<td class="tr th_depth">
+									<fmt:formatNumber value="${col.violtCnASum}" type="currency" />
+								</td>
+								<td class="tr th_depth">${col.violtCnBCnt}&ensp;건</td>
+								<td class="tr th_depth">
+									<fmt:formatNumber value="${col.violtCnBSum}" type="currency" />
+								</td>
+								<td class="tr th_depth">${col.violtCnCCnt}&ensp;건</td>
+								<td class="tr th_depth">
+									<fmt:formatNumber value="${col.violtCnCSum}" type="currency" />
+								</td>
+								<td class="tr th_depth">${col.violtCnDCnt}&ensp;건</td>
+								<td class="tr th_depth">
+									<fmt:formatNumber value="${col.violtCnDSum}" type="currency" />
+								</td>
+								<td class="tr th_depth">${col.shipCnt}&ensp;건</td>
+								<td class="tr th_depth">${col.fcltyACnt}&ensp;건</td>
+								<td class="tr th_depth">${col.fcltyBCnt}&ensp;건</td>
+								<td class="tr th_depth">${col.etcCnt}&ensp;건</td>
+								<c:set var="isDraw" value="Y"></c:set>
+							</tr <%-- 청별 누계 END --%> >
+						</c:if>
+					</c:forEach>
+				</c:if>
+
+				<tr <%-- 해경서별 월계 START --%> >
+					<td rowspan="2" class="tc border">${row.codeNm}</td>
+					<td class="tc border">월</td>
+					<c:set var="isText" value=""></c:set>
+					<c:forEach items="${stat.list}" var="col" varStatus="rowStatus">
+						<c:if test="${row.code eq col.nmpaOfeCode and col.dataType eq 'NMPA_OFE_CODE_MONTH'}">
+							<td class="tr border">${col.ffnlgCnt}&ensp;건</td>
+							<td class="tr border">
+								<fmt:formatNumber value="${col.ffnlgValueSum}" type="currency" />
+							</td>
+							<td class="tr border">${col.ffnlgLevAtYCnt}&ensp;건</td>
+							<td class="tr border">
+								<fmt:formatNumber value="${col.ffnlgLevAtYPriceSum}" type="currency" />
+							</td>
+							<td class="tr border">${col.ffnlgLevAtNCnt}&ensp;건</td>
+							<td class="tr border">
+								<fmt:formatNumber value="${col.ffnlgLevAtNPriceSum}" type="currency" />
+							</td>
+							<td class="tr border">${col.violtCnACnt}&ensp;건</td>
+							<td class="tr border">
+								<fmt:formatNumber value="${col.violtCnASum}" type="currency" />
+							</td>
+							<td class="tr border">${col.violtCnBCnt}&ensp;건</td>
+							<td class="tr border">
+								<fmt:formatNumber value="${col.violtCnBSum}" type="currency" />
+							</td>
+							<td class="tr border">${col.violtCnCCnt}&ensp;건</td>
+							<td class="tr border">
+								<fmt:formatNumber value="${col.violtCnCSum}" type="currency" />
+							</td>
+							<td class="tr border">${col.violtCnDCnt}&ensp;건</td>
+							<td class="tr border">
+								<fmt:formatNumber value="${col.violtCnDSum}" type="currency" />
+							</td>
+							<td class="tr border">${col.shipCnt}&ensp;건</td>
+							<td class="tr border">${col.fcltyACnt}&ensp;건</td>
+							<td class="tr border">${col.fcltyBCnt}&ensp;건</td>
+							<td class="tr border">${col.etcCnt}&ensp;건</td>
+							<c:set var="isText" value="Y"></c:set>
+						</c:if>
+					</c:forEach>
+					<c:if test="${isText ne 'Y'}">
+						<c:forEach var="item" varStatus="i" begin="1" end="18" step="1">
+							<td class="tr border">0</td>
+						</c:forEach>
+					</c:if>
+				</tr <%-- 해경서별 월계 END --%> >
+
+				<tr <%-- 해경서별 누계 START --%> >
+					<td class="tc border">누계</td>
+					<c:set var="isText" value=""></c:set>
+					<c:forEach items="${stat.list}" var="col" varStatus="rowStatus">
+						<c:if test="${row.code eq col.nmpaOfeCode and col.dataType eq 'NMPA_OFE_CODE_STAC'}">
+							<td class="tr border">${col.ffnlgCnt}&ensp;건</td>
+							<td class="tr border">
+								<fmt:formatNumber value="${col.ffnlgValueSum}" type="currency" />
+							</td>
+							<td class="tr border">${col.ffnlgLevAtYCnt}&ensp;건</td>
+							<td class="tr border">
+								<fmt:formatNumber value="${col.ffnlgLevAtYPriceSum}" type="currency" />
+							</td>
+							<td class="tr border">${col.ffnlgLevAtNCnt}&ensp;건</td>
+							<td class="tr border">
+								<fmt:formatNumber value="${col.ffnlgLevAtNPriceSum}" type="currency" />
+							</td>
+							<td class="tr border">${col.violtCnACnt}&ensp;건</td>
+							<td class="tr border">
+								<fmt:formatNumber value="${col.violtCnASum}" type="currency" />
+							</td>
+							<td class="tr border">${col.violtCnBCnt}&ensp;건</td>
+							<td class="tr border">
+								<fmt:formatNumber value="${col.violtCnBSum}" type="currency" />
+							</td>
+							<td class="tr border">${col.violtCnCCnt}&ensp;건</td>
+							<td class="tr border">
+								<fmt:formatNumber value="${col.violtCnCSum}" type="currency" />
+							</td>
+							<td class="tr border">${col.violtCnDCnt}&ensp;건</td>
+							<td class="tr border">
+								<fmt:formatNumber value="${col.violtCnDSum}" type="currency" />
+							</td>
+							<td class="tr border">${col.shipCnt}&ensp;건</td>
+							<td class="tr border">${col.fcltyACnt}&ensp;건</td>
+							<td class="tr border">${col.fcltyBCnt}&ensp;건</td>
+							<td class="tr border">${col.etcCnt}&ensp;건</td>
+							<c:set var="isText" value="Y"></c:set>
+						</c:if>
+					</c:forEach>
+					<c:if test="${isText ne 'Y'}">
+						<c:forEach var="item" varStatus="i" begin="1" end="18" step="1">
+							<td class="tr border">0</td>
+						</c:forEach>
+					</c:if>
+				</tr <%-- 해경서별 누계 END --%> >
+
+
+			</c:forEach>
+
+		</tbody>
+
+	</table>
+
+</div>

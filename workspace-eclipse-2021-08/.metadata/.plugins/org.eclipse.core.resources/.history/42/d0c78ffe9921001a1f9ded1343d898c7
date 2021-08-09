@@ -1,0 +1,19 @@
+package com.koem.vms.area.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+import com.koem.vms.area.dto.AreaDTO;
+
+@Repository
+public interface AreaDAO {
+	
+	List<Map<String, Object>> selectAreaAll() throws Exception;
+
+	int insertArea(AreaDTO dto) throws Exception;
+
+	int insertPort(AreaDTO dto) throws Exception;
+
+
+}

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename local variable &apos;SESSION_KEY&apos; in &apos;kr.co.hanshinit.NeoCMS.cmm.util.SessionUtil.chckPreventAu(...)&apos; to &apos;SESSION_KEY_2&apos;&#x0D;&#x0A;- Original project: &apos;HUIC&apos;&#x0D;&#x0A;- Original element: &apos;kr.co.hanshinit.NeoCMS.cmm.util.SessionUtil.chckPreventAu(HttpSession, String, String, String).SESSION_KEY&apos;&#x0D;&#x0A;- Renamed element: &apos;SESSION_KEY&apos;&#x0D;&#x0A;- Update references to refactored element" description="Rename local variable &apos;SESSION_KEY&apos;" id="org.eclipse.jdt.ui.rename.local.variable" input="/src\/main\/java=/optional=/true=/=/maven.pomderived=/true=/&lt;kr.co.hanshinit.NeoCMS.cmm.util{SessionUtil.java[SessionUtil~chckPreventAu~QHttpSession;~QString;~QString;~QString;@SESSION_KEY!1950!2033!1957!1967!QString;!0!false" name="SESSION_KEY_2" references="true" stamp="1624347833237" version="1.0"/>
+</session>

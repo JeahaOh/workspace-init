@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename resource &apos;MVOTE/doc/README.md&apos; to &apos;HN-MVOTE-인수인계사항.md&apos;" description="Rename resource &apos;README.md&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="doc/README.md" name="HN-MVOTE-인수인계사항.md" stamp="1624498431324" updateReferences="true"/>
+</session>

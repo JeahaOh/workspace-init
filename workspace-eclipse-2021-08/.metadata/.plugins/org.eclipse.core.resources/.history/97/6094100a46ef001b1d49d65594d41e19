@@ -1,0 +1,278 @@
+package kr.co.hanshinit.NeoCMS.cmm.scheduler;
+
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import javax.annotation.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import kr.co.hanshinit.NeoCMS.cmm.api.ApiService;
+import kr.co.hanshinit.NeoCMS.cmm.util.StringUtil;
+import kr.co.hanshinit.NeoCMS.cop.entrprsSport.service.EntrprsSportService;
+import kr.co.hanshinit.NeoCMS.cop.entrprsSport.service.EntrprsSportVO;
+import kr.co.hanshinit.NeoCMS.cop.freeRlwCnslt.service.FreeRlwCnsltResveService;
+import kr.co.hanshinit.NeoCMS.cop.freeRlwCnslt.service.FreeRlwCnsltResveVO;
+import kr.co.hanshinit.NeoCMS.cop.frtHl.service.FrtHlResveService;
+import kr.co.hanshinit.NeoCMS.cop.frtHl.service.FrtHlResveVO;
+import kr.co.hanshinit.NeoCMS.cop.gosi.service.GosiScheduleService;
+import kr.co.hanshinit.NeoCMS.cop.sms.service.MsgDataService;
+import kr.co.hanshinit.NeoCMS.cop.sms.service.MsgDataVO;
+import kr.co.hanshinit.NeoCMS.cop.una.unl.service.UnionLnbnsResveService;
+import kr.co.hanshinit.NeoCMS.cop.una.unl.service.UnionLnbnsResveVO;
+
+/**
+ * 스케줄 실행을 위한 클래스
+ *
+ * context-schedule.xml 을 봐야 함.
+ *
+ * @author (주)한신정보기술 기업부설연구소 최관형
+ * @since 2017.01.08
+ * @version 1.0
+ * @see
+ *
+ *      <pre>
+ * << 개정이력(Modification Information) >>
+ *
+ *  수정일      수정자    수정내용
+ *  ---------- -------- ---------------------------
+ *  2017.01.08 최관형	    최초 생성
+ *      </pre>
+ *
+ */
+public class Scheduler {
+
+  protected Logger logger = LoggerFactory.getLogger(this.getClass());
+
+  @Resource(name = "weatherDataService")
+  private ApiService weatherDataService;
+
+  @Resource(name = "airDataService")
+  private ApiService airDataService;
+
+  @Resource(name = "unionLnbnsResveService")
+  private UnionLnbnsResveService unionLnbnsResveService;
+
+
+  @Resource(name = "frtHlResveService")
+  private FrtHlResveService frtHlResveService;
+
+  @Resource(name = "freeRlwCnsltResveService")
+  private FreeRlwCnsltResveService freeRlwCnsltResveService;
+
+
+  @Resource(name = "gosiScheduler")
+  private GosiScheduleService gosiScheduler;
+
+  /** 기업지원사업정보 서비스 **/
+  @Resource(name = "entrprsSportService")
+  private EntrprsSportService entrprsSportService;
+
+
+
+  /** smsService */
+  @Resource(name = "msgDataService")
+  private MsgDataService msgDataService;
+
+  @Transactional(propagation = Propagation.REQUIRED,
+      rollbackFor = {Exception.class, SQLException.class}, readOnly = false)
+  public boolean weatherData() throws Exception {
+
+    List<HashMap<String, String>> resultMap = weatherDataService.getWeatherApiData();
+    weatherDataService.insertData(resultMap);
+
+    return true;
+  }
+
+  @Transactional(
+      propagation = Propagation.REQUIRED
+      , rollbackFor = {Exception.class, SQLException.class}
+      , readOnly = false
+  )
+  public boolean airData() throws Exception {
+    logger.debug("\t>> Scheduler.airData  BGN");
+
+    List<HashMap<String, String>> resultMap = airDataService.getAirApiData();
+    airDataService.insertData(resultMap);
+
+    logger.debug("\t>> Scheduler.airData END\n\n");
+    return true;
+  }
+
+  /**
+   * 매일아침 6시 견학신청 5일전 자동삭제
+   *
+   **/
+  @Transactional(propagation = Propagation.REQUIRED,
+      rollbackFor = {Exception.class, SQLException.class}, readOnly = false)
+  public boolean deleteUnion() throws Exception {
+
+    Calendar calendar = Calendar.getInstance();
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    logger.info("견학신청 5일전 자동삭제 스케줄러 : " + dateFormat.format(calendar.getTime()));
+
+    UnionLnbnsResveVO unionLnbnsResveVO = new UnionLnbnsResveVO();
+
+    // 5일전
+    Calendar p3 = Calendar.getInstance();
+    p3.add(Calendar.DATE, -5);
+    SimpleDateFormat sdf3 = new SimpleDateFormat("yyyyMMdd");
+    unionLnbnsResveVO.setResveDate(sdf3.format(p3.getTime()).toString());
+
+
+    try {
+      unionLnbnsResveService.deleteAutoUnionLnbnsResve(unionLnbnsResveVO);
+    } catch (Exception e) {
+      StringUtil.printException(e);
+    }
+
+    return true;
+  }
+
+
+  /**
+   * 매일아침 9시 숲치유 프로그램, 무료법률상담 문자 발송
+   *
+   * 20210225 이게 최선이였냐? 아님 머리가 안좋은거냐?? 에효...
+   */
+  @Transactional(
+        propagation = Propagation.REQUIRED
+      , rollbackFor = {Exception.class, SQLException.class}
+      , readOnly = false
+  )
+  public boolean sendSmsResve() throws Exception {
+
+    Calendar calendar = Calendar.getInstance();
+    calendar.add(Calendar.MINUTE, 5);
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    String reqDate = dateFormat.format(calendar.getTime()).toString();
+    logger.info("매일아침 9시 숲치유 프로그램, 무료법률상담 문자 발송 스케줄러 : " + reqDate);
+
+    // unionLnbnsResveService.deleteAutoUnionLnbnsResve(unionLnbnsResveVO);
+    // 숲치유
+    List<FrtHlResveVO> frtHlSmsResveList = frtHlResveService.selectFrtHlResveSendSmsList();
+    // 무료법률
+    List<FreeRlwCnsltResveVO> freeRlwCnsltSmsResveList =
+        freeRlwCnsltResveService.selectFreeRlwCnsltResveSendSmsList();
+
+    //  보낼 메세지를 담을 list
+    List<MsgDataVO> msgDataList = new ArrayList<MsgDataVO>();
+
+
+    int cycle = 0;
+
+    String resveTime = "";
+    MsgDataVO msgDataVO = new MsgDataVO();
+    msgDataVO.setCurState(0);
+    msgDataVO.setMsgType(4);
+    msgDataVO.setReqDate(reqDate);
+
+    if( null != frtHlSmsResveList && !frtHlSmsResveList.isEmpty() && frtHlSmsResveList.size() > 0 ) {
+
+      cycle = frtHlSmsResveList.size();
+      msgDataVO.setCallFrom("0317906341");
+
+      for (int i = 0; i < cycle; i++) {
+
+        //  reqDate, callTo, CallFrom, smsTxt
+        msgDataVO.setCallTo(frtHlSmsResveList.get(i).getPhone().replaceAll("-", ""));
+
+        if (frtHlSmsResveList.get(i).getResveTime3().equals("1"))
+          resveTime = frtHlSmsResveList.get(i).getStartTimeAm2();
+        else
+          resveTime = frtHlSmsResveList.get(i).getStartTimePm2();
+
+        msgDataVO.setSmsTxt(frtHlSmsResveList.get(i).getResveDt() + " " + resveTime + "["
+            + frtHlSmsResveList.get(i).getProgrmName2() + "]  예약일입니다. 문의 : 0317906341");
+
+        msgDataList.add(msgDataVO);
+      }
+    }
+
+    if( null != freeRlwCnsltSmsResveList && !freeRlwCnsltSmsResveList.isEmpty() && freeRlwCnsltSmsResveList.size() > 0 ) {
+
+      cycle = freeRlwCnsltSmsResveList.size();
+      msgDataVO.setCallFrom("0317906054");
+
+      for (int i = 0; i < freeRlwCnsltSmsResveList.size(); i++) {
+
+        //  reqDate, callTo, CallFrom, smsTxt
+        msgDataVO.setCallTo(freeRlwCnsltSmsResveList.get(i).getPhone().replaceAll("-", ""));
+
+        if (freeRlwCnsltSmsResveList.get(i).getResveTime3().equals("1"))
+          resveTime = freeRlwCnsltSmsResveList.get(i).getStartTimeAm2();
+        else
+          resveTime = freeRlwCnsltSmsResveList.get(i).getStartTimePm2();
+
+        msgDataVO.setSmsTxt(freeRlwCnsltSmsResveList.get(i).getResveDt() + " " + resveTime + "["
+            + freeRlwCnsltSmsResveList.get(i).getProgrmName2() + "] 예약일입니다. 문의 : 0317906054");
+
+        msgDataList.add(msgDataVO);
+      }
+    }
+
+    try {
+      /**
+       * 20210225
+       * 비었을 경우는 생각 안 하냐?
+       */
+      if( !msgDataList.isEmpty() || msgDataList.size() > 0 ) {
+        logger.debug("msgDataList2 : {}", msgDataList.size());
+        msgDataService.insertMsgDataResve(msgDataList);
+      }
+    } catch (Exception e) {
+      StringUtil.printException(e);
+      return false;
+    }
+
+    return true;
+  }
+
+  @Transactional(
+      propagation = Propagation.REQUIRED
+      , rollbackFor = {Exception.class, SQLException.class}
+      , readOnly = false
+  )
+  public boolean insertGosiService() throws Exception {
+    long bgnTime = System.currentTimeMillis();
+    logger.error("\n\n\n\n\t>> insertGosiService BGN <<");
+    try {
+
+      if ( gosiScheduler.insertGosiAll() ) {
+        logger.error("\n\n\n\n\t\t\t\t!! 고시공고 등록 성공함 !!");
+      } else {
+        logger.error("고시공고 등록 실패함");
+      }
+
+      logger.debug("\t>> insertGosiService END <<\n\n\n\n");
+
+    } catch (Exception e) {
+      StringUtil.printException(e);
+      return false;
+    }
+    long endTime = System.currentTimeMillis();
+    logger.error("\n\n\n\n\t>> insertGosiService END IN {}s <<", (endTime - bgnTime) / 1000);
+    return true;
+  }
+
+
+  @Transactional(propagation = Propagation.REQUIRED,
+      rollbackFor = {Exception.class, SQLException.class}, readOnly = false)
+  public boolean insertEntrprsSportService() throws Exception {
+    EntrprsSportVO entrprsSportVO = new EntrprsSportVO();
+    try {
+      entrprsSportService.insertEntrprsSport(entrprsSportVO);
+    } catch ( Exception e ) {
+      StringUtil.printException(e);
+    }
+
+    return true;
+  }
+
+
+
+}

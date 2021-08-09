@@ -1,0 +1,154 @@
+package egovframework.mng.auth.service.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+import javax.annotation.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import egovframework.com.cmmn.util.EgovStringUtil;
+import egovframework.mng.auth.dao.AuthDAO;
+import egovframework.mng.auth.service.AuthGroupService;
+import egovframework.mng.auth.service.AuthService;
+import egovframework.mng.auth.vo.AuthGroupVO;
+import egovframework.mng.auth.vo.AuthVO;
+import egovframework.rte.fdl.cmmn.EgovAbstractServiceImpl;
+import egovframework.rte.fdl.property.EgovPropertyService;
+import egovframework.rte.psl.dataaccess.util.EgovMap;
+
+/**
+ * 권한 ServiceImpl 클래스
+ *
+ * @author hjh
+ * @since 2018.06.07
+ * @version 1.0
+ * @see
+ *
+ *      <pre>
+ * << 개정이력(Modification Information) >>
+ *
+ *      수정일     수정자          수정내용
+ *   -----------  --------   ---------------------
+ *   2018.06.07    hjh          최초 생성
+ *
+ *      </pre>
+ */
+@Service("authService")
+public class AuthServiceImpl extends EgovAbstractServiceImpl implements AuthService {
+
+  @Resource(name = "authGroupService")
+  private AuthGroupService authGroupService;
+
+  @Resource(name = "authDAO")
+  private AuthDAO authDAO;
+
+  @Resource(name = "propertiesService")
+  protected EgovPropertyService propertyService;
+  
+  Logger logger = LoggerFactory.getLogger(this.getClass());
+
+  @Override
+  public List<EgovMap> selectAuthPage(AuthVO authVO) throws Exception {
+    List<EgovMap> authPage = authDAO.selectAuthPage(authVO);
+    if (authPage.size() > 0) {
+      authVO.setTotalRecordCount(Integer.valueOf(String.valueOf(authPage.get(0).get("rowCnt"))));
+    }
+    return authPage;
+  }
+
+  @Override
+  public List<EgovMap> selectAuthList(AuthVO authVO) throws Exception {
+    return authDAO.selectAuthList(authVO);
+  }
+
+  @Override
+  public EgovMap selectAuthDetail(AuthVO authVO) throws Exception {
+    return authDAO.selectAuthDetail(authVO);
+  }
+
+  @Override
+  public int selectAuthCount(AuthVO authVO) throws Exception {
+    return authDAO.selectAuthCount(authVO);
+  }
+
+  @Override
+  public void insertAuth(AuthVO authVO) throws Exception {
+
+    String authorGroupCode = authVO.getAuthorGroupCode();
+    String authorCode = authVO.getAuthorCode();
+
+    authDAO.insertAuth(authVO);
+
+    if (!EgovStringUtil.isEmpty(authorGroupCode)) {
+      AuthGroupVO authGroupVO = new AuthGroupVO();
+      authGroupVO.setAuthorGroupCode(authorGroupCode);
+      authGroupVO.setAuthorCode(authorCode);
+      authGroupService.insertAuthGroupMng(authGroupVO);
+    }
+
+    this.deleteInsertAuthMenuMng(authVO);
+  }
+
+  @Override
+  public void updateAuth(AuthVO authVO) throws Exception {
+    logger.debug("\n\n>>>> updateAuth <<<<");
+    authDAO.updateAuth(authVO);
+    this.deleteInsertAuthMenuMng(authVO);
+  }
+
+  @Override
+  public void deleteAuth(AuthVO authVO) throws Exception {
+
+    this.deleteAuthMenuMng(authVO);
+
+    // 권한그룹 매핑 삭제
+    String authorCode = authVO.getAuthorCode();
+    AuthGroupVO authGroupVO = new AuthGroupVO();
+    authGroupVO.setAuthorCode(authorCode);
+    authGroupService.deleteAuthGroupMng(authGroupVO);
+
+    authDAO.deleteAuth(authVO);
+  }
+
+  @Override
+  public List<EgovMap> selectMenuList(String authorCode) throws Exception {
+    return authDAO.selectMenuList(authorCode);
+  }
+
+  @Override
+  public void deleteInsertAuthMenuMng(AuthVO authVO) throws Exception {
+    this.deleteAuthMenuMng(authVO);
+    /*
+    if (authVO.getMenuCodeArr() != null && authVO.getMenuCodeArr().length > 0) {
+      String[] menuCodeArr = authVO.getMenuCodeArr();
+      AuthVO vo = null;
+      for (String menuCode : menuCodeArr) {
+        vo = new AuthVO();
+        vo.setRegisterId(authVO.getRegisterId());
+        vo.setAuthorCode(authVO.getAuthorCode());
+        vo.setMenuCode(menuCode);
+        vo.setRollCreate(authVO.getRollCreate());
+        vo.setRollUpdate(authVO.getRollUpdate());
+        vo.setRollDelete(authVO.getRollDelete());
+        //egovLogger.info(vo.toString());
+        authDAO.insertAuthMenuMng(vo);
+      }
+    }
+    */
+    if(authVO.getAuthVOList() != null && authVO.getAuthVOList().size() > 0) {
+      ArrayList<AuthVO> menuAuthList = (ArrayList<AuthVO>) authVO.getAuthVOList();
+
+      for( AuthVO auth : menuAuthList ) {
+        authDAO.insertAuthMenuMng(auth);
+      }
+      
+    }
+  }
+
+  @Override
+  public void deleteAuthMenuMng(AuthVO authVO) throws Exception {
+    logger.debug("\n\n>>>> deleteAuthMenuMng <<<<");
+    authDAO.deleteAuthMenuMng(authVO);
+  }
+
+}

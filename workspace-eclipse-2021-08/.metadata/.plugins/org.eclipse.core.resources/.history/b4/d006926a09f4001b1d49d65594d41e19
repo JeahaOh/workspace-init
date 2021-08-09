@@ -1,0 +1,144 @@
+package kr.co.hanshinit.NeoCMS.site.web;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+
+import kr.co.hanshinit.NeoCMS.cmm.api.ApiService;
+import kr.co.hanshinit.NeoCMS.cmm.service.CmmUseService;
+import kr.co.hanshinit.NeoCMS.cmm.stereotype.Interceptor;
+import kr.co.hanshinit.NeoCMS.cop.bbs.bim.service.BbsInfo;
+import kr.co.hanshinit.NeoCMS.cop.bbs.bim.service.BbsInfoService;
+import kr.co.hanshinit.NeoCMS.cop.bbs.ntt.service.BbsNttService;
+import kr.co.hanshinit.NeoCMS.cop.bbs.ntt.service.BbsNttVO;
+import kr.co.hanshinit.NeoCMS.cop.bzm.bzi.service.BannerZoneItemService;
+import kr.co.hanshinit.NeoCMS.cop.bzm.service.BannerZoneService;
+import kr.co.hanshinit.NeoCMS.cop.cnt.service.SnsDataService;
+import kr.co.hanshinit.NeoCMS.cop.cnt.service.SnsDataVO;
+import kr.co.hanshinit.NeoCMS.cop.lzm.lzi.service.LinkZoneItemService;
+import kr.co.hanshinit.NeoCMS.cop.lzm.lzi.service.LinkZoneItemVO;
+import kr.co.hanshinit.NeoCMS.cop.pzm.pzi.service.PopupZoneItemService;
+import kr.co.hanshinit.NeoCMS.cop.pzm.pzi.service.PopupZoneItemVO;
+import kr.co.hanshinit.NeoCMS.sym.cma.cdc.service.CmmnDetailCodeService;
+import kr.co.hanshinit.NeoCop.cop.ernt.service.ErntService;
+import kr.co.hanshinit.NeoCop.cop.etcResve.service.EtcResveService;
+import kr.co.hanshinit.NeoEdu.cop.cmm.service.EdcCmmCodeService;
+import kr.co.hanshinit.NeoEdu.cop.edcLctre.service.EdcLctreService;
+import kr.co.hanshinit.NeoEdu.cop.edcLctre.service.EdcLctreVO;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Interceptor("templateMainBinding")
+@Controller
+public class WomanController {
+	
+	/** bbsNttService **/
+	@Resource(name="bbsNttService")
+	private BbsNttService bbsNttService;
+	
+	/** popupZoneItemService **/
+	@Resource(name="popupZoneItemService")
+	private PopupZoneItemService popupZoneItemService;
+
+	/** bannerZoneService **/
+	@Resource(name="bannerZoneService")
+	private BannerZoneService bannerZoneService;
+	
+	/** bannerZoneItemService **/
+	@Resource(name="bannerZoneItemService")
+	private BannerZoneItemService bannerZoneItemService;
+		
+	/** linkZoneItemService **/
+	@Resource(name="linkZoneItemService")
+	private LinkZoneItemService linkZoneItemService;
+	
+	@Resource(name="cmmUseService")
+	private CmmUseService cmmUseService;
+
+	@Resource(name="cmmnDetailCodeService")
+	private CmmnDetailCodeService cmmnDetailCodeService;
+	
+	@Resource(name="edcCmmCodeService")
+	private EdcCmmCodeService edcCmmCodeService;
+	
+	@Resource(name="edcLctreService")
+	private EdcLctreService edcLctreService;
+	
+	@Resource(name="erntService")
+	private ErntService erntService;
+	
+	@Resource(name="etcResveService")
+	private EtcResveService etcResveService;
+	
+	@Resource(name="snsDataService")
+	private SnsDataService snsDataService;
+	
+	@Resource(name="weatherDataService")
+  	private ApiService weatherDataService;
+
+	@Resource(name="airDataService")
+  	private ApiService airDataService;
+	
+	@Resource(name="bbsInfoService")
+  	private BbsInfoService bbsInfoService;
+
+	
+
+	@RequestMapping(value="/woman/index.do")
+    public String index(ModelMap model, HttpServletRequest request) throws Exception {
+		
+		BbsInfo bbsInfo = bbsInfoService.selectBbsInfo(53);
+		
+		BbsNttVO bbsNttVO = new BbsNttVO();
+		bbsNttVO.setBbsNo(53);
+		
+		if( "Y".equals(bbsInfo.getNoticeUseAt()) ) {
+			List<BbsNttVO> bbsNttNoticeList = bbsNttService.selectBbsNttNoticeList(bbsInfo, bbsNttVO);
+			model.addAttribute("bbsNttNoticeList", bbsNttNoticeList);
+		}
+		
+		List<BbsNttVO> bbsNttList01 = bbsNttService.selectBbsMiniList(53,4);
+		model.addAttribute("bbsNttList01", bbsNttList01);
+		
+		List<BbsNttVO> bbsNttList02 = bbsNttService.selectBbsMiniList(56,4);
+		model.addAttribute("bbsNttList02", bbsNttList02);	
+
+		List<BbsNttVO> bbsNttList03 = bbsNttService.selectBbsMiniList(55,4);
+		model.addAttribute("bbsNttList03", bbsNttList03);		
+
+		List<PopupZoneItemVO> popupZoneItemList01 = popupZoneItemService.selectPopupZoneItemList(11, "always");
+		model.addAttribute("popupZoneItemList01", popupZoneItemList01);
+		
+		List<PopupZoneItemVO> popupZoneItemList02 = popupZoneItemService.selectPopupZoneItemList(12, "always");
+		model.addAttribute("popupZoneItemList02", popupZoneItemList02);
+		
+		List<LinkZoneItemVO> linkZoneItemList = linkZoneItemService.selectLinkZoneItemList(3, "always", 0);
+		model.addAttribute("linkZoneItemList", linkZoneItemList);
+
+		/** 강좌 목록 조회 **/
+		EdcLctreVO edcLctreVO = new EdcLctreVO();
+		edcLctreVO.setSearchUseAt("Y");
+		edcLctreVO.setSearchInsttCode("2");
+		//edcLctreVO.setSearchRceptSttus("RP1");
+		edcLctreVO.setPageUnit(4);
+		int totCnt = edcLctreService.webLctreListTotCnt(request, edcLctreVO);
+		edcLctreVO.getNeoPaginationInfo(totCnt);
+		List<EdcLctreVO> edcLctreList = edcLctreService.webLctreSelectList(request, edcLctreVO);
+		model.addAttribute("edcLctreList", edcLctreList);
+
+		SnsDataVO snsDataVO = new SnsDataVO();
+		snsDataVO.setSnsType("facebook_595709297293676");
+		snsDataVO.setFirstIndex(0);
+		snsDataVO.setLastIndex(3);
+		snsDataVO.setPageUnit(3);
+		List<SnsDataVO> facebookList = snsDataService.selectSnsData(snsDataVO);
+		model.addAttribute("facebookList", facebookList);
+
+		return "woman/main.jsp";
+
+    }
+
+}

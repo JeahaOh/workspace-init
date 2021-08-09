@@ -1,0 +1,55 @@
+1595814843140	Rename package 'egovframework.ext.acdntStat'
+1595815375365	Move 'acdntStat' to 'acdntStat'
+1595815690438	Move 'acdntStat' to 'sqlmap'
+1595816507034	Move 34 resources to 'acdntStat'
+1595816526300	Move 'acdntStat' to 'acdntStat'
+1595816642469	Move 34 resources to 'acdntStat'
+1595817956050	Move 2 resources to 'acdntStat'
+1595826509746	Delete element
+1595827581004	Copy file
+1595827590143	Rename resource 'subLayout.jsp'
+1595829033689	Copy file
+1595829040642	Rename resource 'header.jsp'
+1595829525271	Copy file
+1595837836614	Copy file
+1595841096544	Copy file
+1595841237957	Move 'redesign_header.jsp' to 'menu'
+1595844067256	Delete element
+1595919525148	Copy file
+1595919607403	Move 'redesign_middle.jsp' to 'menu'
+1595938016607	Rename local variable 'depth2'
+1595938030134	Rename local variable 'depth3'
+1595938050202	Rename local variable 'depth4'
+1595938063282	Rename local variable 'depth5'
+1595999439061	Rename package 'egovframework.ext.shipInfo'
+1595999485787	Rename package 'egovframework.ext.fcltyInfo'
+1595999530174	Rename package 'egovframework.ext.mtClos'
+1595999576107	Rename package 'egovframework.ext.portmis'
+1595999636413	Rename package 'egovframework.ext.shipCpctAcmslt'
+1595999700933	Rename package 'egovframework.ext.fcltyCpctAcmslt'
+1595999799289	Rename package 'egovframework.ext.mrenvVioltCrime'
+1595999853585	Rename package 'egovframework.ext.oftyPolencStmpr'
+1595999905001	Rename package 'egovframework.ext.shipDsmnnt'
+1595999945094	Rename package 'egovframework.ext.grdMng'
+1596000021330	Rename package 'egovframework.ext.levelZoneMng'
+1596000065782	Rename package 'egovframework.ext.patrlAct'
+1596000113299	Rename package 'egovframework.ext.arplneMntrgResult'
+1596000164784	Rename package 'egovframework.ext.ocmnntAnals'
+1596000252846	Rename package 'egovframework.ext.pollutnMttrMng'
+1596000299912	Rename package 'egovframework.ext.prvmtcFomConfm'
+1596000335403	Rename package 'egovframework.ext.sms'
+1596000398559	Rename package 'egovframework.ext.cpctAcmsltStat'
+1596000437930	Rename package 'egovframework.ext.patrlActStat'
+1596000499014	Rename package 'egovframework.ext.ocmnntAnalsStat'
+1596000558230	Rename package 'egovframework.ext.fcltyInfoStat'
+1596000611976	Rename package 'egovframework.ext.oftyPolencStmprStat'
+1596000677204	Rename package 'egovframework.ext.shipDsmnntStat'
+1596000752043	Rename package 'egovframework.ext.mrenvVioltCrimeStat'
+1596000956793	Move 24 resources to 'prvntn'
+1596017225905	Delete elements
+1596017335238	Delete elements
+1596017428160	Delete elements
+1596094657490	Copy file
+1596094667190	Rename resource 'session.js'
+1596094700878	Rename resource 'session2.js'
+1596094736413	Rename resource 'session_old.js'

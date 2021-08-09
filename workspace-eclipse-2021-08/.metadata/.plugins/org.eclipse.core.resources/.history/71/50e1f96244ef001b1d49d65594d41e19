@@ -1,0 +1,39 @@
+package kr.co.hanshinit.NeoCMS.cop.sms.service;
+
+import java.util.List;
+
+public interface MsgDataService {
+	List<MsgDataVO> selectMsgDataList(MsgDataVO msgDataVO) throws Exception;
+
+	int selectMsgDataTotCnt(MsgDataVO msgDataVO) throws Exception;
+
+	MsgDataVO selectMsgDataData(MsgDataVO msgDataVO) throws Exception;
+
+	void insertMsgData(List<MsgDataVO> msgDataList) throws Exception;
+
+	void updateMsgData(MsgDataVO msgDataVO) throws Exception;
+
+	void deleteMsgData(MsgDataVO msgDataVO) throws Exception;
+
+	void insertMmsData(MmsVO mmsVO) throws Exception;
+
+	int selectMmsContSeq(MmsVO mmsVO) throws Exception;
+
+	void updateMmsData(MmsVO mmsVO) throws Exception;
+
+	void deleteMmsData(MmsVO mmsVO) throws Exception;
+
+	void mmsSendComp(MmsVO mmsVO) throws Exception;
+
+	//List<MsgDataVO> selectMsgCountList(MsgDataVO msgDataVO) throws Exception;
+
+	void insertMsgDataStaff(List<MsgDataVO> msgDataList) throws Exception;
+
+	MsgDataVO selectSmsSentRsltInfo(MsgDataVO msgDataVO) throws Exception;
+
+	List<MsgDataVO> selectSmsSentFailList(MsgDataVO msgDataVO) throws Exception;
+
+	void insertMsgDataResve(List<MsgDataVO> msgDataList) throws Exception;
+
+	int deleteMsgDataAll(MsgDataVO msgDataVO) throws Exception;
+}

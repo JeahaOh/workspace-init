@@ -1,0 +1,217 @@
+/*
+ * Copyright 2008-2009 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
+package egovframework.ext.olRespmtEntrps.web;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+import org.springmodules.validation.commons.DefaultBeanValidator;
+import egovframework.com.cmmn.service.EgovFileMngService;
+import egovframework.com.cmmn.service.EgovFileMngUtil;
+import egovframework.com.cmmn.util.EgovCommonUtil;
+import egovframework.com.cmmn.util.EgovStringUtil;
+import egovframework.ext.olRespmtEntrps.service.OlRespmtEntrpsService;
+import egovframework.ext.olRespmtEntrps.vo.OlRespmtEntrpsSearchVo;
+import egovframework.ext.olRespmtEntrps.vo.OlRespmtEntrpsVo;
+import egovframework.rte.psl.dataaccess.util.EgovMap;
+
+@Controller
+public class OlRespmtEntrpsController {
+  @Resource(name = "EgovFileMngUtil")
+  private EgovFileMngUtil fileUtil;
+
+  @Resource(name = "EgovCommonUtil")
+  private EgovCommonUtil EgovCommonUtil;
+
+  @Resource(name = "EgovFileMngService")
+  private EgovFileMngService fileMngService;
+
+  @Resource(name = "OlRespmtEntrpsService")
+  private OlRespmtEntrpsService OlRespmtEntrpsService;
+
+  @Resource(name = "beanValidator")
+  protected DefaultBeanValidator beanValidator;
+
+  @RequestMapping(value = "/ext/OlRespmtEntrps/OlRespmtEntrpsList.do")
+  public String aqrmList(ModelMap model, HttpServletRequest request) throws Exception {
+    OlRespmtEntrpsSearchVo OlRespmtEntrpsSearchVo =
+        (OlRespmtEntrpsSearchVo) request.getSession().getAttribute("OlRespmtEntrpsSearchVoSession");
+    request.getSession().setAttribute("OlRespmtEntrpsSearchVoSession", null);
+    if (!EgovStringUtil.ObjEmptyChk(OlRespmtEntrpsSearchVo)) {
+      model.addAttribute("OlRespmtEntrpsSearchVo", OlRespmtEntrpsSearchVo);
+    } ;
+    return "olRespmtEntrps/olRespmtEntrpsList";
+  };
+
+  @RequestMapping(value = "/ext/OlRespmtEntrps/OlRespmtEntrpsInsert.do")
+  public String aqrmInsert(ModelMap model, HttpServletRequest request,
+      @ModelAttribute OlRespmtEntrpsSearchVo OlRespmtEntrpsSearchVo) throws Exception {
+    request.getSession().setAttribute("OlRespmtEntrpsSearchVoSession", OlRespmtEntrpsSearchVo);
+    return "olRespmtEntrps/olRespmtEntrpsWrite";
+  };
+
+  // 수정화면
+  @RequestMapping(value = "/ext/OlRespmtEntrps/OlRespmtEntrpsUpdate.do")
+  public String aqrmUpdate(ModelMap model, HttpServletRequest request,
+      @ModelAttribute OlRespmtEntrpsSearchVo OlRespmtEntrpsSearchVo) throws Exception {
+    EgovMap returnMap = new EgovMap();
+    if (!EgovStringUtil.ObjEmptyChk(OlRespmtEntrpsSearchVo.getSn())) {
+      returnMap = OlRespmtEntrpsService.aqrmViewSelect(OlRespmtEntrpsSearchVo);
+      if (!EgovStringUtil.ObjEmptyChk(returnMap)) {
+        Set key = returnMap.keySet();
+        for (Iterator iterator = key.iterator(); iterator.hasNext();) {
+          String keyName = (String) iterator.next();
+          model.addAttribute(keyName, returnMap.get(keyName));
+        }
+      } ;
+    } ;
+    return "olRespmtEntrps/olRespmtEntrpsUpdate";
+  };
+
+  // 상세보기
+  @RequestMapping(value = "/ext/OlRespmtEntrps/OlRespmtEntrpsView.do")
+  public String refrnrelmView(ModelMap model, HttpServletRequest request,
+      @ModelAttribute OlRespmtEntrpsSearchVo OlRespmtEntrpsSearchVo) throws Exception {
+    request.getSession().setAttribute("OlRespmtEntrpsSearchVoSession", OlRespmtEntrpsSearchVo);
+    String returnView = "olRespmtEntrps/olRespmtEntrpsDetail";
+    EgovMap returnMap = new EgovMap();
+    if (!EgovStringUtil.ObjEmptyChk(OlRespmtEntrpsSearchVo.getSn())) {
+      returnMap = OlRespmtEntrpsService.aqrmViewSelect(OlRespmtEntrpsSearchVo);
+      if (!EgovStringUtil.ObjEmptyChk(returnMap)) {
+        Set key = returnMap.keySet();
+        for (Iterator iterator = key.iterator(); iterator.hasNext();) {
+          String keyName = (String) iterator.next();
+          model.addAttribute(keyName, returnMap.get(keyName));
+        }
+      } ;
+    } ;
+    return returnView;
+  };
+
+  // 수정Ajax
+  @ResponseBody
+  @RequestMapping(value = "/ext/OlRespmtEntrps/updateOlRespmtEntrps.do")
+  public ModelAndView updateAqrm(HttpServletRequest request, ModelMap model,
+      @ModelAttribute OlRespmtEntrpsVo OlRespmtEntrpsVo) throws Exception {
+    EgovMap ret = new EgovMap();
+    ModelAndView mav = EgovCommonUtil.getModelAndViewforAjax(OlRespmtEntrpsVo.getVerEx());
+    if (!EgovStringUtil.ObjEmptyChk(OlRespmtEntrpsVo)) {
+      Map<String, Object> aqrmSuperData = new HashMap<String, Object>();
+      aqrmSuperData.put("OlRespmtEntrpsVo", OlRespmtEntrpsVo);
+      ret = OlRespmtEntrpsService.updateaqrm(aqrmSuperData);
+    } ;
+    mav.addObject("data", ret);
+    return mav;
+
+  };
+
+  // 삭제Ajax
+  @ResponseBody
+  @RequestMapping(value = "/ext/OlRespmtEntrps/OlRespmtEntrpsDelete.do")
+  public EgovMap refrnrelmDelete(ModelMap model, HttpServletRequest request) throws Exception {
+    EgovMap ret = new EgovMap();
+    Map<String, String> preDat = new HashMap<String, String>();
+    String sn = request.getParameter("sn");
+    if (!EgovStringUtil.ObjEmptyChk(sn)) {
+      preDat.put("sn", sn);
+      ret = OlRespmtEntrpsService.aqrmDelete(preDat);
+    } ;
+    return ret;
+  };
+
+  // 저장Ajax
+  @ResponseBody
+  @RequestMapping(value = "/ext/OlRespmtEntrps/insertOlRespmtEntrpsData.do")
+  public ModelAndView insertPrefrmrelmData(HttpServletRequest request, ModelMap model,
+      @ModelAttribute OlRespmtEntrpsVo OlRespmtEntrpsVo) throws Exception {
+    EgovMap ret = new EgovMap();
+    ModelAndView mav = EgovCommonUtil.getModelAndViewforAjax(OlRespmtEntrpsVo.getVerEx());
+    request.getSession().setAttribute("OlRespmtEntrpsSearchVoSession", null);
+    if (!EgovStringUtil.ObjEmptyChk(OlRespmtEntrpsVo)) {
+      Map<String, Object> aqrmSuperData = new HashMap<String, Object>();
+      aqrmSuperData.put("OlRespmtEntrpsVo", OlRespmtEntrpsVo);
+      ret = OlRespmtEntrpsService.insertaqrmData(aqrmSuperData);
+    } ;
+    mav.addObject("data", ret);
+    return mav;
+  };
+
+  // 전체 리스트 카운트
+  @ResponseBody
+  @RequestMapping(value = "/ext/OlRespmtEntrps/OlRespmtEntrpsfirstDataListCnt.do")
+  public EgovMap firstDataListCnt(HttpServletRequest request, ModelMap model,
+      @ModelAttribute OlRespmtEntrpsSearchVo OlRespmtEntrpsSearchVo) throws Exception {
+    EgovMap cntF = new EgovMap();
+    if (!EgovStringUtil.ObjEmptyChk(OlRespmtEntrpsSearchVo)) {
+      cntF = OlRespmtEntrpsService.aqrmfirstDataListCnt(OlRespmtEntrpsSearchVo);
+    } ;
+    return cntF;
+  };
+
+  // 조회
+  @ResponseBody
+  @RequestMapping(value = "/ext/OlRespmtEntrps/searchOlRespmtEntrpsListP.do")
+  public List<EgovMap> searchRefrnrelmListP(HttpServletRequest request, ModelMap model,
+      @ModelAttribute OlRespmtEntrpsSearchVo OlRespmtEntrpsSearchVo) throws Exception {
+
+    List<EgovMap> list = new ArrayList<EgovMap>();
+    if (!EgovStringUtil.ObjEmptyChk(OlRespmtEntrpsSearchVo)) {
+      list = OlRespmtEntrpsService.searchaqrmListP(OlRespmtEntrpsSearchVo);
+    } ;
+    return list;
+  };
+
+  // 조회 엑셀
+  @RequestMapping(value = "/ext/OlRespmtEntrps/searchOlRespmtEntrpsListPForExcel.do")
+  public String searchClturRelicsPrtcareaListPForExcel(HttpServletRequest request, ModelMap model,
+      @ModelAttribute OlRespmtEntrpsSearchVo OlRespmtEntrpsSearchVo) throws Exception {
+    OlRespmtEntrpsSearchVo.setFirstRecordIndex("1");
+    OlRespmtEntrpsSearchVo.setLastRecordIndex("9999999");
+    List<EgovMap> list = new ArrayList<EgovMap>();
+    list = OlRespmtEntrpsService.searchaqrmListP(OlRespmtEntrpsSearchVo);
+    model.addAttribute("listForExcelLastVer", list);
+    model.addAttribute("listForExcelLastVerType", "Y");
+    return "olRespmtEntrps/olRespmtEntrpsList";
+  };
+  
+  @RequestMapping(value = "/ext/OlRespmtEntrps/searchOlRespmtEntrpsListPForJSON.do")
+  public EgovMap searchClturRelicsPrtcareaListPForJSON(HttpServletRequest request, ModelMap model,
+      @ModelAttribute OlRespmtEntrpsSearchVo OlRespmtEntrpsSearchVo) throws Exception {
+    OlRespmtEntrpsSearchVo.setFirstRecordIndex("1");
+    OlRespmtEntrpsSearchVo.setLastRecordIndex("9999999");
+    EgovMap result = new EgovMap();
+    List<EgovMap> list = new ArrayList<EgovMap>();
+    list = OlRespmtEntrpsService.searchaqrmListP(OlRespmtEntrpsSearchVo);
+    
+    if( list == null || list.size() == 0 ) {
+      result.put("success", false);
+    } else {
+      result.put("success", true);
+      result.put("list", list);
+    }
+    
+    return result;
+  }
+};

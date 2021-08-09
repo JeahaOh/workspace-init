@@ -1,0 +1,506 @@
+<!-- Include BoardManagement -->
+<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<section id="menu-editor" class="contents-wrap" style="display:none;">
+  <hr>
+  <div class="inner">
+    <article role=”main” class="contents ">
+      <h2 class="title manage_titl">Board Management</h2>
+      <div class="cbody">
+        <!-- content body -->
+        <form commandName="boardMaster" name="boardMaster" id="boardMaster" method="post" action="<c:url value='/cop/bbs/SelectBBSMasterInfs.do'/>">
+          <!--detail area start -->
+          <div class="search_service">
+            <div class="search_top_table contentCreateMenu">
+              <table width="100%" border="0" cellpadding="0" cellspacing="1" class="table-register">
+                <tr>
+                  <td class="td_width">
+                    <label for="bbsNm"> Menu Name </label>
+                  </td>
+                  <td class="td_content" colspan="3">
+                    <input type="text" id="bbsNm" name="bbsNm" value title="Enter Menu Name" placeholder="Menu Name" size="60" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="td_width">
+                    <label for="bbsIntrcn"> Menu Desc</label>
+                  </td>
+                  <td class="td_content" colspan="3">
+                    <textarea type="textarea" id="bbsIntrcn" name="bbsIntrcn" value title="Enter Menu Description" placeholder="Enter Menu Description" rows="4" cols="95" ></textarea>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="td_width">
+                    <label for="bbsTyCode"> Menu Type </label>
+                  </td>
+                  <td class="td_content" >
+                    <select path="bbsTyCode" name=bbsTyCode id="bbsTyCode" title="Select Menu Type" onchange="typeChange(this.value)" style="width:120px;">
+                      <option value='' label=" - - Choose - - " />
+                      <option value='GROUP' label="Group" />
+
+                      <c:forEach var="type" items="${typeList}" varStatus="status">
+                        <option value="${type.code}">${type.codeNm}</option>
+                      </c:forEach>
+                    </select>
+                  </td>
+                  <td class="td_width">
+                    <label for="bbsAttrbCode"> Board Attribute </label>
+                  </td>
+                  <td class="td_content">
+                    <select path="bbsAttrbCode" name="bbsAttrbCode" id="bbsAttrbCode" title="Select Board Attribute" style="width:120px;">
+                      <option value='' label=" - - Choose - - " />
+                      <option value="BBSA03">일반게시판</option>
+                      <option value='BBSA01' id="bbs_ty_notice" style="display:none;">Notice</option>
+                      <option value='GROUP' id="bbs_ty_group" style="display:none;">Group</option>
+                      <%--
+                        //  갤러리는 아직 사용하지 않음으로 코드를 가져올 필요가 없다.
+                        //  그러나 이후 갤러리를 사용 할 수 있으니 남겨두자.
+                      <c:forEach var="attr" items="${attrbList}" varStatus="status">
+                        <option value="${attr.code}">${attr.codeNm}</option>
+                      </c:forEach>
+                      --%>
+                    </select>
+                  </td>
+                </tr>
+                <tr id="file_manage">
+                  <td class="td_width">
+                    <label for="fileAtchPosblAt"> File Attach </label>
+                  </td>
+                  <td class="td_content">
+                    <label for="fileAtchPosblAt1">possible&nbsp;:&nbsp;</label>
+                    <input type="radio" id="fileAtchPosblAt1" name="fileAtchPosblAt" value="Y" onclick="document.boardMaster.posblAtchFileNumber.disabled=''; document.boardMaster.posblAtchFileNumber.focus();" />
+                    <label for="fileAtchPosblAt2">impossible&nbsp;:&nbsp;</label>
+                    <input type="radio" id="fileAtchPosblAt2" name="fileAtchPosblAt" value="N" onclick="document.boardMaster.posblAtchFileNumber.disabled='disabled'; document.boardMaster.posblAtchFileNumber.value=0" />
+                    <br />
+                    <form:errors path="fileAtchPosblAt" />
+                  </td>
+                  <td class="td_width">
+                    <label for="posblAtchFileNumber"> Possible Number of Attached Files </label>
+                  </td>
+                  <td class="td_content" colspan="6">
+                    <select id="posblAtchFileNumber" name="posblAtchFileNumber" title="Possible Number of Attached Files." style="width:120px;">
+                      <c:forEach var="i" begin="0" end="10" step="1">
+                        <option value="${10 - i}">${10 - i}</option>
+                      </c:forEach>
+                    </select>
+                  </td>
+                </tr>
+
+              </table>
+            </div>
+          </div>
+          <!--detail area end -->
+          <!-- 목록/저장버튼  시작-->
+          <table border="0" cellspacing="0" cellpadding="0" align="center">
+            <tr>
+              <td>
+                <input type="hidden" id="replyPosblAt" name="replyPosblAt" value="N" readonly="readonly"/>
+                <input type="hidden" id="tmplatNm" name="tmplatNm" value="게시판 기본템플릿" readonly="readonly"/>
+                <input type="hidden" id="tmplatId" name="tmplatId" value="TMPLAT_BOARD_DEFAULT" readonly="readonly"/>
+                <input type="hidden" id="status" value="" readonly="readonly"/>
+                <input type="hidden" id="dept" value="" readonly="readonly" />
+              </td>
+              <td>
+                <div class="buttons" align="center" style="margin-bottom: 100px">
+                  <label for="submit_btn" class="btn">Save</label>
+                  <input type="button" id="submit_btn" onclick="insertBnM()" style="display:none;" /><%-- "javascript:fn_egov_regist_brdMstr(); return false;" --%>
+                  <label for="cncl" class="btn">Cancel</label>
+                  <input type="button" id="cncl" onclick="hideInsertMenu();" style="display:none;" /> <%-- fn_egov_select_brdMstrList(); return false; --%>
+                </div>
+              </td>
+            </tr>
+          </table>
+          <!-- 목록/저장버튼  끝-->
+        </form>
+      </div>
+      <!-- //content body -->
+    </article>
+  </div>
+</section>
+<script type="text/javascript">
+  /** BoardMastrRegist Default FX */
+  /*
+  function fn_egov_regist_brdMstr() {
+    if (!validateBoardMaster(document.boardMaster)) {
+      return;
+    }
+
+    if (confirm('<spring:message code="common.regist.msg" />')) {
+      form = document.boardMaster;
+      form.action = "<c:url value='/cop/bbs/insertBBSMasterInf.do'/>";
+      form.submit();
+    }
+  }
+
+  function fn_egov_select_brdMstrList() {
+    form = document.boardMaster;
+    form.action = "<c:url value='/cop/bbs/SelectBBSMasterInfs.do'/>";
+    form.submit();
+  }
+
+  function fn_egov_inqire_tmplatInqire() {
+    form = document.boardMaster;
+    var retVal;
+    var url = "<c:url value='/cop/com/openPopup.do?requestUrl=/cop/com/selectTemplateInfsPop.do&typeFlag=BBS&width=850&height=360'/>";
+    var openParam = "dialogWidth: 850px; dialogHeight: 360px; resizable: 0, scroll: 1, center: 1";
+
+    retVal = window.showModalDialog(url, "p_tmplatInqire", openParam);
+    if (retVal != null) {
+      var tmp = retVal.split("|");
+      form.tmplatId.value = tmp[0];
+      form.tmplatNm.value = tmp[1];
+    }
+  }
+
+  function showModalDialogCallback(retVal) {
+    if (retVal != null) {
+      var tmp = retVal.split("|");
+      form.tmplatId.value = tmp[0];
+      form.tmplatNm.value = tmp[1];
+    }
+  }
+  */
+  /** BoardMastrRegist Default FX */
+  
+  /** Board Management FX */
+  //  --> Menu Type이 변하면 처리
+  function typeChange(val) {
+    switch( val ){
+      case 'BBST01':  //  일반 게시판을 선택할 경우
+        $('.manage_titl').html("Regular Board Management");
+        showFileManagement();
+        $('#bbs_ty_notice').css('display', 'none');
+        $('#bbs_ty_group').css('display', 'none');
+        $('#bbsAttrbCode').val('BBSA03');
+        $('#bbsAttrbCode').removeAttr('disabled', '');
+        //  $('#bbsAttrbCode').focus(); 갤러리는 사용하지 않음으로 주석 처리
+        break;
+      case 'BBST03':  //  공지사항을 선택할 경우
+        $('.manage_titl').html("Notice Board Management");
+        $('#bbs_ty_notice').css('display', 'block');
+        $('#bbsAttrbCode').val('BBSA01');
+        $('#bbsAttrbCode').attr('disabled', 'disabled');
+        hideFileManagement();
+        $('#posblAtchFileNumber').val(0);
+        $('#fileAtchPosblAt2').prop('checked', true);
+        $('#posblAtchFileNumber').attr('disabled', 'disabled');
+        // $('#fileAtchPosblAt2').attr('checked', 'true');
+        // $('#posblAtchFileNumber').val(10);
+        break;
+      case 'GROUP':   //  그룹을 선택할 경우
+        $('.manage_titl').html("Group Menu Management");
+        $('#bbs_ty_group').css('display', 'block');
+        $('#bbsAttrbCode').val('GROUP');
+        $('#bbsAttrbCode').attr('disabled', 'disabled');
+        hideFileManagement();
+        // $('#fileAtchPosblAt2').attr('checked', 'true');
+        // $('#posblAtchFileNumber').val(10);
+        break;
+    }
+  }
+  //  <-- Menu Type이 변하면 처리
+  
+  function hideFileManagement() {
+    $('#file_manage').fadeOut();
+  }
+  
+  function showFileManagement() {
+    $('#posblAtchFileNumber').val(0);
+    $('input:radio[name=fileAtchPosblAt]').prop('checked', false);
+    $('#file_manage').fadeIn();
+  }
+  
+  //  --> Board Attribute가 변하면 처리
+//  function attrChange() {
+//    //console.log('Attr Change!');
+//  }
+  //  <-- Board Attribute가 변하면 처리
+  
+  
+  //  --> 대메뉴가 선택 됬는지 확인
+  function checkMainMenuSelected() {
+    var menulist = $('#contentMainMenu li');
+    var validate = false;
+    
+    var menuNo = "";
+    $.each(menulist, function(idx) {
+      if(menulist.eq(idx).hasClass('siteSelected')) {
+        //console.log(menulist.eq(idx).val());
+        menuNo = menulist.eq(idx).val();
+        validate = true;
+      }
+    });
+    
+    if(!validate) {
+      alert('Please, Select Main Menu First.');
+    }
+    
+    //console.log(validate);
+    return validate;
+  }
+  //  <-- 대메뉴가 선택 됬는지 확인
+  
+  //  --> Left 메뉴가 선택 됬는지 확인
+  function checkLeftMenuSelected() {
+    var menulist = $('#contentLeftMenu li');
+    var validate = false;
+    
+    var menuNo = "";
+    $.each(menulist, function(idx) {
+      if(menulist.eq(idx).hasClass('siteSelected')) {
+        //console.log(menulist.eq(idx).val());
+        menuNo = menulist.eq(idx).val();
+        validate = true;
+      }
+    });
+    
+    if(!validate) {
+      alert('Please, Select Left Menu.');
+    }
+    
+    //console.log(validate);
+    return validate;
+  }
+  //  <-- Left 메뉴가 선택 됬는지 확인
+  
+  
+  //  --> 버튼 클릭시 조건이 맞다면 Board Management Form을 보여줌.
+  function showMenuForm4Insert(level) {
+    // -> 대메뉴가 선택 됬는지 확인
+    if( level == 'mid' && checkMainMenuSelected() == false ) return;
+    if( level == 'low') {
+      if( checkMainMenuSelected() == false ) return;
+      if( checkLeftMenuSelected() == false ) return;
+    } 
+    
+    $('#menu-editor').fadeIn();
+    location.href = '#menu-editor';
+    $('#bbsNm').focus();
+    $('#status').val('Insert');
+    $('#dept').val(level);
+  }
+  //  <-- 버튼 클릭시 조건이 맞다면 Board Management Form을 보여줌.
+  
+  //  --> Board Management Form을 숨김.
+  function hideInsertMenu() {
+    //  form을 숨긴 뒤.
+    $('#menu-editor').fadeOut();
+    //  form을 초기화 해줌.
+    $('#boardMaster')[0].reset();
+  }
+  //  <-- Board Management Form을 숨김.
+  
+  //  --> Board Management Form의 값들을 확인후,
+  //  유효하다면 serialized form을 리턴, 아니면 false를 리턴.
+  function checkValidate( level ) {
+    $('#bbsNm').val( $('#bbsNm').val().trim() );
+    var bbsNm = $('#bbsNm');
+
+    
+    var bbsIntrcn = $('#bbsIntrcn');
+    var bbsTyCode = $('#bbsTyCode option:selected');
+    var bbsAttrbCode = $('#bbsAttrbCode option:selected');
+    var fileAtchPosblAt = $(":input:radio[name=fileAtchPosblAt]:checked");
+    var posblAtchFileNumber = $('#posblAtchFileNumber option:selected');
+    
+    //  Menu Name이 0보다 크지 않다면.
+    if( !bbsNm.val().trim().length > 0 ) {
+      bbsNm.focus();
+      alert("Name Value Is Required!!");
+      return false;
+    //  Menu Name이 60자가 넘는다면.
+    } else if (bbsNm.val().trim().length > 60) {
+      bbsNm.focus();
+      alert("Name Value Is Too Long!!");
+      return false;
+    // Menu Name에 특수문자가 있다면.
+    } else {
+      let replaceChar = /[~!@\#$%^&*\()\-=+_'\;<>\/.\`:\"\\,\[\]?|{}]/gi;
+      let cont = bbsNm.val();
+      if( cont.match(replaceChar) ) {
+        cont = cont.replace(replaceChar, " ");
+        alert("Name Can Not Contain Special Character like\n [~!@\#$%^&*\()\=+_'\;<>\/.\`:\"\\,\[\]?|{}]");
+        bbsNm.val(cont);
+      }
+    }
+    
+    if( !bbsIntrcn.val().trim().length > 0 ) {
+      bbsIntrcn.focus();
+      alert("Description Value Is Required!!");
+      return false;
+    } else if ( bbsIntrcn.val().trim().length > 200 ) {
+    	bbsIntrcn.focus();
+      alert("Description Value Is Too Long!!");
+      return false;
+    } else {
+      let replaceChar = /[~!@\#$%^&*\()\-=+_'\;<>\/.\`:\"\\,\[\]?|{}]/gi;
+      let cont = bbsIntrcn.val();
+      if( cont.match(replaceChar) ) {
+        cont = cont.replace(replaceChar, " ");
+        alert("Desciprtion Can Not Contain Special Character like\n [~!@\#$%^&*\()\=+_'\;<>\/.\`:\"\\,\[\]?|{}]");
+        bbsIntrcn.val(cont);
+      }
+    }
+    
+    if( !bbsTyCode.val().length > 0 ) {
+    	$('#bbsTyCode').focus();
+      alert("Type Value Is Required!!");
+      return false;
+    }
+    if( !bbsAttrbCode.val().length > 0 ) {
+    	$('#bbsAttrbCode').focus();
+      alert("Attribute Value Is Required!!");
+      return false;
+    }
+    if( !fileAtchPosblAt.val() > 0 ) {
+    	$('#fileAtchPosblAt1').focus();
+      alert("File Attach Value Is Required!!");
+      return false;
+    }
+    if( $('#posblAtchFileNumber').prop('disabled') ) {
+      //console.log('dis')
+    } else {
+      //console.log('able')
+      if( $('#posblAtchFileNumber').val() <= 0 ) {
+        $('#posblAtchFileNumber').focus();
+        alert("Possible Number Of Atteched Files Value Is Must More Then 0!!");
+        return false;
+      }
+    }
+    
+    
+    
+    
+    //  선택한 상위 메유 No를 가져온다.
+    var siteId = '&siteId=' + selectSiteId();
+    var upperMenuId = '&upperMenuId=';
+    switch( level ){
+    case 'mid' :
+      upperMenuId += $('#contentMainMenu .siteSelected').val();
+      break;
+    case 'low':
+      upperMenuId += $('#contentLeftMenu .siteSelected').val();
+      break;
+    case 'high':
+      alert("Some Value Is Wrong!\nTry Again Before Page Reload!!");
+      return false;
+    default:
+      alert("Some Value Is Wrong!\nTry Again Before Page Reload!!");
+      return false;
+    }
+    //  상위 메뉴가  undefined라면 리턴
+    if( upperMenuId.includes('undefined') ) {
+      return false;
+    }
+    
+    var high = '&high=' + $('#contentMainMenu .siteSelected > input').val();
+    
+    if ( level == 'low' ) {
+      high += '&mid=' + $('#contentLeftMenu .siteSelected > input').val();
+    }
+    
+    
+    $('#bbsIntrcn').val( $('#bbsIntrcn').val().trim() );
+    $('#bbsIntrcn').val( selectSiteId() + ' ' + $('#bbsNm').val() + ' ' + $('#bbsIntrcn').val() );
+    
+    var siteId = '&siteId=' + selectSiteId();
+    var level = '&level=' + level;
+    $('#bbsAttrbCode').removeAttr('disabled');
+    $('#bbsTyCode').removeAttr('disabled');
+
+    return $('#boardMaster').serialize() + siteId + upperMenuId + level + high;
+  }
+  //  <-- Board Management Form의 값들을 확인
+  
+
+  
+  //  --> Board Management Form의 Save Button을 누를 시 작동.
+  //  Menu Type을 구분해서 Group이면 insertMenu()를 실행한다.
+  //  Group이 아니고 게시판 이라면 checkValidate()로 form data를 serialize object로 가져와서 submit한다.
+  function insertBnM () {
+    var level = $('#dept').val();
+    $('#bbsNm').val($('#bbsNm').val().trim());
+    $('#bbsIntrcn').val($('#bbsIntrcn').val().trim());
+    
+
+    //  그룹일 경우.
+    if( $('#bbsTyCode').val() == 'GROUP' ) {
+      //  low level에는 group을 만들면 안되므로 리턴.
+      if( level === 'low') {
+        alert("Left Sub Menu Can't Create Groups ");
+        return;
+      }
+      $('#bbsIntrcn').val( $('#contentMainMenu .siteSelected > input').val()  + ' - ' +  $('#bbsNm').val() + ' - ' + $('#bbsIntrcn').val() );
+      //  값을 form에 넣어준 뒤 insertMenu() 함수를 호출한다.
+      $('#midMenuFrm > input:hidden[name=menuNm]').val($('#bbsNm').val());
+      $('#midMenuFrm > input:hidden[name=menuDc]').val($('#bbsIntrcn').val());
+      //console.log(level);
+      insertMenu(level);
+      return;
+    }
+    
+    // 그룹이 아닐 경우
+    if (confirm('Are You Sure?')) {
+      //console.log( 'ready to submit ');
+      var params = checkValidate( level );
+      console.log( params );
+      
+      if( params !== false ) {
+        console.log('$.ajax()');
+        
+        $.ajax({
+          type: 'POST',
+          url: '/insertBoard.do',
+          data: params,
+          dataType: 'JSON',
+          success: function(data) {
+            console.log('COMMUNICATE success');
+            console.log(data);
+            //console.log(JSON.stringify( data ));
+            if( data.FINAL_RESULT == "FAIL" ) {
+              console.log("fail");
+              alert("FAIL");
+              alert(data.message);
+            } else {
+              console.log("Success");
+              alert(data.message);
+              location.reload();
+            }
+          }
+        });
+        
+      }   //  if( params != false )
+    }
+  }
+  //  <-- Board Management Form의 Save Button
+  
+  //  --> Mid Menu가 Group인지 확인후 Board Management Form을 보여줄지 말지 결정한다.
+  const isMidMenuGroupCheck = function() {
+    let menuManageVO = 'siteId=' + selectSiteId()
+       + '&upperMenuNo=' + $('#contentMainMenu .siteSelected').val()
+       + '&menuNo=' + $('#contentLeftMenu .siteSelected').val();
+   
+     if( menuManageVO.indexOf('undefined') > 0 ) {
+      alert('You Have To Select "Main Menu" And "Left Menu".');
+      return false;
+    }
+    
+    $.ajax({
+      type: 'POST',
+      url: '/isMidGroupCheck.do',
+      data: menuManageVO,
+      dataType: 'JSON',
+      success: function( res ) {
+        if( res.isGroup ) {
+          $('#bbsTyCode').val('BBST01');
+          $('#bbsTyCode').attr('disabled', true);
+          showMenuForm4Insert( 'low' );
+        } else {
+          alert("Sub Boards can only be created under the group.");
+        }
+      }
+    });
+  }
+  //  <-- Mid Menu가 Group인지 확인
+</script>
+<!-- Include END BoardManagement -->

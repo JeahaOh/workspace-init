@@ -1,0 +1,6 @@
+package com.koem.vms.area.dao;
+
+@Repository
+public interface EnvDAO {
+
+}

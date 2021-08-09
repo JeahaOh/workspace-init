@@ -1,0 +1,62 @@
+
+  var timer = null;
+  var sessionBlockRemainTime = 60;
+  // var sessionBlockRemainTime = 15;
+
+  var startTimer = function() {
+    //  일정 시간 뒤에 sessionPreBlock
+    timer = setTimeout( function() {
+      sessionPreBlock();
+      //  30분.
+    }, 1800000);
+  }
+
+  var sessionPreBlock = function() {
+    //  초기화
+    clearTimeout( timer );
+    timmer = null;
+    
+    //  모달로 화면을 막은 뒤, 로그아웃 타이머 시작.
+    $("#session_blocker").css('display', 'block');
+    //  1초마다 화면 갱신 후, 지정된 시간이 지나면 sessionBlock().
+    timer = setInterval(function() {
+      console.log(sessionBlockRemainTime + (sessionBlockRemainTime % 2 == 0 ? ' tick': ' tock'));
+      $('#session_timeout_sec').text(sessionBlockRemainTime--);
+      if(sessionBlockRemainTime <= -1) {
+        sessionBlock();
+      };
+    }, 1000);
+  }
+
+  
+  var cancelSeesionBlock = function() {
+    $("#session_blocker").css('display', 'none');
+    //  타이머 초기화후 재시작.
+    clearInterval( timer );
+    timer = null;
+    sessionBlockRemainTime = 60;
+    startTimer();
+  }
+  
+  var sessionBlock = function() {
+    //  타이머 초기화.
+    clearInterval( timer );
+    timer = null;
+
+    //  비동기 로그아웃.
+    $.ajax({
+      url: "/cmmn/logout.do",
+      type: 'POST',
+      async: false,
+    }).done(function(res) {
+      if( res == 'ok') {
+        $('#sessiobn_block_msg').text('장시간 이용하지 않아 로그아웃 되었습니다.');
+        $('#session_block_btn').remove();
+        $('#session_login_btn').css('display', 'block');
+      }
+    });
+  }
+
+  $(document).ready(function(){
+    startTimer();
+  });

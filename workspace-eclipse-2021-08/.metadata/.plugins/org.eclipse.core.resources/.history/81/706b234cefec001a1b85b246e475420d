@@ -1,0 +1,286 @@
+<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<script>
+  window.onload = function(){
+    // $('.screentit').text('${menuName}');
+    $('#pageTit').text('${menuName}');
+    document.title = '${menuName}';
+    console.info('${locNav}', $('#pageTit').text())
+  }
+</script>
+<!--LNB start-->
+<div id="lnbdropdown" class="lnbdropdown">
+  <ol class="lnbwrap">
+    <li><a  class="home" href="<c:out value="${rootPage}"/>">메인으로 이동</a></li>
+
+    <c:if test="${not empty curDepth_1}">
+      <li>
+        
+        <c:set var="menuCodeData" value="${curDepth_1.menuCode}" />
+        <c:choose>
+          <c:when test="${not empty curDepth_1.menuCodeSub}">
+            <c:set var="menuCodeData" value="${curDepth_1.menuCodeSub}" />
+          </c:when>
+          <c:otherwise>
+            <c:set var="menuCodeData" value="${curDepth_1.menuCode}" />
+          </c:otherwise>
+        </c:choose>
+        
+        <a href="#"><span><c:out value="${curDepth_1.menuNm}"/></span></a>
+        
+        <ul class="lnbdrop2">
+
+          <li>
+            <a
+              href="${curDepth_1.menuUrl}<c:if test="${curDepth_1.menuUrl ne '#' && curDepth_1.newWindowAt eq 'N'}"><c:choose><c:when test="${fn:indexOf(curDepth_1.menuUrl, '?') > -1}">&amp;</c:when><c:otherwise>?</c:otherwise></c:choose>menuCode=${menuCodeData}</c:if>"
+              <c:if test="${curDepth_1.newWindowAt eq 'Y'}"> target="_blank" title="새창열림"</c:if>
+            ><span><c:out value="${curDepth_1.menuNm}"/></span></a>
+          </li>
+
+          <c:forEach var="data" items="${gnbMenu}" varStatus="status">
+            <c:if test="${data.lvl eq '1' && data.menuNm ne '관리자'}">
+              <li data-index="${status.index}">
+                <c:set var="menuCodeData" value="${data.menuCode}" />
+                <c:choose>
+                  <c:when test="${not empty data.menuCodeSub}">
+                    <c:set var="menuCodeData" value="${data.menuCodeSub}" />
+                  </c:when>
+                  <c:otherwise>
+                    <c:set var="menuCodeData" value="${data.menuCode}" />
+                  </c:otherwise>
+                </c:choose>
+  
+                <c:set var="menuUrl">${data.menuUrl}<c:if test="${data.menuUrl ne '#' && data.newWindowAt eq 'N'}"><c:choose><c:when test="${fn:indexOf(data.menuUrl, '?') > -1}">&</c:when><c:otherwise>?</c:otherwise></c:choose>menuCode=${menuCodeData}</c:if></c:set>
+      
+                <!-- 추가 수정부분 GIS-->
+                <c:choose>
+                  <c:when test="${data.menuNm eq 'GIS'}">
+                    <a href="javascript:gisButton();" id="gisButton" lang="1">GIS</a>
+                  </c:when>
+                  <c:when test="${data.menuNm eq '관리자'}"></c:when>
+                  <c:otherwise>
+                    <a
+                      href="<c:out value="${menuUrl}"/>"
+                      <c:if test="${data.newWindowAt eq 'Y'}"> target="_blank" title="새창열림"</c:if>
+                      lang="1"
+                    >${data.menuNm}</a>
+                  </c:otherwise>
+                </c:choose>
+              </li>
+            </c:if>
+          </c:forEach>
+
+        </ul>
+      </li>
+    </c:if>
+    
+    <c:if test="${not empty curDepth_2}">
+      <li>
+
+        <c:set var="menuCodeData" value="${curDepth_2.menuCode}" />
+        <c:choose>
+          <c:when test="${not empty curDepth_2.menuCodeSub}">
+            <c:set var="menuCodeData" value="${curDepth_2.menuCodeSub}" />
+          </c:when>
+          <c:otherwise>
+            <c:set var="menuCodeData" value="${curDepth_2.menuCode}" />
+          </c:otherwise>
+        </c:choose>
+        
+        <a href="#"><span><c:out value="${curDepth_2.menuNm}"/></span></a>
+        
+        <ul class="lnbdrop2">
+          
+          <li>
+            <a
+              href="${curDepth_2.menuUrl}<c:if test="${curDepth_2.menuUrl ne '#' && curDepth_2.newWindowAt eq 'N'}"><c:choose><c:when test="${fn:indexOf(curDepth_2.menuUrl, '?') > -1}">&amp;</c:when><c:otherwise>?</c:otherwise></c:choose>menuCode=${menuCodeData}</c:if>"
+              <c:if test="${curDepth_2.newWindowAt eq 'Y'}"> target="_blank" title="새창열림"</c:if>
+            ><span><c:out value="${curDepth_2.menuNm}"/></span></a>
+          </li>
+
+          <c:if test="${fn:length(lvl2List) > 0}" >
+            <c:forEach var="menu" items="${lvl2List}">
+              <li>
+                <c:set var="menuCodeData" value="${menu.menuCode}" />
+                <c:choose>
+                  <c:when test="${not empty menu.menuCodeSub}">
+                    <c:set var="menuCodeData" value="${menu.menuCodeSub}" />
+                  </c:when>
+                  <c:otherwise>
+                    <c:set var="menuCodeData" value="${menu.menuCode}" />
+                  </c:otherwise>
+                </c:choose>
+                
+                <c:set var="menuUrl">${menu.menuUrl}<c:if test="${menu.menuUrl ne '#' && menu.newWindowAt eq 'N'}"><c:choose><c:when test="${fn:indexOf(menu.menuUrl, '?') > -1}">&</c:when><c:otherwise>?</c:otherwise></c:choose>menuCode=${menuCodeData}</c:if></c:set>
+                
+                <a
+                href="<c:out value="${menuUrl}"/>"
+                <c:if test="${menu.newWindowAt eq 'Y'}"> target="_blank" title="새창열림"</c:if>
+                >${menu.menuNm}</a>
+              </li>
+            </c:forEach>
+          </c:if>
+
+        </ul>
+      </li>
+    </c:if>
+    
+
+    <c:if test="${not empty curDepth_3}">
+      <li>
+
+        <c:set var="menuCodeData" value="${curDepth_3.menuCode}" />
+        <c:choose>
+          <c:when test="${not empty curDepth_3.menuCodeSub}">
+            <c:set var="menuCodeData" value="${curDepth_3.menuCodeSub}" />
+          </c:when>
+          <c:otherwise>
+            <c:set var="menuCodeData" value="${curDepth_3.menuCode}" />
+          </c:otherwise>
+        </c:choose>
+        
+        <a href="#"><span><c:out value="${curDepth_3.menuNm}"/></span></a>
+        
+        <ul class="lnbdrop2">
+
+          <li>
+            <a
+              href="${curDepth_3.menuUrl}<c:if test="${curDepth_3.menuUrl ne '#' && curDepth_3.newWindowAt eq 'N'}"><c:choose><c:when test="${fn:indexOf(curDepth_3.menuUrl, '?') > -1}">&amp;</c:when><c:otherwise>?</c:otherwise></c:choose>menuCode=${menuCodeData}</c:if>"
+              <c:if test="${curDepth_2.newWindowAt eq 'Y'}"> target="_blank" title="새창열림"</c:if>
+            ><span><c:out value="${curDepth_3.menuNm}"/></span></a>
+          </li>
+
+          <c:if test="${fn:length(lvl3List) > 0}" >
+            <c:forEach var="menu" items="${lvl3List}">
+              <li>
+                <c:set var="menuCodeData" value="${menu.menuCode}" />
+                <c:choose>
+                  <c:when test="${not empty menu.menuCodeSub}">
+                    <c:set var="menuCodeData" value="${menu.menuCodeSub}" />
+                  </c:when>
+                  <c:otherwise>
+                    <c:set var="menuCodeData" value="${menu.menuCode}" />
+                  </c:otherwise>
+                </c:choose>
+                
+                <c:set var="menuUrl">${menu.menuUrl}<c:if test="${menu.menuUrl ne '#' && menu.newWindowAt eq 'N'}"><c:choose><c:when test="${fn:indexOf(menu.menuUrl, '?') > -1}">&</c:when><c:otherwise>?</c:otherwise></c:choose>menuCode=${menuCodeData}</c:if></c:set>
+                
+                <a
+                href="<c:out value="${menuUrl}"/>"
+                <c:if test="${menu.newWindowAt eq 'Y'}"> target="_blank" title="새창열림"</c:if>
+                >${menu.menuNm}</a>
+              </li>
+            </c:forEach>
+          </c:if>
+
+        </ul>
+      </li>
+    </c:if>
+    
+    <c:if test="${not empty curDepth_4}">
+      <li>
+
+        <c:set var="menuCodeData" value="${curDepth_4.menuCode}" />
+        <c:choose>
+          <c:when test="${not empty curDepth_4.menuCodeSub}">
+            <c:set var="menuCodeData" value="${curDepth_4.menuCodeSub}" />
+          </c:when>
+          <c:otherwise>
+            <c:set var="menuCodeData" value="${curDepth_4.menuCode}" />
+          </c:otherwise>
+        </c:choose>
+        
+        <a href="#"><span><c:out value="${curDepth_4.menuNm}"/></span></a>
+        
+        <ul class="lnbdrop2">
+
+          <li>
+            <a
+              href="${curDepth_4.menuUrl}<c:if test="${curDepth_4.menuUrl ne '#' && curDepth_4.newWindowAt eq 'N'}"><c:choose><c:when test="${fn:indexOf(curDepth_4.menuUrl, '?') > -1}">&amp;</c:when><c:otherwise>?</c:otherwise></c:choose>menuCode=${menuCodeData}</c:if>"
+              <c:if test="${curDepth_4.newWindowAt eq 'Y'}"> target="_blank" title="새창열림"</c:if>
+            ><span><c:out value="${curDepth_4.menuNm}"/></span></a>
+          </li>
+
+          <c:if test="${fn:length(lvl4List) > 0}" >
+            <c:forEach var="menu" items="${lvl4List}">
+              <li>
+                <c:set var="menuCodeData" value="${menu.menuCode}" />
+                <c:choose>
+                  <c:when test="${not empty menu.menuCodeSub}">
+                    <c:set var="menuCodeData" value="${menu.menuCodeSub}" />
+                  </c:when>
+                  <c:otherwise>
+                    <c:set var="menuCodeData" value="${menu.menuCode}" />
+                  </c:otherwise>
+                </c:choose>
+                
+                <c:set var="menuUrl">${menu.menuUrl}<c:if test="${menu.menuUrl ne '#' && menu.newWindowAt eq 'N'}"><c:choose><c:when test="${fn:indexOf(menu.menuUrl, '?') > -1}">&</c:when><c:otherwise>?</c:otherwise></c:choose>menuCode=${menuCodeData}</c:if></c:set>
+                
+                <a
+                href="<c:out value="${menuUrl}"/>"
+                <c:if test="${menu.newWindowAt eq 'Y'}"> target="_blank" title="새창열림"</c:if>
+                >${menu.menuNm}</a>
+              </li>
+            </c:forEach>
+          </c:if>
+
+        </ul>
+      </li>
+    </c:if>
+
+    <c:if test="${not empty curDepth_5}">
+      <li>
+
+        <c:set var="menuCodeData" value="${curDepth_5.menuCode}" />
+        <c:choose>
+          <c:when test="${not empty curDepth_5.menuCodeSub}">
+            <c:set var="menuCodeData" value="${curDepth_5.menuCodeSub}" />
+          </c:when>
+          <c:otherwise>
+            <c:set var="menuCodeData" value="${curDepth_5.menuCode}" />
+          </c:otherwise>
+        </c:choose>
+        
+        <a href="#"><span><c:out value="${curDepth_5.menuNm}"/></span></a>
+        
+        <ul class="lnbdrop2">
+
+          <li>
+            <a
+              href="${curDepth_5.menuUrl}<c:if test="${curDepth_5.menuUrl ne '#' && curDepth_5.newWindowAt eq 'N'}"><c:choose><c:when test="${fn:indexOf(curDepth_5.menuUrl, '?') > -1}">&amp;</c:when><c:otherwise>?</c:otherwise></c:choose>menuCode=${menuCodeData}</c:if>"
+              <c:if test="${curDepth_5.newWindowAt eq 'Y'}"> target="_blank" title="새창열림"</c:if>
+            ><span><c:out value="${curDepth_5.menuNm}"/></span></a>
+          </li>
+
+          <c:if test="${fn:length(lvl5List) > 0}" >
+            <c:forEach var="menu" items="${lvl5List}">
+              <li>
+                <c:set var="menuCodeData" value="${menu.menuCode}" />
+                <c:choose>
+                  <c:when test="${not empty menu.menuCodeSub}">
+                    <c:set var="menuCodeData" value="${menu.menuCodeSub}" />
+                  </c:when>
+                  <c:otherwise>
+                    <c:set var="menuCodeData" value="${menu.menuCode}" />
+                  </c:otherwise>
+                </c:choose>
+                
+                <c:set var="menuUrl">${menu.menuUrl}<c:if test="${menu.menuUrl ne '#' && menu.newWindowAt eq 'N'}"><c:choose><c:when test="${fn:indexOf(menu.menuUrl, '?') > -1}">&</c:when><c:otherwise>?</c:otherwise></c:choose>menuCode=${menuCodeData}</c:if></c:set>
+                
+                <a
+                href="<c:out value="${menuUrl}"/>"
+                <c:if test="${menu.newWindowAt eq 'Y'}"> target="_blank" title="새창열림"</c:if>
+                >${menu.menuNm}</a>
+              </li>
+            </c:forEach>
+          </c:if>
+          
+        </ul>
+      </li>
+    </c:if>
+
+  </ol>
+  
+</div>
+<!--LNB end-->

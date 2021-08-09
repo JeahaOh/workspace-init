@@ -1,0 +1,39 @@
+package egovframework.com.cmmn.interceptor;
+
+import java.util.Arrays;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+import egovframework.com.cmmn.LoginVO;
+
+public class ManagerPageAccessInterceptor  extends HandlerInterceptorAdapter {
+  Logger logger = LoggerFactory.getLogger(this.getClass());
+  String[] ACCESS_ALLOWED_ID = {"dglee", "dglee2", "dglee3", "asdf1020", "kido", };
+
+
+  @Override
+  public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
+      throws Exception {
+    
+    boolean isAllowed = true;
+    
+    HttpSession session = request.getSession();
+    //  여기까지 왔다면 이미 session애 loginVO는 담겨 있다. null 처리 필요 없음.
+    LoginVO requester = (LoginVO) session.getAttribute("loginVO");
+    
+    
+    /**
+     * 내부망 구분 값이 없으므로 일단 계정 ID 로만 체크한다.
+     */
+    
+    String requesterID = requester.getUserId();
+    
+    isAllowed  = Arrays.asList(ACCESS_ALLOWED_ID).contains(requesterID);
+    logger.debug("\n\n\t\t\t!!! MANAGER PAGE ACCESSER : {} IS ALLOWED : {} !!!\n\n", requesterID, isAllowed);
+    
+    return isAllowed;
+  }
+}

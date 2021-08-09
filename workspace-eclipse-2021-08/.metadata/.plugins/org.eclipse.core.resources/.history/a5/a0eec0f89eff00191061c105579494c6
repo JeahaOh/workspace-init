@@ -1,0 +1,676 @@
+const BASE = 'http://192.168.0.168:8800';
+var movePosition = [];
+var favoriteList = [];
+
+// 레이어
+var raster = new ol.layer.Tile({
+  source: new ol.source.OSM({
+    // url: 'https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png'
+  })
+});
+
+var source = new ol.source.Vector();
+var vector = new ol.layer.Vector({
+  source: source,
+  style: function (feature, resolution) {
+    return new ol.style.Style({
+      fill: new ol.style.Fill({
+        color: '#5858582d'
+      }),
+      stroke: new ol.style.Stroke({
+        color: '#424242',
+        width: 2,
+        lineDash: [4, 8],
+        lineDashOffset: 6
+      }),
+      image: new ol.style.Circle({
+        radius: 3,
+        fill: new ol.style.Fill({
+          color: '#2b2b2b70'
+        })
+      }),
+      text: new ol.style.Text({
+        text: '격자',
+        fill: new ol.style.Fill({
+          color: '#ffffff'
+        }),
+        font: '14px sans-serif'
+      })
+    })
+  }
+});
+
+
+var overlayPopup;
+var overlayPopupElement;
+
+
+var cnv = document.createElement('canvas');
+var ctx = cnv.getContext('2d');
+var img = new Image();
+img.src = 'https://www.w3schools.com/w3css/img_lights.jpg';
+var pattern;
+img.onload = function () {
+  pattern = ctx.createPattern(img, 'no-repeat');
+}
+
+
+var samllSource = new ol.source.Vector();
+var smallVector = new ol.layer.Vector({
+  source: samllSource,
+  style: function (feature, resolution) {
+    return new ol.style.Style({
+      fill: new ol.style.Fill({
+        color: '#1ea8ca98'
+      }),
+      stroke: new ol.style.Stroke({
+        color: '#1ea8caf3',
+        width: 2,
+        lineDash: [4, 8],
+        lineDashOffset: 6
+      }),
+      image: new ol.style.Circle({
+        radius: 7,
+        fill: new ol.style.Fill({
+          color: '#1ea8ca98'
+        })
+      }),
+      text: new ol.style.Text({
+        text: '소광구',
+        fill: new ol.style.Fill({
+          color: '#FFFFFF'
+        }),
+        font: '14px sans-serif'
+      })
+    })
+  }
+});
+
+var style = new ol.style.Style({
+  fill: new ol.style.Fill({
+    color: 'rgba(211, 35, 35, 0.103)'
+  }),
+  stroke: new ol.style.Stroke({
+    color: '#5422c9',
+    width: 2
+  }),
+  image: new ol.style.Circle({
+    radius: 7,
+    fill: new ol.style.Fill({
+      color: '#ffcc33'
+    })
+  }),
+  text: new ol.style.Text({
+    text: $('#areaSmallName').val(),
+    fill: new ol.style.Fill({
+      color: '#5422c9'
+    }),
+    font: '16px sans-serif'
+  })
+});
+
+var selectStyle = new ol.style.Style({
+  fill: new ol.style.Fill({
+    color: '#bb2121c7'
+  }),
+  stroke: new ol.style.Stroke({
+    color: '#bb2121',
+    width: 2
+  }),
+  text: new ol.style.Text({
+    text: 'Selected',
+    fill: new ol.style.Fill({
+      color: '#ffffff'
+    }),
+    font: '14px sans-serif'
+  })
+});
+
+
+const osmTile = new ol.layer.Tile({
+  source: new ol.source.OSM(),
+  opacity: 0.5
+});
+
+const grid = new ol.source.OSM().getTileGrid({
+  tileSize:[128, 128]
+});
+
+var grildTile = new ol.layer.Tile({
+  source: new ol.source.TileDebug({
+  tileGrid: grid,
+  projection:'EPSG:4326'
+  })
+});
+
+const highlightVector = new ol.source.Vector();
+const highlightLayer = new ol.layer.Vector({
+  source: highlightVector,
+  style: new ol.style.Style({
+    stroke: new ol.style.Stroke({
+      width: 3,
+      color: [255, 0, 0, 1]
+    })
+  })
+});
+
+const view = new ol.View({
+  center: [0, 0],
+  zoom: 2
+});
+
+
+// 기본맵 불러오기
+var map = new ol.Map({
+  target: 'map',
+  autoPan: false,
+  layers: [
+    raster, 
+    vector, 
+    smallVector,
+    // osmTile, grildTile, highlightLayer
+    ],
+  view: new ol.View({
+    center: ol.proj.fromLonLat([133.4, 36.7]),
+    zoom: 7,
+  })
+});
+
+
+view.on('change:resolution', function(event){
+  // zooming changes tile sizes
+  highlightVector.clear();
+});
+
+map.on('singleclick',function(event){
+  var z = map.getView().getZoom();
+  var coord = grid.getTileCoordForCoordAndZ(event.coordinate, z);
+  var extent = grid.getTileCoordExtent(coord);
+
+  highlightVector.clear();
+  highlightVector.addFeature(new ol.Feature({
+    geometry: new ol.geom.LineString([
+      [ extent[0],extent[1] ],
+      [ extent[0],extent[3] ],
+      [ extent[2],extent[3] ],
+      [ extent[2],extent[1] ],
+      [ extent[0],extent[1] ],
+    ])
+  }));
+});
+
+
+// var graticule = new ol.Graticule({
+    // the style to use for the lines, optional.
+// strokeStyle: new ol.style.Stroke({
+  // color: '#bb2121',
+  // width: 1.3,
+  // lineDash: [0.5, 4]
+  // })
+// });
+// graticule.setMap(map);
+
+// 클릭 이벤트
+var selectClick = new ol.interaction.Select({
+  condition: ol.events.condition.click,
+  style: selectStyle
+});
+  
+// 화면이동 완료 후, 좌표값 저장하기
+map.on('moveend', function() {
+  if(movePosition.length === undefined) {
+    movePosition[0] = map.getView().getCenter();              
+  } else {
+    movePosition[movePosition.length] = map.getView().getCenter();
+  }
+});
+
+var wmsSource = new ol.source.Vector({
+  format: new ol.format.GeoJSON(),
+  url: BASE + '/geoserver/wfs?service=WFS&' +
+      'version=1.0.0&request=GetFeature&typename=test:area&' +
+      'outputFormat=application/json&srsname=EPSG:4326'
+});
+
+var wmsLayer = new ol.layer.Vector({
+  source: wmsSource
+});
+
+var wmsSource2 = new ol.source.TileWMS({
+  url: BASE + '/geoserver/wms',
+  params: {
+    'LAYERS': 'test:gmt_area',
+    'TILED': false,
+  },
+  serverType: 'geoserver',
+  projection: 'EPSG:4326',
+  transition: 0
+});
+
+var wmsLayer2 = new ol.layer.Tile({
+  source: wmsSource2
+});
+
+map.addLayer(wmsLayer);
+map.addLayer(wmsLayer2);
+
+map.addInteraction(selectClick);
+
+// --> 현재 마우스 포지션
+map.on('pointermove', function(evt) {
+  var lonlat = ol.proj.toLonLat(evt.coordinate);
+  var lon = lonlat[0].toFixed(5);
+  var lat = lonlat[1].toFixed(5);
+  $('#current-position').html('Lon : ' + lon + '　Lat : ' + lat);
+  // console.log('Lon : ' + lon + ' Lat : ' + lat);
+});
+// <-- 현재 마우스 포지션
+
+// --> 대광구 설정 클릭
+$(document).on('click', '#setArea', function () {
+  var type = $('#type').val();
+  if (type === 'none') {
+    alert("타입을 선택해주세요");
+    $('#type').focus();
+  } else {
+    var draw, snap; // global so we can remove them later
+    var typeSelect = document.getElementById('type');
+
+    var featureCollection = new ol.Collection();
+    var drawFeature = new ol.Feature({});
+
+    var geometryFunction, maxPoints;
+
+    function addInteractions() {
+      if (typeSelect.value === 'Box') {
+        maxPoints = 2;
+        // geometryFunction =
+        // ol.interaction.Draw.createRegularPolygon(4);
+        geometryFunction = function (coordinates, geometry) {
+          if (!geometry) {
+            geometry = new ol.geom.Polygon(null);
+          }
+          var start = coordinates[0];
+          var end = coordinates[1];
+          geometry.setCoordinates([
+            [start, [start[0], end[1]], end, [end[0], start[1]], start]
+          ]);
+          return geometry;
+        };
+      }
+
+      draw = new ol.interaction.Draw({
+        source: vector.getSource(),
+        type: 'LineString',
+        geometryFunction: geometryFunction,
+        maxPoints: maxPoints,
+        features: featureCollection
+      });
+
+      map.addInteraction(draw);
+
+      createMeasureTooltip();
+
+      snap = new ol.interaction.Snap({
+        source: source
+      });
+      map.addInteraction(snap);
+
+      draw.on('drawstart', function (evt) {
+        var sketch = evt.feature;
+
+        // console.log(sketch.getGeometry());
+        sketch.getGeometry().on('change', function (evt) {
+          var geom = evt.target;
+          console.log(geom.getLastCoordinate());
+          var coord = geom.getLastCoordinate();
+          var output;
+          output = formatLength(geom);
+          overlayPopupElement.innerHTML = output;
+          overlayPopup.setPosition(geom.getLastCoordinate());
+          // console.log(output);
+          // map.getView().animate({
+          // center: [coord[0] + 296.1934846, coord[1] +
+          // 296.1934846],
+          // duration: 300
+          // })
+        });
+        // evt.feature.setId('id');
+
+        evt.feature.setProperties({
+          'category': 'bigArea'
+        });
+      });
+
+      map.addInteraction(selectClick);
+
+      draw.on('drawend', function (e) {
+        // 격자만들기 테스트
+        var currentFeature = e.feature;
+        console.log(currentFeature.getGeometry().getCoordinates());
+        var coordinates = currentFeature.getGeometry().getCoordinates();
+        var coordinate = coordinates[0];
+        console.log(coordinate[0]);
+
+        var point1_X = coordinate[0][0];
+        var point1_Y = coordinate[0][1];
+
+        var point2_X = coordinate[1][0];
+        var point2_Y = coordinate[1][1];
+
+        var point3_X = coordinate[2][0];
+        var point3_Y = coordinate[2][1];
+
+        var point4_X = coordinate[3][0];
+        var point4_Y = coordinate[3][1];
+
+        // 가로 값
+        var g = [];
+        // 세로 값
+        var s = [];
+
+        var g1, g2;
+        var s1, s2;
+
+        for (var i = 0; i <= 12; i++) {
+          if (i == 0) {
+            g1 = point1_X;
+            g[i] = g1;
+          } else {
+            g2 = (point4_X - point1_X) / 12;
+
+            g[i] = g1 + g2;
+
+            g1 = g[i];
+          }
+        }
+
+        for (var i = 0; i <= 12; i++) {
+          if (i == 0) {
+            s1 = point1_Y;
+            s[i] = s1;
+          } else {
+            s2 = (point2_Y - point1_Y) / 12;
+            s[i] = s1 + s2;
+            s1 = s[i];
+          }
+        }
+
+
+        var test = [];
+        var num = 0;
+
+        var tempJ;
+
+        $.each(s, function (j) {
+          $.each(g, function (i) {
+            if (num == 0) {
+              test[num] = [
+                [
+                  [g[i], s[j]],
+                  [g[i], s[j + 1]],
+                  [g[i + 1], s[j + 1]],
+                  [g[i + 1], s[j]],
+                  [g[i], s[j]]
+                ]
+              ];
+              num++;
+            } else if (num != (g.length * s.length)) {
+              if ((i + 1) <= g.length - 1 && (j + 1) <= s.length -
+                1) {
+                console.log("들어왔니");
+                test[num] = [
+                  [
+                    [g[i], s[j]],
+                    [g[i], s[j + 1]],
+                    [g[i + 1], s[j + 1]],
+                    [g[i + 1], s[j]],
+                    [g[i], s[j]]
+                  ]
+                ];
+                num++;
+              }
+
+            } else {
+              console.log("ccc");
+            }
+          });
+        });
+
+        // console.log(test);
+        // console.log(test.length);
+
+        $.each(test, function (idx, item) {
+          if (idx < test.length) {
+            var testFeature = new ol.Feature({
+              geometry: new ol.geom.Polygon(test[idx])
+            })
+
+            var myStyle = new ol.style.Style({
+              text: new ol.style.Text({
+                text: idx,
+                fill: new ol.style.Fill({
+                  color: '#3f3f3f'
+                }),
+                font: '13px sans-serif'
+              })
+            });
+
+            testFeature.setId(idx);
+            vector.getSource().addFeature(testFeature);
+
+            var format = new ol.format.WKT();
+            var src = 'EPSG:3857';
+            var dest = 'EPSG:4326';
+            var wkt = format.writeGeometry(testFeature.getGeometry().transform(src, dest));
+
+            $.ajax({
+              type: 'POST',
+              url: '/WebVMS_Test/insertArea.do',
+              data: {"areaName": idx, "areaGeometry": String(wkt)},
+              dataType: 'text',
+              success: function(data) {
+                console.log(data);
+              },
+              fail: function(data) {
+                console.log(data);
+              }
+            });
+            console.log(wkt);
+          }
+        });
+        map.removeInteraction(draw);
+        map.removeInteraction(snap);
+      });
+    }
+    addInteractions();
+  }
+});
+// <-- 대광구 설정 클릭
+
+
+
+selectClick.on('select', function (evt) {
+  snap = new ol.interaction.Snap({
+    source: source
+  });
+  map.addInteraction(snap);
+
+  if (evt.selected[0]) {
+    console.group("selectClick.onSelect");
+    console.log("----------------------------------------");
+    console.log("---- Selected Feature ID : " + evt.selected[0].getId());
+    console.log("---- Selected Feature get Geometry");
+    console.log(evt.selected[0].getGeometry());
+    console.log("---- Selected Feature get Coordinates");
+    console.log(evt.selected[0].getGeometry().getCoordinates());
+    console.log("---- Selected Feature get First Coordinate");
+    console.log(evt.selected[0].getGeometry().getCoordinates()[0]);
+    console.groupEnd();
+    /*
+	 * if (evt.selected[0].getId() !== undefined) {
+	 * $('#featureContent')[0].innerHTML += "<li onclick='fn_move(\"" +
+	 * evt.selected[0].getId() + "\")'>클릭한 격자 아이디 : " + evt.selected[0].getId() + "</li>"; }
+	 */
+  }
+});
+
+function fn_move(id) {
+  var feature = vector.getSource().getFeatures();
+  $.each(feature, function (idx, item) {
+    if (Number(id) === item.getId()) {
+      item.setStyle(selectStyle);
+      var pointMove = item.getGeometry().getCoordinates()[0];
+      map.getView().animate({
+        zoom: 9,
+        center: pointMove[0],
+        duration: 300
+      })
+    }
+  });
+
+}
+
+var formatLength = function (line) {
+  var length = ol.Sphere.getLength(line);
+  var output;
+  if (length > 100) {
+    output = (Math.round(length / 1000 * 100) / 100) +
+      ' ' + 'km';
+  } else {
+    output = (Math.round(length * 100) / 100) +
+      ' ' + 'm';
+  }
+  return output;
+};
+
+function createMeasureTooltip() {
+  overlayPopupElement = document.createElement('div');
+  overlayPopupElement.className = 'overlayPop';
+  overlayPopup = new ol.Overlay({
+    element: overlayPopupElement,
+    offset: [0, -15],
+    positioning: 'bottom-center'
+  });
+  map.addOverlay(overlayPopup);
+}
+
+
+// 소광구 설정
+$(document).on('click', '#setSmallArea', function () {
+  var type = $('#type').val();
+  if (type === 'none') {
+    alert("타입을 선택해주세요");
+    $('#type').focus();
+  } else {
+    var draw, snap; // global so we can remove them later
+    var typeSelect = document.getElementById('type');
+
+    var featureCollection = new ol.Collection();
+    var geometryFunction, maxPoints;
+
+    function addInteractions() {
+      if (typeSelect.value === 'Box') {
+        maxPoints = 2;
+        geometryFunction = function (coordinates, geometry) {
+          if (!geometry) {
+            geometry = new ol.geom.Polygon(null);
+          }
+          var start = coordinates[0];
+          var end = coordinates[1];
+          geometry.setCoordinates([
+            [start, [start[0], end[1]], end, [end[0], start[1]], start]
+          ]);
+          return geometry;
+        };
+      }
+
+
+      draw = new ol.interaction.Draw({
+        source: samllSource,
+        type: 'LineString',
+        geometryFunction: geometryFunction,
+        maxPoints: maxPoints,
+        features: featureCollection
+      });
+
+      map.addInteraction(draw);
+
+      createMeasureTooltip();
+
+      snap = new ol.interaction.Snap({
+        source: source
+      });
+      map.addInteraction(snap);
+
+      draw.on('drawstart', function (evt) {
+        var sketch = evt.feature;
+
+        sketch.getGeometry().on('change', function (evt) {
+          var geom = evt.target;
+          var output;
+          output = formatLength(geom);
+          overlayPopupElement.innerHTML = output;
+          overlayPopup.setPosition(geom.getLastCoordinate());
+        });
+
+        // evt.feature.setId('id');
+        sketch.setProperties({
+          'category': 'smallArea'
+        });
+      });
+
+      draw.on('drawend', function (evt) {
+        console.log("유효범위 만들기");
+        
+        var currentFeature = evt.feature;
+        var coordinates = currentFeature.getGeometry().getCoordinates();
+        var coordinate = coordinates[0];
+
+        var point1_X = coordinate[0][0];
+        var point1_Y = coordinate[0][1];
+
+        var point2_X = coordinate[1][0];
+        var point2_Y = coordinate[1][1];
+
+        var point3_X = coordinate[2][0];
+        var point3_Y = coordinate[2][1];
+
+        var point4_X = coordinate[3][0];
+        var point4_Y = coordinate[3][1];
+
+        var result = distance(point1_X, point1_Y, point4_X, point4_Y);
+
+        function distance(lat1, lon1, lat2, lon2, unit) {
+          var radlat1 = Math.PI * lat1 / 180
+          var radlat2 = Math.PI * lat2 / 180
+          var theta = lon1 - lon2
+          var radtheta = Math.PI * theta / 180
+          var dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math
+            .cos(radlat2) * Math.cos(radtheta);
+          dist = Math.acos(dist)
+          dist = dist * 180 / Math.PI
+          dist = dist * 60 * 1.1515
+          if (unit == "K") {
+            dist = dist * 1.609344
+          }
+          if (unit == "N") {
+            dist = dist * 0.8684
+          }
+          return dist;
+        }
+
+        map.addInteraction(selectClick);
+        map.removeInteraction(draw);
+        map.removeInteraction(snap);
+      });
+    }
+
+    typeSelect.onchange = function () {
+      map.removeInteraction(draw);
+      map.removeInteraction(snap);
+      addInteractions();
+    };
+    addInteractions();
+  }
+});

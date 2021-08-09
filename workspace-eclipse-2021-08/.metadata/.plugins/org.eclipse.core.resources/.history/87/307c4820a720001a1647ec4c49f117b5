@@ -1,0 +1,159 @@
+package com.koem.vms.area.controller;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.koem.vms.area.dto.AreaDTO;
+import com.koem.vms.area.service.AreaService;
+import com.koem.vms.track.service.TrackService;
+
+@Controller
+public class AreaController {
+
+	// 바다누리 해양정보 서비스 API 키 (sihus)
+	private static final String serviceKey = "vkoF2elKs70tKbEFm0jGqQ==";
+
+	@Autowired
+	private AreaService service;
+	
+	@Autowired
+	private TrackService trackService;
+
+	@RequestMapping(value = "/insertObj.do", method=RequestMethod.POST)
+	@ResponseBody
+	public String insertObj(HttpServletRequest req, HttpServletResponse res) throws Exception {
+
+		String serviceUrl = "http://www.khoa.go.kr/oceangrid/grid/api/ObsServiceObj/search.do?ServiceKey=" + serviceKey + "&ResultType=json";
+		JSONObject obj = new JSONObject();
+
+		String result = "";
+
+		try{
+			URL url = new URL(serviceUrl);
+			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+			System.out.println(conn.getResponseCode());
+
+			if(conn.getResponseCode() == 200) {
+				System.out.println("접속 성공");
+
+			} else {
+				System.out.println("접속 실패");
+			}
+
+			BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+			StringBuilder sb = new StringBuilder();
+			String line;
+
+			while((line=br.readLine()) != null) {
+				sb.append(line);
+			}
+
+			br.close();
+			conn.disconnect();
+			result = sb.toString();
+
+		} catch(Exception e){
+			e.printStackTrace();
+		}
+
+		return result;
+	}
+
+	@RequestMapping(value = "/selectArea.do", method=RequestMethod.GET, produces="application/json;charset=UTF-8")
+	@ResponseBody
+	public String selectAreaList(HttpServletRequest req, HttpServletResponse res) throws Exception {
+		List<Map<String, Object>> result = service.selectAreaAll();
+
+		JSONObject jsonObject = new JSONObject();
+
+		jsonObject.put("result", result);
+
+
+		return jsonObject.toString();
+	}
+
+	@RequestMapping(value = "/insertArea.do", method=RequestMethod.POST, produces="application/json;charset=UTF-8")
+	@ResponseBody
+	public String insertArea(HttpServletRequest req, HttpServletResponse res, AreaDTO dto) throws Exception {
+		String message = "";
+		int result = service.insertArea(dto);
+
+		if(result > 0) {
+			message = "성공적으로 등록 되었습니다";
+		} else {
+			message = "등록 오류";
+		}
+		return message;
+	}
+	
+	@RequestMapping(value = "/insertPort.do", method=RequestMethod.POST, produces="application/json;charset=UTF-8")
+	@ResponseBody
+	public String insertPort(HttpServletRequest req, HttpServletResponse res, AreaDTO dto) throws Exception {
+		String message = "";
+		int result = service.insertPort(dto);
+
+		if(result > 0) {
+			message = "성공적으로 등록 되었습니다";
+		} else {
+			message = "등록 오류";
+		}
+		return message;
+	}
+	
+	
+	@RequestMapping(value = "/selectPort.do", produces="application/json;charset=UTF-8")
+	@ResponseBody
+	public String selectPort(HttpServletRequest req, HttpServletResponse res) throws Exception {
+		List<Map<String, Object>> result = trackService.selectPort();
+
+		JSONObject jsonObject = new JSONObject();
+		jsonObject.put("result", result);
+
+		return jsonObject.toString();
+	}
+	
+	@RequestMapping(value = "/selectEEZ.do", produces="application/json;charset=UTF-8")
+	@ResponseBody
+	public String selectEEZ(HttpServletRequest req, HttpServletResponse res) throws Exception {
+		List<Map<String, Object>> result = trackService.selectEEZ();
+
+		JSONObject jsonObject = new JSONObject();
+		jsonObject.put("result", result);
+
+		return jsonObject.toString();
+	}
+	
+	@RequestMapping(value = "/getEnvSurv.do", produces="application/json;charset=UTF-8")
+	@ResponseBody
+	public String getEnvSurv(HttpServletRequest req, HttpServletResponse res) throws Exception {
+	  
+	  System.out.println(req.toString());
+	  
+	  return req.toString();
+	}
+	
+	@RequestMapping( value = "/postEnvData.do", produces = "application/json;charset=UTF-8", method = RequestMethod.POST )
+	@ResponseBody
+	public String postEnvData( HttpServletRequest req, HttpServletResponse res, String param) throws Exception {
+	  System.out.println("\n\tPOST ENV DATA.DO");
+	  System.out.println( param );
+	  return "Communicated";
+	}
+
+
+
+}

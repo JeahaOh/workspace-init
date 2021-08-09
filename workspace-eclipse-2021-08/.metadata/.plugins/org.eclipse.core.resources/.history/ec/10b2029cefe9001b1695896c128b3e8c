@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+  <Appenders>
+    <Console name="console" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d %5p [%c %M:%l] %m%n" />
+    </Console>
+  </Appenders>
+
+  <Loggers>
+    <Logger name="java.sql" level="DEBUG" additivity="false">
+      <AppenderRef ref="console" />
+    </Logger>
+    <logger name="java.sql.ResultSet">
+      <level value="OFF" />
+    </logger>
+
+    <Logger name="egovframework" level="INFO" additivity="false">
+      <AppenderRef ref="console" />
+    </Logger>
+    
+    <!-- log SQL with timing information, post execution -->
+
+    <Logger name="jdbc.sqltiming" level="INFO" additivity="false">
+      <AppenderRef ref="console" />
+    </Logger>
+
+    <Logger name="org.springframework" level="INFO" additivity="false">
+      <AppenderRef ref="console" />
+    </Logger>
+
+    <Logger name="kr.co.hanshinit" level="DEBUG" additivity="false">
+      <AppenderRef ref="console" />
+    </Logger>
+
+    <Logger name="kr.co.hanshinit.NeoCMS.cmm.annotation" level="INFO" additivity="false">
+      <AppenderRef ref="console" />
+    </Logger>
+
+    <Root level="TRACE">
+      <AppenderRef ref="console" />
+    </Root>
+  </Loggers>
+</Configuration>

@@ -1,0 +1,5 @@
+package kr.co.hanshinit.NeoCMS.cmm.util;
+
+public class EmailUtil {
+
+}

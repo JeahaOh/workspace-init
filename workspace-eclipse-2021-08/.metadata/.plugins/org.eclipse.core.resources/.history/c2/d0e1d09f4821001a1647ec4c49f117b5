@@ -1,0 +1,52 @@
+package com.koem.vms.area.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.mybatis.spring.SqlSessionTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+import com.koem.vms.waterdepth.dto.AreaDTO;
+
+@Repository
+public class AreaDAOImpl implements AreaDAO {
+
+	@Autowired
+	@Resource(name="sqlSessionTemplate")
+	private SqlSessionTemplate session;
+	
+	@Autowired
+	@Resource(name="sqlSessionTemplate2")
+	private SqlSessionTemplate session2;
+	
+	@Override
+	public List<Map<String, Object>> selectAreaAll() throws Exception {
+		return session.selectList("area.selectAreaAll");
+	}
+
+	@Override
+	public int insertArea(AreaDTO dto) throws Exception {
+		int result = 0;
+		try {
+			result = session.insert("area.insertArea", dto);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
+
+	@Override
+	public int insertPort(AreaDTO dto) throws Exception {
+		int result = 0;
+		try {
+			result = session.insert("area.insertPort", dto);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
+
+
+}

@@ -1,0 +1,878 @@
+package egovframework.com.cmmn.web;
+
+import java.net.URLEncoder;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Random;
+import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.spec.RSAPublicKeySpec;
+
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.annotation.Resource;
+import javax.crypto.Cipher;
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import xecure.crypto.SignVerifier;
+import xecure.servlet.XecureConfig;
+import egovframework.com.cmmn.CmmnConstant;
+import egovframework.com.cmmn.EgovMessageSource;
+import egovframework.com.cmmn.LoginVO;
+import egovframework.com.cmmn.service.LoginService;
+import egovframework.mng.auth.service.AuthGroupService;
+import egovframework.mng.auth.vo.AuthGroupVO;
+import egovframework.mng.menu.service.MenuService;
+import egovframework.mng.menu.vo.MenuVO;
+import egovframework.mng.user.service.InsttUserService;
+import egovframework.mng.user.service.UserService;
+import egovframework.mng.user.vo.UserVO;
+import egovframework.rte.psl.dataaccess.util.EgovMap;
+
+@Controller
+public class LoginController {
+	
+	/** 일반사용자 */
+	@Resource(name = "loginService")
+	private LoginService loginService;
+	
+	/** 기관사용자 */
+	@Resource(name = "insttUserService")
+	private InsttUserService insttUserService;
+	
+	/** 사용자 권한 */
+	@Resource(name = "authGroupService")
+	private AuthGroupService authGroupService;
+	
+	/** 사용자  */
+	@Resource(name = "userService")
+	private UserService userService;
+	
+	/** 메뉴  */
+	@Resource(name = "menuService")
+	private MenuService menuService;
+	
+	@Resource(name = "egovMessageSource")
+	private EgovMessageSource egovMessageSource;
+	
+	public static final int KEY_SIZE = 1024;
+
+	/**
+	 * 로그인 화면
+	 * @param loginVO
+	 * @param model
+	 * @return "/cmmn/login"
+	 * @exception Exception
+	 */
+	@SuppressWarnings("rawtypes")
+	@RequestMapping(value = "/cmmn/login.do")
+	public String login(@ModelAttribute("loginVO")LoginVO loginVO, ModelMap model, HttpServletRequest request) throws Exception {
+						
+            KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+            generator.initialize(KEY_SIZE);
+            
+            KeyPair keyPair = generator.genKeyPair();
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+
+            PublicKey publicKey = keyPair.getPublic();
+            PrivateKey privateKey = keyPair.getPrivate();
+
+            HttpSession session = request.getSession();
+            // 세션에 공개키의 문자열을 키로하여 개인키를 저장한다.
+            session.setAttribute("__rsaPrivateKey__", privateKey);
+
+            // 공개키를 문자열로 변환하여 JavaScript RSA 라이브러리 넘겨준다.
+            RSAPublicKeySpec publicSpec = (RSAPublicKeySpec) keyFactory.getKeySpec(publicKey, RSAPublicKeySpec.class);
+            
+            String publicKeyModulus = publicSpec.getModulus().toString(16);
+            String publicKeyExponent = publicSpec.getPublicExponent().toString(16);
+
+		String param = "";
+		Enumeration params = request.getParameterNames();
+		//System.out.println("----------------------------");
+		while (params.hasMoreElements()){
+		    String name = (String)params.nextElement();
+		    if(request.getParameter(name).length() > 0) {
+		    	request.setAttribute(name, request.getParameter(name));
+		    	//System.out.println(name + " : " +request.getParameter(name));
+		    	param += "&"+name+"="+request.getParameter(name);
+		    }
+		}
+		//System.out.println("----------------------------");
+
+		
+		String returnURL = "";
+		// 요청주소
+		if(request.getParameter("returnURL") == null) {
+			String domain = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort();
+			String reqURL = request.getHeader("referer") != null ? request.getHeader("referer") : "/main.do";
+			//System.out.println("#### domain : " + domain );
+			//System.out.println("#### reqURL : " + reqURL );
+			if(reqURL.indexOf("?") > -1) {
+				returnURL = reqURL.replace(domain.replace(":80", ""), "");
+			} else {
+				if(param.equals("")) {
+					returnURL = reqURL.replace(domain.replace(":80", ""), "");
+				} else {
+					returnURL = reqURL.replace(domain.replace(":80", ""), "")+"?"+param.substring(1);
+				}
+			}
+		} else {
+			returnURL = request.getParameter("returnURL");
+		}
+		
+		model.addAttribute("returnURL", returnURL.replace("?message=auth.err.001", ""));
+		model.addAttribute("publicKeyModulus", publicKeyModulus);
+		model.addAttribute("publicKeyExponent", publicKeyExponent);
+		
+		String usersip = "";
+		
+		if(usersip == null || usersip.trim().equals("")){
+			usersip = "0";
+		} 
+		
+		//운영용
+		usersip = request.getRemoteAddr();
+		//로컬용
+		//usersip = InetAddress.getLocalHost().getHostAddress();
+		
+		/* 김홍진 주석
+		 String[] ipArr = usersip.split("\\."); //현재 접속 아이피 분리	
+		long ipAddressLong = (Long.parseLong(ipArr[0]) << 24) +	(Long.parseLong(ipArr[1]) << 16) +
+				(Long.parseLong(ipArr[2]) << 8) + (Long.parseLong(ipArr[3]));		
+		
+		//지방청 ip 
+		String [] inIP = {
+				"106.222.118.89","106.17.21.136","106.6.53.134","106.18.103.192"
+				,"211.253.82.243","106.4.48.154","211.253.82.235","111.23.7.43"
+				,"111.22.33.81","111.15.20.143","10.212.115.191","111.1.29.152"
+				,"111.2.20.31","110.0.116.44","110.1.78.13","110.24.105.193"
+				,"110.20.12.170","110.23.106.45","110.18.59.153","110.17.118.82"
+				,"110.19.9.41","110.2.21.88","110.3.198.16","110.6.4.184"
+				,"110.11.94.108","211.253.124.77","110.22.3.36","110.16.1.204"
+				,"110.15.51.154","110.14.5.125","109.0.88.143","109.2.45.204"
+				,"109.14.183.72","109.13.162.57","104.1.188.114","104.4.47.53"
+				,"104.5.66.32","104.6.83.131","99.17.84.74","99.1.28.114"
+				,"99.1.120.34","99.5.28.13","99.3.20.9","99.10.48.42"
+				,"99.2.63.46","99.11.18.47","210.103.83.39","210.103.83.29"
+				,"112.100.32.202","210.104.250.41","112.2.72.92","112.4.56.12"
+				,"112.26.143.219","99.13.72.12","112.5.232.31","112.9.145.44"
+				,"112.6.136.28"," 112.14.132.94","112.16.170.52","122.15.176.133"
+				,"101.84.2.75","101.2.4.145","101.3.32.122","101.4.14.163"
+				,"101.5.29.21","101.8.176.86","101.1.82.79","101.9.40.29"
+				,"101.10.55.215","105.15.64.152","105.31.133.46","105.105.126.64"
+				,"211.114.22.79","105.24.13.115","105.7.129.114","108.4.52.152"
+				,"108.15.118.152","108.0.15.29","210.95.187.137","108.14.26.97"
+				,"210.95.187.135","210.95.187.177","210.95.187.175","113.0.221.44"
+				,"113.1.56.27","133.2.33.28"
+		};
+		
+		boolean inIpSearch = Arrays.asList(inIP).contains(usersip);
+		
+		//10.0.0.1 (167772161) ~ 10.255.255.255 (184549375)
+		if(ipAddressLong >= 167772161  &&  ipAddressLong <= 184549375){
+			//내부로그인
+			return "/cmmn/login";
+		}else if(inIpSearch){
+			//내부로그인 지방청 ip 
+			return "/cmmn/login";
+		}else{
+			//외부로그인
+			return "/cmmn/login2";
+		}*/
+		
+		return "/cmmn/login2";
+	}
+	
+	/**
+	 * 로그인처리
+	 * @param loginVO
+	 * @param model
+	 * @return "/cmmn/login"
+	 * @exception Exception
+	 */
+	@ResponseBody
+	@RequestMapping(value = "/cmmn/loginProc.do")
+
+	public  HashMap<String, Object>  loginProc(@ModelAttribute("loginVO")LoginVO loginVO, ModelMap model, HttpServletResponse response, HttpServletRequest request) throws Exception {
+
+		String returnURL = "/main.do";
+		//String returnURL = request.getParameter("returnURL") != null ? request.getParameter("returnURL") : "/main.do";
+		String gubun = request.getParameter("gubun") != null ? request.getParameter("gubun") : "N";
+		String menuCode = "";
+		String vgubun = "";
+		
+	    HashMap<String, Object> result = new HashMap<String, Object>();
+	    
+		result.put("state", "ok");
+		
+	    String signed_msg = request.getParameter("signed_msg");
+		if(signed_msg == null){
+			signed_msg = "";
+		}
+		System.out.println("@@@@@@@@@@@@@@@@@@@@@");
+		System.out.println("@@@@@@@@@@@@@@@@@@@@@");
+		System.out.println("signed-start");
+	    /*아이디 패스퉈드 복호화 시작*/
+	    
+	    String securedParam1 = loginVO.getSecuredParam1();
+        String securedParam2 = loginVO.getSecuredParam2();
+        HttpSession session = request.getSession();
+        PrivateKey privateKey = (PrivateKey) session.getAttribute("__rsaPrivateKey__");
+        session.removeAttribute("__rsaPrivateKey__"); // 키의 재사용을 막는다. 항상 새로운 키를 받도록 강제.
+
+        if (privateKey == null) {            
+        	result.put("message", egovMessageSource.getMessage("cert.rsa"));
+        	returnURL = "/cmmn/login.do";
+        }else{
+        	 String userId = decryptRsa(privateKey, securedParam1);
+             String password = decryptRsa(privateKey, securedParam2);
+             
+             loginVO.setUserId(userId);
+             loginVO.setPassword(password);        	
+             
+        }
+        
+		//인증서로 서명한 사용자아이디
+		String userId = "";
+		//인증서 시리얼
+		String serial = "";
+		
+		//사용자 인증서 검증단계
+		String ss = request.getParameter("signed_msg");
+		System.out.println(request.getParameter("signed_msg"));
+		System.out.println(ss);
+		// 신지훈
+		/*if(gubun.equals("I")){
+			XecureConfig xc = new XecureConfig();
+			SignVerifier verifier = new SignVerifier ( xc, request.getParameter("signed_msg"));
+			
+			int	nVerifierResult = verifier.getLastError();
+			if ( nVerifierResult != 0 ) {
+				result.put("message", egovMessageSource.getMessage("cert.fail"));
+				
+			}else{
+			
+				if(verifier.getVerifiedMsg_Text() == null){
+					userId = loginVO.getUserId();
+				}else{
+					userId = verifier.getVerifiedMsg_Text();
+				}
+				serial = verifier.getSignerCertificate().getSerial();
+			}
+			
+			EgovMap checkMap = loginService.idPwCheck(loginVO);
+			
+			System.out.println("!!!!!!!!!!!!!!!!!!"+checkMap);
+			//  LoginVO realGubun = loginService.actionLogin(loginVO);
+	        if(checkMap == null  ){
+	        	gubun = "I";
+	        	loginVO.setGubun("I");
+	        }else{
+	        	gubun = "N";
+	        	loginVO.setGubun("N");
+	        }
+	        System.out.println(gubun);
+	        System.out.println(gubun);
+	        
+			HashMap<String, Object> map = new HashMap<String, Object>();
+			map.put("userId", userId);
+			map.put("seValue", gubun);
+			map.put("crtfctValue", serial);
+			EgovMap certMap = loginService.selectCertificate(map);
+			
+			if(certMap != null){
+				//DB에 저장되어있는 인증서 시리얼
+				String crtfctValue = certMap.get("crtfctValue").toString();
+				
+				if(StringUtils.isEmpty(crtfctValue)){
+					result.put("message", egovMessageSource.getMessage("cert.empty"));
+					
+				}
+				if(StringUtils.isNotEmpty(serial) && serial.equals(crtfctValue)){
+					//통과
+				}else{
+					result.put("message", egovMessageSource.getMessage("cert.auth.fail"));
+					
+				}
+			}else{
+				result.put("message", egovMessageSource.getMessage("cert.fail"));
+				
+			}
+		}*/
+		
+		System.out.println("@@@@@@@@@@@@@@@@@@@@@");
+		System.out.println("@@@@@@@@@@@@@@@@@@@@@");
+		System.out.println("xecure-end");
+		String authorGroupCode = "";
+		LoginVO resultVO = null;
+	
+		/*
+		if(returnURL.indexOf("/main.do") > -1 || returnURL.equals("/")) {
+		
+		} else {
+			String[] val = returnURL.split("menuCode=");
+			if(val != null && val.length > 1) {
+				menuCode = val[1];
+			} else {
+				menuCode = request.getParameter("menuCode") != null ? request.getParameter("menuCode") : "MNU00002";
+			}
+			
+		}
+		*/
+		menuCode = "MNU00002";
+		
+		LoginVO insttVO = null;
+		// 신지훈 insttVO =  loginService.selectUserInsttCode(loginVO);
+		if(insttVO != null){
+		//if(gubun.equals("I")) {
+			int odr = Integer.parseInt(insttVO.getOdr());
+			if(odr == 1){
+				insttVO.setUpInsttCD("0000000");
+			}else if(odr == 2){
+				insttVO.setUpInsttCD(insttVO.getFirstInsttCD());
+				insttVO.setUpInsttNM(insttVO.getFirstInsttNM());
+
+				if(insttVO.getMidInsttCDOdr2() != null){
+					//2레벨 xx청(해양경찰청 서해지방해양경찰청) 
+					insttVO.setUserInsttCD(insttVO.getMidInsttCDOdr2());
+					insttVO.setUserInsttNM(insttVO.getMidInsttNMOdr2());
+				}else if(insttVO.getMidInsttCDOdr2() == null && insttVO.getFirstInsttCD() == null){
+					//2레벨 (해양환경공단) 
+					insttVO.setUserInsttCD(insttVO.getBussInsttCD());
+					insttVO.setUserInsttNM(insttVO.getBussInsttNM());
+				}else{
+					 if(insttVO.getFirstInsttCD().equals("1532000")){
+						//2레벨 해양경찰청 하위부서(해양경찰청  감사담당관) 일때 기관코드 날림 
+						insttVO.setUpInsttCD("0000000");
+					 }else{
+						insttVO.setUserInsttCD(insttVO.getInsttCode());
+						insttVO.setUserInsttNM(insttVO.getMidInsttNMOdr2());
+					 }
+				}
+			}else if (odr == 3){
+				
+				//3레벨 해양경찰청 하위부서 (해양경찰청 해양오염방제국 방제기획과) 일때 기관코드 날림 
+				if(insttVO.getMidInsttCD() == null){
+					insttVO.setUpInsttCD("0000000");
+				}else if(insttVO.getLastInsttCDOdr3() == null){
+					//3레벨  xx청 xx센터(해양경찰청 중부지방해양경찰청 xx관제센터) 
+					insttVO.setUpInsttCD(insttVO.getFirstInsttCD());
+					insttVO.setUpInsttNM(insttVO.getFirstInsttNM());
+					insttVO.setUserInsttCD(insttVO.getMidInsttCD());
+					insttVO.setUserInsttNM(insttVO.getMidInsttNM());
+				}else if(insttVO.getLastInsttCDOdr3() != null){
+					//3레벨  xx경찰서(해양경찰청 중부지방해양경찰청 xx경찰서) 
+					insttVO.setUpInsttCD(insttVO.getMidInsttCD());
+					insttVO.setUpInsttNM(insttVO.getMidInsttNM());
+					insttVO.setUserInsttCD(insttVO.getLastInsttCDOdr3());
+					insttVO.setUserInsttNM(insttVO.getLastInsttNMOdr3());
+				}
+			}else if(odr == 4){
+				//4레벨 해양경찰청 하위부서 (해양경찰청 해양경찰교육원 xx센터 xx팀) 일때 기관코드 날림 
+				if(insttVO.getMidInsttCD() == null){
+					insttVO.setUpInsttCD("0000000");
+				}else{
+					//4레벨 xx청 (해양경찰청 해양경찰교육원 xx센터 xx팀) 
+					insttVO.setUpInsttCD(insttVO.getMidInsttCD());
+					insttVO.setUpInsttNM(insttVO.getMidInsttNM());
+					insttVO.setUserInsttCD(insttVO.getLastInsttCD());
+					insttVO.setUserInsttNM(insttVO.getLastInsttNM());
+				}
+			}
+		//}
+		}
+		
+		System.out.println("login-instt-start");
+		// 기관관리자 로그인 @@
+		if(gubun.equals("I")) {
+			resultVO =  loginService.actionLoginInstt(loginVO);
+			if(resultVO != null) {
+			
+				// 비밀번호 오류횟수 초과 시 리턴
+				if(Integer.parseInt(resultVO.getPasswordErrorCnt()) > 4) {
+					System.out.println("pwdCnt!!!");
+					result.put("message", egovMessageSource.getMessage("login.fail.pwdCnt"));
+					result.put("state", "noPwd");
+				}
+				
+				if("1".equals(resultVO.getLoginPwChk())) {				// 로그인 성공
+					System.out.println("@@@login0000pwchk=1");
+					session.setAttribute("pwUpdtDt", insttUserService.checkUserPwUpdateDate(loginVO.getUserId()));
+					// 권한 세션 저장
+					AuthGroupVO authGroupVO = new AuthGroupVO();
+					authGroupVO.setUserId(loginVO.getUserId());
+					authGroupVO.setQueryType("D");
+					authGroupVO.setSttusCode(CmmnConstant.STTUS_CODE_CONFM);
+					List<EgovMap> authGroup = authGroupService.selectAuthGroupList(authGroupVO);
+					System.out.println("authSize@@@@@"+authGroup.size());
+					if(authGroup.size() > 0) {
+						for(int i=0; i<authGroup.size(); i++) {
+							authorGroupCode =  authorGroupCode + authGroup.get(i).get("authorGroupCode").toString() + ",";
+						}
+						if(authorGroupCode.indexOf("AG10") > -1 ){
+							vgubun = "AG10";
+						}else{
+							vgubun = "AG00";
+						}
+						authorGroupCode = authorGroupCode.substring(0, authorGroupCode.length()-1);
+						resultVO.setAuthorGroupCode(authorGroupCode);
+					}
+					
+					//GIS key 저장 <신규>	-문제시 여기서부터
+					Random rnd = new Random();
+					StringBuffer buf = new StringBuffer();
+				    for (int i = 0; i < 20; i++) {									//GIS key 생성
+				    	if (rnd.nextBoolean()) {
+				    		buf.append((char)(rnd.nextInt(26) + 97));
+				    	} else {
+				    		buf.append(rnd.nextInt(10));
+				    	}
+				    }
+				    
+				    resultVO.setGisKey(buf.toString());
+				    loginService.initGisKey(resultVO);
+				    ///////////////////////////////// -여기까지 주석처리
+				    
+					// 로그인 사용자 IP 저장
+					resultVO.setIp(request.getRemoteAddr());
+					resultVO.setGubun(gubun);
+					request.getSession().setAttribute("loginVO", resultVO);
+					request.getSession().setAttribute("insttVO", insttVO);
+
+					// 메뉴 권한 체크
+					MenuVO menuVO = new MenuVO();
+					menuVO.setMenuCode(menuCode);
+					
+					System.out.println(resultVO.getAuthorGroupCode());
+					if(StringUtils.isNotEmpty(resultVO.getAuthorGroupCode())){
+						menuVO.setAuthorGroupCode("'"+resultVO.getAuthorGroupCode().replaceAll(",", "','")+"'");
+					} else {
+						menuVO.setAuthorGroupCode("'AG99'");
+					}
+					int menuAutn = 0;
+					if(returnURL.indexOf("/main.do") > -1 || returnURL.equals("/")) {
+						menuAutn = 1;
+					}else{
+						menuAutn = menuService.selectAuthMenu(menuVO);
+					}
+					
+					if(menuAutn == 0) {
+						System.out.println("outAuth!!!");
+						result.put("message", egovMessageSource.getMessage("login.fail.outAuth"));
+						result.put("state", "outAuth");
+					}
+					/*
+						page = "/main.do";
+					} else {
+						page = returnURL;
+					}
+					*/
+				} else {
+					if("2".equals(resultVO.getLoginPwChk())) {			// 비밀번호 사용 기간만료
+						System.out.println("expire!!!");
+						result.put("message", egovMessageSource.getMessage("login.fail.expire"));
+						result.put("gubun", gubun);
+						result.put("state", "expPwd");
+						
+					} else if("3".equals(resultVO.getLoginPwChk())) {	// 초기화 비밀번호 사용
+						System.out.println("reset!!!");
+						result.put("message", egovMessageSource.getMessage("login.fail.reset"));
+						result.put("LoginPwChange", "Y");
+						result.put("userId", resultVO.getUserId());
+						result.put("userNm", resultVO.getUserNm());
+						result.put("gubun", gubun);
+						result.put("state", "chPwd");
+						
+					} else if("4".equals(resultVO.getLoginPwChk())) {	// 비밀번호 불일치
+						// 비밀번호 불일치 카운트 업데이트
+						loginService.updatePwErrCnt(loginVO);
+						System.out.println("fail!!!");
+						result.put("message", egovMessageSource.getMessage("login.fail"));
+						result.put("state", "noPwd");
+						result.put("gubun", gubun);
+						
+					} else {
+						System.out.println("fail2!!!");
+						result.put("message", egovMessageSource.getMessage("login.fail"));
+						result.put("state", "noPwd");
+						result.put("gubun", gubun);
+						
+					}
+				}
+			} else {
+				System.out.println("fail3!!!");
+				result.put("message", egovMessageSource.getMessage("login.fail"));
+				result.put("state", "noPwd");
+				result.put("gubun", gubun);
+				
+			}
+		// 외부사용자(유창청소업,해양환경공단) 로그인 
+			System.out.println("login-instt-end");
+		} else {
+			System.out.println("login-mem-start");
+			// 사용자정보 
+			resultVO = loginService.actionLogin(loginVO);
+			
+			if(resultVO != null) {
+				// 비번오류 횟수 5회초과 사용자
+				if(Integer.parseInt(resultVO.getPasswordErrorCnt()) > 4){
+					System.out.println("pwdCnt@@@");
+					result.put("message", egovMessageSource.getMessage("login.fail.pwdCnt"));
+					result.put("state", "5countPwd");
+				}
+				
+				//1q2w3e4r!@ 암호화처리 부분 포팅시 확인할것 @@
+				if(loginVO.getPassword().equals("1q2w3e4r!@") && resultVO.getPassword().equals("1q2w3e4r!@")) {	// 초기화된 현재 비밀번호 확인
+					System.out.println("reset@@@");
+					result.put("message", egovMessageSource.getMessage("login.fail.reset"));
+					result.put("state", "chPwd");
+					result.put("LoginPwChange", "Y");
+					result.put("userId", resultVO.getUserId());
+					result.put("userNm", resultVO.getUserNm());
+					result.put("gubun", gubun);
+
+				} else {
+					
+					
+					//2010405 LOGIN_SQL_Tibero.xml 쿼리를보면 password나 loginPwChk나 동일한 값인 PASSWORD를 조회한다... 결국 동일한 값을 비교 -> TRUE반환. 입력된 비번과 비교하도록 수정
+					//if(resultVO.getPassword().equals(resultVO.getLoginPwChk())) {
+					session.setAttribute("pwUpdtDt", userService.checkUserPwUpdateDate(loginVO.getUserId()));
+					//if(resultVO.getPassword().equals(loginVO.getPassword())) { //실제 사용자 로그인 시
+					if("1".equals("1")) { //개발시 
+						resultVO.setPasswordErrorCnt("0");
+						loginService.updatePasswordErrorCnt(resultVO);
+						// 권한 세션 저장
+						AuthGroupVO authGroupVO = new AuthGroupVO();
+						authGroupVO.setUserId(loginVO.getUserId());
+						authGroupVO.setQueryType("D");
+						authGroupVO.setSttusCode(CmmnConstant.STTUS_CODE_CONFM);
+						List<EgovMap> authGroup = authGroupService.selectAuthGroupList(authGroupVO);
+
+						if(authGroup.size() > 0) {
+							for(int i=0; i<authGroup.size(); i++) {
+								authorGroupCode =  authorGroupCode + authGroup.get(i).get("authorGroupCode").toString() + ",";
+							}
+							
+							
+							// 해양환경공(AG11), 유창청소업체(AG12) , 관리자(AG01), 지자치(AG10)추후삭제, 없을 경우 리턴 
+							if(authorGroupCode.indexOf("AG11") > -1 || authorGroupCode.indexOf("AG12") > -1 ||  authorGroupCode.indexOf("AG01") > -1 || authorGroupCode.indexOf("AG10") > -1){
+								authorGroupCode = authorGroupCode.substring(0, authorGroupCode.length()-1);
+								resultVO.setAuthorGroupCode(authorGroupCode);
+								if(authorGroupCode.indexOf("AG11") > -1  || authorGroupCode.indexOf("AG10") > -1){
+									vgubun = "AG11";
+								}else if(authorGroupCode.indexOf("AG12") > -1){
+									vgubun = "AG12";
+								}
+								result.put("vgubun", vgubun);
+							}else{
+								/*if (authorGroupCode.indexOf("AG10") > -1 ){
+									result.put("message", egovMessageSource.getMessage("login.fail.typeAuth"));
+									result.put("state", "typeAuth");
+								}else{
+								*/
+									System.out.println("outAuth@@@");
+									result.put("message", egovMessageSource.getMessage("login.fail.outAuth"));
+									result.put("state", "outAuth");
+								//}
+							}
+						
+						}else {
+							System.out.println("outAuth2@@@");
+							result.put("message", egovMessageSource.getMessage("login.fail.outAuth"));
+							result.put("state", "outAuth");
+							
+						}
+						
+						//GIS key 저장 <신규>	-문제시 여기서부터
+						Random rnd = new Random();
+						StringBuffer buf = new StringBuffer();
+					    for (int i = 0; i < 20; i++) {			//GIS key 생성
+					    	if (rnd.nextBoolean()) {
+					    		buf.append((char)(rnd.nextInt(26) + 97));
+					    	} else {
+					    		buf.append(rnd.nextInt(10));
+					    	}
+					    }
+					    
+					    resultVO.setGisKey(buf.toString());
+					    loginService.initGisKey(resultVO);
+					    ///////////////////////////////// -여기까지 주석처리
+					    
+						// 로그인 사용자 IP 저장
+						resultVO.setIp(request.getRemoteAddr());
+						resultVO.setGubun(gubun);
+						request.getSession().setAttribute("loginVO", resultVO);
+						request.getSession().setAttribute("insttVO", insttVO);
+						// 메뉴 권한 체크
+						MenuVO menuVO = new MenuVO();
+						menuVO.setMenuCode(menuCode);
+						if(StringUtils.isNotEmpty(resultVO.getAuthorGroupCode())){
+							menuVO.setAuthorGroupCode("'"+resultVO.getAuthorGroupCode().replaceAll(",", "','")+"'");
+						} else {
+							menuVO.setAuthorGroupCode("'AG99'");
+						}
+						int menuAutn = 0;
+						if(returnURL.indexOf("/main.do") > -1 || returnURL.equals("/")) {
+							menuAutn = 1;
+						}else{
+							menuAutn = menuService.selectAuthMenu(menuVO);
+						}
+						
+						if(menuAutn == 0) {
+							result.put("state", "outAuth");
+							System.out.println("outAuth4@@@");
+							result.put("message", egovMessageSource.getMessage("login.fail.outAuth"));
+						}
+
+						/*
+							page = "/main.do";
+						} else {
+							page = returnURL;
+						}
+						*/
+					} else {
+						System.out.println("pass change!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+						
+						//비밀번호 실패 횟수 수정
+						resultVO.setPasswordErrorCnt(String.valueOf(Integer.parseInt(resultVO.getPasswordErrorCnt())+1));
+						loginService.updatePasswordErrorCnt(resultVO);
+						
+						result.put("state", "noPwd");
+						System.out.println("fail~!~!");
+						result.put("message", egovMessageSource.getMessage("login.fail"));
+						result.put("gubun", gubun);
+						
+					}
+				}
+				System.out.println("login-mem-end");
+			} else {
+				result.put("state", "noPwd");
+				System.out.println("fail!!!@@");
+				result.put("message", egovMessageSource.getMessage("login.fail"));
+				model.addAttribute("gubun", gubun);
+				
+			}
+		}
+		System.out.println("@@@@@@@@@@@@@@@@@@@@@");
+		System.out.println("@@@@@@@@@@@@@@@@@@@@@");
+		System.out.println("exit");
+		
+		
+		System.out.println(result);
+	
+		return result;
+		
+	}
+	
+	private String decryptRsa(PrivateKey privateKey, String securedValue) throws Exception {
+        System.out.println("will decrypt : " + securedValue);
+        Cipher cipher = Cipher.getInstance("RSA");
+        byte[] encryptedBytes = hexToByteArray(securedValue);
+        cipher.init(Cipher.DECRYPT_MODE, privateKey);
+        byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
+        String decryptedValue = new String(decryptedBytes, "UTF-8"); // 문자 인코딩 주의.
+        return decryptedValue;
+    }
+	
+	 /**
+     * 16진 문자열을 byte 배열로 변환한다.
+     */
+    public static byte[] hexToByteArray(String hex) {
+        if (hex == null || hex.length() % 2 != 0) {
+            return new byte[]{};
+        }
+
+        byte[] bytes = new byte[hex.length() / 2];
+        for (int i = 0; i < hex.length(); i += 2) {
+            byte value = (byte)Integer.parseInt(hex.substring(i, i + 2), 16);
+            bytes[(int) Math.floor(i / 2)] = value;
+        }
+        return bytes;
+    }
+	
+	/**
+	 * 로그아웃
+	 * @param loginVO
+	 * @param model
+	 * @return "/cmmn/login"
+	 * @exception Exception
+	 */
+    @ResponseBody
+	@RequestMapping(value = "/cmmn/logout.do")
+	public String logout(@ModelAttribute("loginVO")LoginVO loginVO, ModelMap model, HttpServletRequest request) throws Exception {
+		String result = "ok";
+		request.getSession().setAttribute("loginVO", null);
+		
+		return result;
+		//	return "redirect:/main.do";
+	}
+	
+	/**
+	 * 기관사용자 비밀번호 변경
+	 * @param loginVO
+	 * @param model
+	 * @return "/cmmn/login"
+	 * @exception Exception
+	 */
+    
+	@RequestMapping(value = "/cmmn/loginPwChangeProc.do")
+	public @ResponseBody HashMap<String, Object> loginPwChangeProc(@ModelAttribute("loginVO")LoginVO loginVO, ModelMap model, HttpServletRequest request) throws Exception {
+		String passwordNow = request.getParameter("passwordNow") != null ? request.getParameter("passwordNow") : "";
+		String gubun = request.getParameter("pwdGubun") != null ? request.getParameter("pwdGubun") : "N";
+
+	    HashMap<String, Object> result = new HashMap<String, Object>();
+	    
+		/*
+		if(passwordNow.equals("1q2w3e4r!@")) {	// 초기화된 현재 비밀번호 확인
+			EgovMap chkVal = loginService.selectChangePwChk(loginVO);
+			if(chkVal != null) {
+				
+				if("1".equals(chkVal.get("chkDv")) && "1".equals(chkVal.get("bChkDv"))) {
+					// 기관관리자 로그인
+					if(gubun.equals("I")) {
+						loginVO.setPassword(chkVal.get("eVal").toString());
+						loginService.updateGscTcmUserPassWd(loginVO);
+					} else {
+						UserVO userVO = new UserVO();
+						userVO.setUserId(loginVO.getUserId());
+						userVO.setPassword(loginVO.getPassword());
+						userService.updateUserPassword(userVO);
+					}
+					message = egovMessageSource.getMessage("success.common.update");
+				} else {
+					if(!"1".equals(chkVal.get("chkDv"))) {	//비밀번호 규칙 체크
+						message = chkVal.get("chkDv").toString();
+					} else if(!"1".equals(chkVal.get("bChkDv"))) {	//초기화비밀번호 체크
+						message = chkVal.get("bChkDv").toString();
+					} else {
+						message = egovMessageSource.getMessage("pwd.fail");
+					}
+				}
+			} else {
+				message = egovMessageSource.getMessage("pwd.fail");
+			}
+		} 
+		*/
+		result.put("state","no");
+		if(passwordNow.equals("1q2w3e4r!@")) {	
+			if (gubun.equals("I")){
+				result.put("state","ok");
+				EgovMap chkVal = loginService.selectChangePwChk(loginVO);
+				loginVO.setPassword(chkVal.get("eVal").toString());
+				loginService.updateGscTcmUserPassWd(loginVO);
+			}else {
+				result.put("state","ok");
+				UserVO userVO = new UserVO();
+				userVO.setUserId(loginVO.getUserId());
+				userVO.setPassword(loginVO.getPassword());
+				userService.updateUserPassword(userVO);
+			}
+			result.put("message", egovMessageSource.getMessage("success.common.update"));
+		}else{
+			result.put("message", egovMessageSource.getMessage("pwd.fail"));
+		}
+		return result;
+	}
+
+	/**
+	 * 아이디, 패스워드 확인
+	 * @param loginVO
+	 * @param model
+	 * @return "/cmmn/login"
+	 * @exception Exception
+	 */
+	@ResponseBody
+	@RequestMapping(value = "/cmmn/idPwCheck.do")
+	public String idPwCheck(@ModelAttribute("loginVO")LoginVO loginVO, ModelMap model, HttpServletRequest request) throws Exception {
+		String result = "no";
+		
+		String gubun = loginVO.getGubun();
+		
+		EgovMap checkMap = null;
+		
+		if ( gubun.equals("N")){
+			
+			checkMap = loginService.idPwCheck(loginVO);
+			
+		}else{
+			
+			checkMap = loginService.idOrgPwCheck(loginVO);
+		}
+		
+		
+		
+		//ID, PW 체크
+		if(checkMap != null){
+			String password = checkMap.get("password").toString();
+			String check_enc_password = checkMap.get("loginPwChk").toString();
+			System.out.println("@@@@@@@@@pass");
+			System.out.println(password);
+			System.out.println(check_enc_password);
+			if(password.equals(check_enc_password)){
+				result = "ok";
+			}else{
+				result = "no";
+			}
+		}else{
+			result = "no";
+		}
+		
+		return URLEncoder.encode(result, "UTF-8");
+	}
+	
+	/**
+	 * 인증서 등록절차
+	 * @param loginVO
+	 * @param model
+	 * @return "/cmmn/login"
+	 * @exception Exception
+	 */
+	@ResponseBody
+	@RequestMapping(value = "/cmmn/certRegist.do")
+	public String certRegist(@ModelAttribute("loginVO")LoginVO loginVO, ModelMap model, HttpServletRequest request) throws Exception {
+		String result = "문제가 발생하였습니다.";
+
+		XecureConfig xc = new XecureConfig();
+		SignVerifier verifier = new SignVerifier ( xc, request.getParameter("signed_msg"));
+		
+		int	nVerifierResult = verifier.getLastError();
+		if ( nVerifierResult != 0 ) {
+			result = verifier.getLastErrorMsg();
+		}else{
+			
+			String userId = verifier.getVerifiedMsg_Text();
+			String userId2 = loginVO.getUserId();
+			String gubun = loginVO.getGubun();
+			String serial = verifier.getSignerCertificate().getSerial();
+			
+			if(StringUtils.isNotEmpty(userId) && StringUtils.isNotEmpty(userId2) && userId.equals(userId2)){
+				result = "ok";
+				
+				//계정정보+인증서시리얼 저장
+				HashMap<String, Object> map = new HashMap<String, Object>();
+				map.put("userId", userId);
+				map.put("seValue", gubun);
+				map.put("crtfctValue", serial);
+				
+				loginService.mergeCertificate(map);
+			}else{
+				result = "문제가 발생하였습니다3.";
+			}
+		}
+		
+		return URLEncoder.encode(result, "UTF-8");
+	}
+}

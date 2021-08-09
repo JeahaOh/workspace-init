@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:task="http://www.springframework.org/schema/task"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context-3.1.xsd
+        http://www.springframework.org/schema/task
+        http://www.springframework.org/schema/task/spring-task-3.1.xsd">
+
+    <context:component-scan base-package="tipNTech.schedule" />
+    <task:annotation-driven />
+
+    <!-- 공통 적용 -->
+    <bean id="scheduler" class="kr.co.hanshinit.NeoCMS.cmm.scheduler.Scheduler" />
+    <task:scheduler id="baseScheduler" pool-size="10" />
+
+
+    <!-- 날씨정보 -->
+    <!-- 20210227 테스트 환경이므로 주석 처리함.
+    <task:scheduled-tasks scheduler="baseScheduler">
+      <task:scheduled ref="scheduler" method="weatherData" cron="0 0 */1 * * ?"/>
+    </task:scheduled-tasks>
+    -->
+
+    <!-- 미세먼지정보 -->
+    <!-- 20210227 테스트 환경이므로 주석 처리함.
+      <task:scheduled ref="scheduler" method="airData" cron="0 5 */1 * * ?"/>
+    <task:scheduled-tasks scheduler="baseScheduler">
+      <task:scheduled ref="scheduler" method="airData" cron="0 */1 * * * ?"/>
+    </task:scheduled-tasks>
+    -->
+
+    <!-- 숲치유프로그램 예약 하루 전 문자 전송 -->
+    <!-- 20210227 테스트 환경이므로 주석 처리함.
+    <task:scheduled-tasks scheduler="baseScheduler">
+      <task:scheduled ref="scheduler" method="sendSmsResve" cron="0 0 9 * * ?"/>
+    </task:scheduled-tasks>
+    -->
+
+
+    <!-- 유니온파크견학삭제
+      // 운영에는 적용 안되있는 값
+    <task:scheduled-tasks scheduler="baseScheduler">
+      <task:scheduled ref="scheduler" method="deleteUnion" cron="0 0 6 1 1 ?"/>
+    </task:scheduled-tasks>
+    -->
+
+
+    <!--
+      //  고시공고 정보 넣기
+      //  개발 서버이므로 주석처리 해 둠.
+
+      //  운영에 반영된 값
+      <task:scheduled ref="scheduler" method="insertGosiService" cron="0 0 8,10,12,15,18,21 * * ?"/>
+      // 누군가 커밋한 이상한 값
+      <task:scheduled ref="scheduler" method="insertGosiService" cron="0 0 8,10,12,15,18,18 30,21 1 1 ?"/>
+      // 테스트용 값 -> /www/gosiInsert.do 하면 스케쥴러 없이 로직 돌리긴 함.
+      <task:scheduled ref="scheduler" method="insertGosiService" cron="0 */5 * * * ?"/>
+
+    <task:scheduled-tasks scheduler="baseScheduler">
+      <task:scheduled ref="scheduler" method="insertGosiService" cron="0 */5 * * * ?"/>
+    </task:scheduled-tasks>
+    -->
+
+
+    <!-- 기업지원사업
+      // 20210227 테스트 환경이므로 주석 처리함.
+    
+    <task:scheduled-tasks scheduler="baseScheduler">
+      <task:scheduled ref="scheduler" method="insertEntrprsSportService" cron="0 15 1 * * ?"/>
+    </task:scheduled-tasks>
+    -->
+
+    <!-- 매주 토요일 8시 발송 대기중인 문자의 중복을 제거한다. -->
+    <task:scheduled-tasks scheduler="baseScheduler">
+      <task:scheduled ref="scheduler" method="deleteDuplicateMsg" cron="0 8 * * 6 ?"/>
+    </task:scheduled-tasks>
+
+</beans>

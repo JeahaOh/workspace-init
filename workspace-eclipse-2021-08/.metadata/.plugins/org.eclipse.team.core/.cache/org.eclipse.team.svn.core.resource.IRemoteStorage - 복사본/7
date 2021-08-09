@@ -1,0 +1,441 @@
+<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"
+%><%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" 
+%><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ko" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<title>해양오염방제통합시스템 로그인</title>
+<link rel="shortcut icon" href="/images/favicon.ico" type="image/x-icon">
+<link rel="icon" href="images/favicon.ico" type="image/x-icon">
+<link href="/css/ext/design.css" rel="stylesheet" />
+<script src="${pageContext.request.contextPath}/js/jquery1.9.1.min.js" type="text/javascript"></script>
+<script src="${pageContext.request.contextPath}/js/common.js" type="text/javascript"></script>
+<script type="text/javascript" src='${pageContext.request.contextPath}/XecureObject/xecureweb.js'></script>
+<script type="text/javascript" src='${pageContext.request.contextPath}/js/rsa/jsbn.js'></script>
+<script type="text/javascript" src='${pageContext.request.contextPath}/js/rsa/rsa.js'></script>
+<script type="text/javascript" src='${pageContext.request.contextPath}/js/rsa/prng4.js'></script>
+<script type="text/javascript" src='${pageContext.request.contextPath}/js/rsa/rng.js'></script>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/ext/main.css"/>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/ext/design.css"/>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/jquery.datetimepicker.css"/>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/cmmn.css"/>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/jquery-ui.css"/>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/multipleSelect/multiple-select.css"/>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/multipleSelect/bootstrap.css"/>
+
+<script type="text/javascript">
+
+//PrintObjectTag();
+</script>
+
+</head>
+<body class='loginBody'  >
+<!--whole wrap start-->
+<form id="frm" name="frm" method="post" action="/cmmn/loginProc.do">
+<input type="hidden" id="returnURL" name="returnURL" value="${returnURL}" />
+<input type="hidden" name="a" value="${param.a}">
+<input type="hidden" name="signed_msg">
+<input type="hidden" name="publicKeyModulus" value="${publicKeyModulus}">
+<input type="hidden" name="publicKeyExponent" value="${publicKeyExponent}">
+<input type="hidden" id="securedParam1" name="securedParam1" value="">
+<input type="hidden" id="securedParam2" name="securedParam2" value="">
+<div class="wrap login">	
+	<h1 class = "login_logo"></h1>
+	<div class="loginwrap">
+		<div class = "loginContent">
+				<h2 class="login">해양경찰청</h2>
+				<div class = "loginInput">
+					<dl>
+						<dt><label for="userId">ID</label></dt>
+						<dd><input type="text" style="ime-mode:inactive;" id="userId" name="userId" value="" onkeypress="if(event.keyCode==13) {login(); return false;}" /></dd>
+					</dl>
+					<dl>
+						<dt><label for="password">PW</label></dt>
+						<dd><input type="password" id="password" name="password" value="" onkeypress="if(event.keyCode==13) {login(); return false;}" /></dd>
+					</dl>
+					<div style="color:white;padding-bottom: 10px;" align="center">
+						<!--<input type="radio" id="gubun1" name="gubun" value="I" <c:if test="${empty gubun || gubun eq 'I'}">checked="checked"</c:if> /> <label for="gubun1">기관사용자</label>-->  
+						<input type="radio" id="gubun2" name="gubun" value="N" checked="checked" /> <label for="gubun2">일반사용자</label>
+
+
+					</div>
+					<a href="javascript:login();" class="loginbtn">로그인</a>
+					<!-- 
+					<div align="center" style="margin-top:5px;">
+						<a href="javascript:fn_cert_reg_form();" class="loginbtn2">인증서등록</a>
+						<a href="/XecureObject/xw_install.exe" class="loginbtn2">수동설치</a>
+					</div>
+					 -->
+				</div>
+				
+		</div>
+	</div>
+</div>
+</form>
+<!--whole wrap end-->
+<div id="popup" style="display: none; position: absolute; top: 100px; left: 50%; margin-left: -350px; background-color: #ffffff; border: 2px solid #000000; ">
+	<div class="popwrap" style="height: 340px; width: 700px;">
+		<form id="pwdFrm" name="pwdFrm" method="post" action="/">
+		<input type="hidden" id="pwdReturnURL" name="returnURL" value="${returnURL}" />
+		<input type="hidden" id="pwdUserId" name="userId" value="" />
+		<input type="hidden" id="pwdGubun" name="pwdGubun" value="N" />
+		<div class="poptit"><h1 class="tit">기관사용자 비밀번호 변경</h1></div>
+		<!--popup wrap start-->
+		<div class="popcon">
+			<!--table_left start-->
+			<div class="table_left">
+				<table>
+					<caption>기관사용자 비밀번호 변경 팝업</caption>
+					<colgroup>
+						<col style="width:28%" />
+						<col />
+					</colgroup>
+					<tbody>
+						<!-- 
+						<tr>
+							<th scope="row">사용자정보</th>
+							<td><c:out value="${pwdUserId}"/>(${pwdUserId})${userId}</td>
+						</tr>
+						 -->
+						<tr>
+							<th scope="row"><label for="passwordNow">현재 비밀번호<strong class="mandotory">필수입력</strong></label></th>
+							<td><input type="password" id="passwordNow" name="passwordNow" class="inputsrch vm" maxlength="100"/></td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="passwordNew">변경 비밀번호<strong class="mandotory">필수입력</strong></label></th>
+							<td><input type="password" id="passwordNew" name="password" class="inputsrch vm" maxlength="100"/></td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="passwordConfm">변경 비밀번호 확인<strong class="mandotory">필수입력</strong></label></th>
+							<td><input type="password" id="passwordConfm" name="passwordConfm" class="inputsrch vm" maxlength="100"/></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<!--table_left end-->
+		</div>
+		패스워드는 대문자, 소문자, 숫자, 특수문자 포함한 8자리 이상입니다
+		<!--popup wrap end-->
+		</form>
+	</div>
+	<div class="btn_wrap tc mt10 pb20">
+		<a href="javascript:fnPwdChange();" class="btn pagebtn positive">저장</a>
+		<a href="javascript:fnPwdChangeClose();" class="btn pagebtn negative">닫기</a>
+	</div>
+</div>
+<div id="certPopup" style="display:none; position: absolute; top: 100px; left: 50%; margin-left: -350px; background-color: #ffffff; border: 2px solid #000000; ">
+	<div class="popwrap" style="height: 340px; width: 700px;">
+		<form id="certRegFrm" name="certRegFrm" method="post" action="/">
+		<input type="hidden" name="signed_msg">
+		<div class="poptit"><h1 class="tit">인증서 등록</h1></div>
+		<!--popup wrap start-->
+		<div class="popcon">
+			<!--table_left start-->
+			<div class="table_left">
+				<table>
+					<caption>인증서 등록 팝업</caption>
+					<colgroup>
+						<col style="width:28%" />
+						<col />
+					</colgroup>
+					<tbody>
+						<tr>
+							<th scope="row"><label for="userId2">아이디<strong class="mandotory">필수입력</strong></label></th>
+							<td><input type="text" id="userId2" name="userId" class="inputsrch vm" maxlength="100"/></td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="password2">패스워드<strong class="mandotory">필수입력</strong></label></th>
+							<td><input type="password" id="password2" name="password" class="inputsrch vm" maxlength="100"/></td>
+						</tr>
+					</tbody>
+				</table>
+				<div style="padding-top: 10px;" align="center">
+					<input type="radio" id="gubun11" name="gubun" value="I"/><label for="gubun11">기관사용자</label> 
+					<input type="radio" id="gubun22" name="gubun" value="N" checked="checked"/> <label for="gubun22">일반사용자</label>
+				</div>
+			</div>
+			<!--table_left end-->
+		</div>
+		<!--popup wrap end-->
+		</form>
+	</div>
+	<div class="btn_wrap tc mt10 pb20">
+		<a href="/XecureObject/xw_install.exe" class="btn pagebtn positive">수동설치</a>
+		<a href="#" class="btn pagebtn positive" onclick="fn_idPwCheck(); return false;">인증서선택</a>
+		<a href="javascript:fn_cert_close();" class="btn pagebtn negative">닫기</a>
+	</div>
+</div>
+<!-- <div class="sync_layer sync_layer_loader">
+     <div class="background_layer"></div>
+     <div id="loadingLayer" class="loading_layer">
+         <div class="loaderWrap">
+             <div class="loader"></div>
+             <p id="loaderText"></p>
+         </div>
+     </div>
+</div> -->
+
+<script type="text/javascript">
+	
+
+	// window.open('/popup.jsp ','NewWindow1', 'left=0,top=0,toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=no,copyhistory=yes,width=400,height=400')
+	var message = "${message}";
+	if(message != new String("")) {
+		var LoginPwChange = "${LoginPwChange}";
+		alert(LoginPwChange);
+		//var LoginPwChange = "Y";
+		if(LoginPwChange == new String("Y")) {
+			if(confirm(message+" 변경하시겠습니까?")){
+				$("#popup").show();
+			} else {
+				$("#popup").hide();
+			}
+		} else {
+			alert(message);
+		}
+	}
+
+	function login() {
+		//$('.sync_layer').fadeIn("fast");
+		progressStart()
+		if($("#userId").val() == new String("")) {
+			alert("ID 를 입력하세요.");
+
+			$("#userId").focus;
+			return;
+		}
+		if($("#password").val() == new String("")) {
+			alert("password 를 입력하세요.");
+
+			$("#password").focus;
+			return;
+		}
+		if($(":input:radio[name=gubun]:checked").val() == new String("")) {
+			alert("사용자 구분값을 선택하세요.");
+			$("#gubun2").focus;
+			return;
+		}
+		var gubun = $("input[name=gubun]:checked").val();
+		
+
+		
+		if(gubun == "N"){
+			var param1 = $("#userId").val();
+			var param2 = $("#password").val();
+			var publicKeyModulus = document.frm.publicKeyModulus.value;
+			var publicKeyExponent = document.frm.publicKeyExponent.value;			
+		//	document.frm.signed_msg.value = Sign_with_option(0, document.frm.userId.value);	
+		  submitEncryptedForm(param1,param2, publicKeyModulus, publicKeyExponent);
+		}else{
+			var param1 = $("#userId").val();
+			var param2 = $("#password").val();
+			var publicKeyModulus = document.frm.publicKeyModulus.value;
+			var publicKeyExponent = document.frm.publicKeyExponent.value;		
+			document.frm.signed_msg.value = Sign_with_option(0, document.frm.userId.value);	
+		}
+	    /*
+		if(document.frm.a.value != ""){
+
+			var param1 = $("#userId").val();
+			var param2 = $("#password").val();
+			var publicKeyModulus = document.frm.publicKeyModulus.value;
+			var publicKeyExponent = document.frm.publicKeyExponent.value;					
+		   
+		    submitEncryptedForm(param1,param2, publicKeyModulus, publicKeyExponent);
+		}else{
+
+			var param1 = $("#userId").val();
+			var param2 = $("#password").val();
+			var publicKeyModulus = document.frm.publicKeyModulus.value;
+			var publicKeyExponent = document.frm.publicKeyExponent.value;		
+			document.frm.signed_msg.value = Sign_with_option(0, document.frm.userId.value);	
+		}
+		*/
+		if(document.frm.signed_msg.value != ""){					
+			submitEncryptedForm(param1,param2, publicKeyModulus, publicKeyExponent);
+		}
+	}
+	
+	function submitEncryptedForm(param1, param2, publicKeyModulus,
+			publicKeyExponent) {
+
+		var rsa = new RSAKey();
+		rsa.setPublic(publicKeyModulus, publicKeyExponent);
+
+		// 사용자ID와 비밀번호를 RSA로 암호화한다.
+		var securedParam1 = rsa.encrypt(param1);
+		var securedParam2 = rsa.encrypt(param2);
+
+		$("#userId").val('');
+		$("#password").val('');
+
+		$("#securedParam1").val(securedParam1);
+		$("#securedParam2").val(securedParam2);
+		//$("#frm").action = "/cmmn/loginProc.do";
+		//$("#frm").submit();
+		var params = jQuery("#frm").serialize();
+		var message = "";
+		$
+				.ajax({
+					url : "/cmmn/loginProc.do",
+					type : 'POST',
+					data : {
+						"gubun" : $("input[name=gubun]:checked").val(),
+						"securedParam1" : securedParam1,
+						"securedParam2" : securedParam2,
+						"returnURL" : $("#returnURL").val(),
+						"signed_msg" : $("input[name=signed_msg]").val(),
+						"a" : $("input[name=a]").val()
+					},
+					dataType : 'json',
+					success : function(result) {
+						console.log(result);
+						message = result.message;
+						if (result.state == "ok") {
+							if (result.vgubun == "AG11") {
+								location.href = '/ext/resrc/selectPrvnbeResrcList.do?menuCode=MNU00092';
+							} else if (result.vgubun == "AG12") {
+								location.href = '/ext/pollutnMttrMng/shipTkawyAcmsltMngList.do?menuCode=MNU00028';
+							} else {
+								location.href = '/main.do';
+							}
+							
+						} else if (result.state == "chPwd") {
+							if (confirm(message + " 변경하시겠습니까?")) {
+								$('.sync_layer').fadeOut();
+								$("#pwdUserId").val(result.userId);
+								$("#popup").show();
+							} else {
+								$("#popup").hide();
+								location.href = '/cmmn/login.do';
+							}
+						} else {
+							alert(message);
+							location.href = '/cmmn/login.do';
+						}
+					},
+
+					error : function() {
+						alert("로그인에 실패하였습니다.\r\n 시스템 관리자에게 문의하여 주세요.");
+						//isSuccess =false;
+						location.href = '/cmmn/login.do';
+						return false;
+					}
+
+				});
+
+	}
+
+	function fnPwdChange() {
+		if ($("#passwordNow").val() == new String("")) {
+			alert("현재 비밀번호를 입력하세요.");
+			$("#passwordNow").focus();
+			return;
+		}
+		if ($("#passwordNew").val() == new String("")) {
+			alert("변경 비밀번호를 입력하세요.");
+			$("#passwordNew").focus();
+			return;
+		}
+		if ($("#passwordNew").val() != $("#passwordConfm").val()) {
+			alert("변경 비밀번호가 일치하지 않습니다.");
+			return;
+		}
+
+		var pw = $("#passwordNew").val();
+		var num = pw.search(/[0-9]/g);
+		var eng = pw.search(/[a-z]/ig);
+		var spe = pw.search(/[`~!@@#$%^&*|₩₩₩'₩";:₩/?]/gi);
+		var message = "";
+
+		if (pw.search(/₩s/) != -1) {
+			alert("비밀번호는 공백업이 입력해주세요.");
+			return;
+		}
+		if (num < 0 || eng < 0 || spe < 0) {
+			alert("영문,숫자, 특수문자를 혼합하여 입력해주세요.");
+			return;
+		}
+		$.ajax({
+			url : "/cmmn/loginPwChangeProc.do",
+			type : 'POST',
+			data : $("#pwdFrm").serialize(),
+			dataType : 'json',
+			success : function(result) {
+				message = result.message;
+				if (result.state == "ok") {
+					//alert(message);
+					alert("정상적으로 수정되었습니다. \n 변경된 패드워드로 다시 로그인해주시기 바랍니다.");
+					location.href = '/cmmn/login.do';
+				} else {
+					alert(message);
+					location.href = '/cmmn/login.do';
+				}
+			}
+		});
+	}
+
+	function fnPwdChangeClose() {
+		$("#popup").hide();
+		location.href = '/cmmn/login.do';
+	}
+
+	function fn_idPwCheck() {
+		$.ajax({
+			url : "/cmmn/idPwCheck.do",
+			type : 'POST',
+			data : $("#certRegFrm").serialize(),
+			async : false,
+			success : function(result) {
+				if (result == "ok") {
+					document.certRegFrm.signed_msg.value = Sign_with_option(0,
+							document.certRegFrm.userId.value);
+					if (document.certRegFrm.signed_msg.value != "") {
+						$.ajax({
+							url : "/cmmn/certRegist.do",
+							type : 'POST',
+							data : $("#certRegFrm").serialize(),
+							async : false,
+							success : function(result) {
+								if (result == "ok") {
+									alert("등록되었습니다.");
+									fn_cert_close();
+								} else {
+									result = decodeURIComponent(((result + '')
+											.replace(/\+/g, '%20')));
+									alert(result);
+									return;
+								}
+							},
+							error : function(xhr) {
+								alert("실패하였습니다.");
+							}
+						});
+					} else {
+						return;
+					}
+				} else {
+					alert("실패하였습니다.\n아이디, 패스워드를 확인해주세요.");
+					return;
+				}
+			},
+			error : function(xhr) {
+				alert("실패하였습니다.");
+			}
+		});
+	}
+
+	function fn_cert_close() {
+		$("#certPopup").hide();
+	}
+
+	function fn_cert_reg_form() {
+		//$('.sync_layer').fadeOut();
+		$('#back, #loadingBar').hide();
+		$('#back, #loadingBar').remove();
+		$("#certPopup").show();
+	}
+</script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+/**
+ * Created by JaeHun on 2018-01-19.
+ */
+/*테스트 서버*/
+////맵서버
+var mapServerURL=["http://192.168.3.101:9000/geoserver/martime/wms"];		//세종시 Map서버
+//지오서버-해양주제도(subject)
+var subjectGeoServerURL=["http://192.168.3.101:8080/geoserver/subject/wms"];	//세종시 geoserver
+//지오서버-오염방제(mpc)
+var mpcGeoServerURL=["http://192.168.3.101:8080/geoserver/mpc/wms"];			//세종시 geoserver
+//지오서버-날씨(weather)
+var weatherGeoServerURL=["http://192.168.3.101:8080/geoserver/weather/wms"];	//세종시 geoserver
+//검색엔진
+var searchEngineURL = ['http://192.168.2.186:8081/essearch/query'];				//테스트 서버 없음
+//주소검색
+var searchAddrEngineURL = ['http://192.168.2.186:8080/geocoding/rgeocode'];		//테스트 서버 없음
+var imageURL = "http://192.168.1.72/cmmn/fms/getImage.do";						//테스트 서버 없음
+/*																*/
+
+/*실서버 서버*/
+//맵서버
+//var mapServerURL=["http://10.188.139.193/geoserver/maritime/wms","http://10.188.139.194/geoserver/maritime/wms"];
+////지오서버-해양주제도(subject)
+//var subjectGeoServerURL=["http://10.188.139.193/geoserver/subject/wms", "http://10.188.139.194/geoserver/subject/wms"];
+////지오서버-오염방제(mpc)
+//var mpcGeoServerURL=["http://10.188.139.193/geoserver/mpc/wms", "http://10.188.139.194/geoserver/mpc/wms"];
+////지오서버-날씨(weather)
+//var weatherGeoServerURL=["http://10.188.139.193/geoserver/weather/wms", "http://10.188.139.194/geoserver/weather/wms"];
+////검색엔진
+//var searchEngineURL = ['http://10.188.139.191:8080/essearch/query','http://10.188.139.192:8080/essearch/query'];
+////주소검색
+//var searchAddrEngineURL = ['http://10.188.139.191:8080/geocoding/rgeocode','http://10.188.139.192:8080/geocoding/rgeocode'];
+////이미지
+//var imageURL = "http://10.188.139.205/cmmn/fms/selectImageFileInfs.do";
+/*											  					*/
+
+//최초 로딩시 지도 정보 표출 관련 설정
+//최초 로딩 이후에는 변경하더라도 작동되지 않음
+//로딩 이후 변경시 setControl(controlNo,flag) 사용
+var mapInformationOption={
+	overviewMap:true,
+	mousePosition:true,
+	rotate:true,
+	scaleLine:true,
+	timePanel:true
+}
+
+
+
+
+
+
+
+/*
+//타겟 삭제 시간(분)
+var targetLostTerm={
+    "11":6,
+    "14":10,
+    "19":360,
+    "21":360,
+    "22":360,
+    "23":180,
+    "24":360,
+    "25":360,
+    "26":360,
+    "27":360,
+    "28":360,
+    "51":360,
+    "52":360,
+    "53":360,
+    "54":360,
+    "69":360
+}
+
+var targetDelTerm={
+    "11":12,
+    "14":20,
+    "19":720,
+    "21":720,
+    "22":720,
+    "23":360,
+    "24":720,
+    "25":720,
+    "26":720,
+    "27":720,
+    "28":720,
+    "51":720,
+    "52":720,
+    "53":720,
+    "54":720,
+    "69":720,
+    "99":12
+}
+
+
+//타겟 표출 옵션
+//로컬스토리지에 옵션값이 존재한다면 불러온다.
+var targetOption={
+    targetType		:targetType[0].value,
+    strokeColor		:"#000000",
+    fillColor		:"#0000ff",
+    targetFill		:true,
+    targetSize		:5,
+    labelFont		:"맑은 고딕",
+    labelFontSize	:10,
+    labelVisible	:false,
+    labelRcvDt		:true,
+    labelSog		:true,
+    alramInterval	:1,
+    alramVisible : true,
+    guRadius		:15,
+    labelTxtColor	:"#000000",
+    labelBoxVisible:true,
+    labelPosition	:labelType[3],
+    vectorVisible:true,
+    specialShipTailCnt:10,
+    alramBeepChk	:true,
+    lableDisplay	: 1,			//라벨표출레벨
+    labelShipName :true,
+    labelIMO		:true,			//라벨IMO표출 여부
+    labelMMSI		:true,			//라벨MMSI표출 여부
+    mapPNChk		:true,			//지명보기 옵션
+    trackChk		:true,			//항적보기 옵션
+    areaChk			:true,			//해역보기 옵션
+    statusChk		:true,			//감시현황판보기 옵션
+    cgStatusChk		:true,			//해경현황판보기 옵션
+    labelCog		:true,			//코스 라벨표시
+    labelHeading	:true,			//선수방위 라벨 표시
+    deleteTargetChk :true			//소실선박 표출여부
+}
+
+//전자해도 상 더블클릭/우클릭 시
+//해당포인트 근처에서 검색할 타겟 포인트 사이즈
+var targetSearchPointSize=6;
+
+//var mapServerURL=["http://10.188.139.186:9000/geoserver/maritime/wms","http://10.188.139.187:9000/geoserver/maritime/wms","http://10.188.139.188:9000/geoserver/maritime/wms","http://10.188.139.189:9000/geoserver/maritime/wms"];
+var subjectGeoServerURL=["http://10.188.139.186:9000/geoserver/subject/wms","http://10.188.139.187:8080/geoserver/subject/wms","http://10.188.139.188:8080/geoserver/subject/wms","http://10.188.139.189:8080/geoserver/subject/wms"];
+var mpcGeoServerURL=["http://10.188.139.186:8080/geoserver/mpc/wms","http://10.188.139.187:8080/geoserver/mpc/wms","http://10.188.139.188:8080/geoserver/mpc/wms","http://10.188.139.189:8080/geoserver/mpc/wms"];
+*/

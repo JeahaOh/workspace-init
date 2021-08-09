@@ -1,0 +1,5 @@
+package com.koem.vms.area.dto;
+
+public class EnvDTO {
+
+}
