@@ -1,0 +1,18 @@
+1601262081643	Rename resource 'header.jsp'
+1601262088643	Rename resource 'left.jsp'
+1601262112477	Rename resource 'acdntStatLayout.jsp'
+1601262129828	Rename resource 'acdntStatLayout.jsp.bk'
+1601262135510	Rename resource 'header.jsp.bk'
+1601262142781	Rename resource 'left.jsp.bk'
+1601262293408	Delete element
+1601262308776	Rename resource 'header.jsp'
+1601262344849	Delete elements
+1601262370652	Rename resource 'redesign_footer.jsp'
+1601263488100	Rename resource 'header.jsp.BK'
+1601275826632	Delete element
+1601275878107	Rename package 'egovframework.board.bugreport'
+1601275940452	Rename compilation unit 'BugReport.java'
+1601280280522	Rename local variable 'board'
+1601343856636	Rename type 'BugReportService'
+1601343869208	Rename type 'BugReportController'
+1601344808044	Rename package 'egovframework.board.bug'

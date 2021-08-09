@@ -1,0 +1,1526 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<!-- 
+/**
+  * @Description : 해양환경위반사범 통계 SQL
+  * @Modification Information
+  * @
+  * @   수정일       수정자               수정내용
+  * @ 2018.07.26     hjh               최초작성
+  *
+  */ 
+-->
+<sqlMap namespace="mrenvVioltCrimeStatDAO">
+
+    <typeAlias alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap" />
+    <typeAlias alias="mrenvVioltCrimeStatVO" type="egovframework.prvntn.mrenvVioltCrimeStat.vo.MrenvVioltCrimeStatVO"/>
+    <typeAlias alias="ffnlgValueStatVO" type="egovframework.prvntn.mrenvVioltCrimeStat.vo.FfnlgValueStatVO"/>
+
+    <!-- 현재년도-5 ~ 현재년도 뷰 -->
+    <sql id="MrenvVioltCrimeStat_SQL_Tibero.VIEW_YEAR">
+        <![CDATA[
+          WITH VIEW_YEAR /* 현재년도-5 ~ 현재년도 뷰 */
+            AS 
+             ( SELECT TO_CHAR(SYSDATE, 'YYYY') - (ROWNUM-1) AS YR
+                 FROM DUAL
+              CONNECT
+                   BY LEVEL <= 5
+             )
+        ]]>
+    </sql>
+
+    <!-- 해경서 조회 -->
+    <select id="mrenvVioltCrimeStatDAO.selectNmpaList" parameterClass="mrenvVioltCrimeStatVO" resultClass="egovMap">
+        <![CDATA[
+        /* MrenvVioltCrimeStat_SQL_Tibero.mrenvVioltCrimeStatDAO.selectNmpaList.01 20180726 */
+        SELECT A1.INSTT_CODE AS NMPA_OFE_CODE /* 해경서코드 */
+             , REPLACE(A1.LOWEST_INSTT_NM, '해양경찰서', '') AS NMPA_OFE_NM /* 해경서명 */
+          FROM TCM_INSTT_CODE A1 /* 기관코드 */ 
+         WHERE 1 = 1  
+           AND A1.REPRSNT_INSTT_CODE = '1532000' /* 해양경찰청 */
+           AND A1.TY_LRGE_CL_CODE = '01'
+           AND A1.TY_MIDDL_CL_CODE in ('07', '08', '99')
+           AND A1.TY_SMALL_CL_CODE in ('03', '07', '08')
+           AND (A1.LOWEST_INSTT_NM LIKE '%해양%')
+           AND A1.ODR = 3        
+           AND A1.ALL_INSTT_NM NOT LIKE '%구조%'
+           AND A1.ALL_INSTT_NM NOT LIKE '%정비%'
+           ]]>
+           <isNotEmpty property="firstInsttCode">
+           AND A1.BEST_INSTT_CODE = #firstInsttCode#
+           </isNotEmpty>
+           <isNotEmpty property="seHighInsttCode">
+           AND A1.SEHIGH_INSTT_CODE =#seHighInsttCode#
+           </isNotEmpty>
+           <isNotEmpty property="thInsttCode">
+           AND A1.INSTT_CODE = #thInsttCode#
+           </isNotEmpty>
+         ORDER 
+            BY A1.SEHIGH_INSTT_CODE ASC
+             , A1.INSTT_CODE ASC
+        
+    </select>
+
+    <!-- 최근5년간 위반현황 - 해경서별 현황 -->
+    <select id="mrenvVioltCrimeStatDAO.selectNmpaStat" parameterClass="mrenvVioltCrimeStatVO" resultClass="egovMap" remapResults="true">
+        <include refid="MrenvVioltCrimeStat_SQL_Tibero.VIEW_YEAR"/>
+        <![CDATA[
+        /* MrenvVioltCrimeStat_SQL_Tibero.mrenvVioltCrimeStatDAO.selectNmpaStat.01 20180726 */
+             , VIEW_MRENV_VIOLT_CRIME /* 해양환경위반사범 뷰 */
+            AS
+             ( SELECT TO_CHAR(A1.VIOLT_DT, 'YYYY') AS VIOLT_YR /* 위반년도 */ 
+                    , A1.NMPA_OFE_CODE /* 해경서코드 */
+                 FROM TPM_MRENV_VIOLT_CRIME A1 /* 해양환경위반사범 */
+                WHERE 1 = 1
+                  AND A1.NMPA_OFE_CODE IN ( SELECT A1.INSTT_CODE  /* 해경서코드 */
+									          FROM TCM_INSTT_CODE A1 /* 기관코드 */ 
+									         WHERE 1 = 1  
+									           AND A1.REPRSNT_INSTT_CODE = '1532000' /* 해양경찰청 */
+									           AND A1.TY_LRGE_CL_CODE = '01'
+									           AND A1.TY_MIDDL_CL_CODE in ('07', '08', '99')
+									           AND A1.TY_SMALL_CL_CODE in ('03', '07', '08')
+									           AND (A1.LOWEST_INSTT_NM LIKE '%해양%')
+									           AND A1.ODR = 3        
+									           AND A1.ALL_INSTT_NM NOT LIKE '%구조%'
+									           AND A1.ALL_INSTT_NM NOT LIKE '%정비%')
+                  AND A1.VIOLT_DT IS NOT NULL
+                  AND A1.STTUS_CODE <> 'R' /* 상태코드 [R]삭제가 아닌 경우만 */
+                  AND A1.CLOS_AT = 'Y' /* 마감여부 'Y'인 경우만 */
+             )
+        SELECT '합계' AS YR
+             , 
+             ( SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME S1 ) AS TOTAL_CNT
+        ]]>             
+        <iterate property="paramList">
+             <![CDATA[
+             , 
+             ( SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME S1 
+                WHERE S1.NMPA_OFE_CODE = #paramList[]# ) AS VALUE_$paramList[]$
+             ]]>
+        </iterate>
+        <![CDATA[
+          FROM DUAL
+         UNION
+           ALL
+        SELECT TO_CHAR(YR)
+             , 
+             ( SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME S1 
+                WHERE S1.VIOLT_YR = R1.YR )
+        ]]>             
+        <iterate property="paramList">
+             <![CDATA[
+             , 
+             ( SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME S1 
+                WHERE S1.NMPA_OFE_CODE = #paramList[]# 
+                  AND S1.VIOLT_YR = R1.YR )
+             ]]>
+        </iterate>
+        <![CDATA[
+          FROM VIEW_YEAR R1
+        ]]>
+    </select>
+    
+    <!-- 최근5년간 위반현황 - 대상별 현황 -->
+    <select id="mrenvVioltCrimeStatDAO.selectTargetStat" parameterClass="mrenvVioltCrimeStatVO" resultClass="egovMap" remapResults="true">
+        <include refid="MrenvVioltCrimeStat_SQL_Tibero.VIEW_YEAR"/>
+        <![CDATA[
+        /* MrenvVioltCrimeStat_SQL_Tibero.mrenvVioltCrimeStatDAO.selectTargetStat.01 20180726 */
+             , VIEW_MRENV_VIOLT_CRIME /* 해양환경위반사범 뷰 */
+            AS
+             ( SELECT TO_CHAR(A1.VIOLT_DT, 'YYYY') AS VIOLT_YR /* 위반년도 */
+                    , A1.POLTNSRC_SE_CODE /* 오염원구분코드 */
+                    , B1.VSLKND_CODE /* 선종코드 */
+                    , 
+                    ( SELECT S1.UPPER_CODE /* 상위코드 */
+                         FROM TCM_CMMN_DTL_CODE S1 /* 공통상세코드 */
+                        WHERE S1.CODE = C1.FCLTY_KND_CODE
+                    ) AS FCLTY_KND_CODE /* 시설종류코드 */
+                 FROM TPM_MRENV_VIOLT_CRIME A1 /* 해양환경위반사범 */
+                    , VIEW_TPM_SHIP_INFO2 B1 /* 선박정보 */
+                    , TPM_FCLTY_INFO C1 /* 시설정보 */
+                WHERE 1 = 1
+                  AND A1.POLTNSRC_NM_ALL = B1.CLSGN_VALUE(+)
+                  AND A1.POLTNSRC_NM_ALL = C1.FCLTY_SN(+)
+                  AND A1.VIOLT_DT IS NOT NULL
+                  AND A1.STTUS_CODE <> 'R' /* 상태코드 [R]삭제가 아닌 경우만 */
+                  AND A1.CLOS_AT = 'Y' /* 마감여부 'Y'인 경우만 */
+                  AND A1.NMPA_OFE_CODE IN ( SELECT A1.INSTT_CODE  /* 해경서코드 */
+									          FROM TCM_INSTT_CODE A1 /* 기관코드 */ 
+									         WHERE 1 = 1  
+									           AND A1.REPRSNT_INSTT_CODE = '1532000' /* 해양경찰청 */
+									           AND A1.TY_LRGE_CL_CODE = '01'
+									           AND A1.TY_MIDDL_CL_CODE in ('07', '08', '99')
+									           AND A1.TY_SMALL_CL_CODE in ('03', '07', '08')
+									           AND (A1.LOWEST_INSTT_NM LIKE '%해양%')
+									           AND A1.ODR = 3        
+									           AND A1.ALL_INSTT_NM NOT LIKE '%구조%'
+									           AND A1.ALL_INSTT_NM NOT LIKE '%정비%')
+             )
+        SELECT '합계' AS YR
+             , 
+             ( SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME S1 
+                WHERE (S1.POLTNSRC_SE_CODE = 'A' AND S1.VSLKND_CODE IS NOT NULL)
+                      OR
+                      (S1.POLTNSRC_SE_CODE = 'B' AND S1.FCLTY_KND_CODE IS NOT NULL)
+                      OR
+                      (S1.POLTNSRC_SE_CODE = 'C')
+             ) AS TOTAL_CNT
+             , 
+             ( SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME S1 
+                WHERE S1.POLTNSRC_SE_CODE = 'A' /* 오염원구분코드 [A]선박 */ 
+                  AND S1.VSLKND_CODE IS NOT NULL ) AS SHIP_CNT
+        ]]>             
+        <iterate property="paramList">
+             <![CDATA[
+             , 
+             ( SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME S1 
+                WHERE S1.POLTNSRC_SE_CODE = 'A' /* 오염원구분코드 [A]선박 */ 
+                  AND S1.VSLKND_CODE = #paramList[]# ) AS VALUE_A_$paramList[]$
+             ]]>
+        </iterate>
+             , 
+             ( SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME S1 
+                WHERE S1.POLTNSRC_SE_CODE = 'B' /* 오염원구분코드 [B]시설 */ 
+                  AND S1.FCLTY_KND_CODE IS NOT NULL ) AS FCLTY_CNT
+        <iterate property="paramList2">
+             <![CDATA[
+             , 
+             ( SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME S1 
+                WHERE S1.POLTNSRC_SE_CODE = 'B' /* 오염원구분코드 [B]시설 */ 
+                  AND S1.FCLTY_KND_CODE = #paramList2[]# ) AS VALUE_B_$paramList2[]$
+             ]]>
+        </iterate>
+             , 
+             ( SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME S1 
+                WHERE S1.POLTNSRC_SE_CODE = 'C' /* 오염원구분코드 [C]미상 */ ) AS UKNWN_CNT
+        
+        <![CDATA[
+          FROM DUAL
+         UNION
+           ALL
+        SELECT TO_CHAR(YR)
+             , 
+             ( SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME S1 
+                WHERE S1.VIOLT_YR = R1.YR 
+                  AND (
+                      (S1.POLTNSRC_SE_CODE = 'A' AND S1.VSLKND_CODE IS NOT NULL)
+                      OR
+                      (S1.POLTNSRC_SE_CODE = 'B' AND S1.FCLTY_KND_CODE IS NOT NULL)
+                      OR
+                      (S1.POLTNSRC_SE_CODE = 'C')
+                      )
+             )
+             , 
+             ( SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME S1 
+                WHERE S1.VIOLT_YR = R1.YR AND S1.POLTNSRC_SE_CODE = 'A' /* 오염원구분코드 [A]선박 */ 
+                  AND S1.VSLKND_CODE IS NOT NULL )
+        ]]>             
+        <iterate property="paramList">
+             <![CDATA[
+             , 
+             ( SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME S1 
+                WHERE S1.VIOLT_YR = R1.YR AND S1.POLTNSRC_SE_CODE = 'A' /* 오염원구분코드 [A]선박 */ 
+                  AND S1.VSLKND_CODE = #paramList[]# )
+             ]]>
+        </iterate>
+             , 
+             ( SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME S1 
+                WHERE S1.VIOLT_YR = R1.YR AND S1.POLTNSRC_SE_CODE = 'B' /* 오염원구분코드 [B]시설 */ 
+                  AND S1.FCLTY_KND_CODE IS NOT NULL )
+        <iterate property="paramList2">
+             <![CDATA[
+             , 
+             ( SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME S1 
+                WHERE S1.VIOLT_YR = R1.YR AND S1.POLTNSRC_SE_CODE = 'B' /* 오염원구분코드 [B]시설 */ 
+                  AND S1.FCLTY_KND_CODE = #paramList2[]# )
+             ]]>
+        </iterate>
+             , 
+             ( SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME S1 
+                WHERE S1.VIOLT_YR = R1.YR AND S1.POLTNSRC_SE_CODE = 'C' /* 오염원구분코드 [C]미상 */ )
+        <![CDATA[
+          FROM VIEW_YEAR R1
+        ]]>
+    </select>
+    
+    <!-- 최근5년간 위반현황 - 유형별 현황 -->
+    <select id="mrenvVioltCrimeStatDAO.selectTyStat" parameterClass="mrenvVioltCrimeStatVO" resultClass="egovMap" remapResults="true">
+        <include refid="MrenvVioltCrimeStat_SQL_Tibero.VIEW_YEAR"/>
+        <![CDATA[
+        /* MrenvVioltCrimeStat_SQL_Tibero.mrenvVioltCrimeStatDAO.selectTyStat.01 20180726 */
+             , VIEW_MRENV_VIOLT_CRIME /* 해양환경위반사범 뷰 */
+            AS
+             ( SELECT TO_CHAR(A1.VIOLT_DT, 'YYYY') AS VIOLT_YR /* 위반년도 */ 
+                    , A1.VIOLT_TY_CODE /* 위반유형코드 */
+                 FROM TPM_MRENV_VIOLT_CRIME A1 /* 해양환경위반사범 */
+                WHERE 1 = 1
+                  AND A1.VIOLT_TY_CODE IS NOT NULL
+                  AND A1.VIOLT_DT IS NOT NULL
+                  AND A1.STTUS_CODE <> 'R' /* 상태코드 [R]삭제가 아닌 경우만 */
+                  AND A1.CLOS_AT = 'Y' /* 마감여부 'Y'인 경우만 */
+                  AND A1.NMPA_OFE_CODE IN ( SELECT A1.INSTT_CODE  /* 해경서코드 */
+									          FROM TCM_INSTT_CODE A1 /* 기관코드 */ 
+									         WHERE 1 = 1  
+									           AND A1.REPRSNT_INSTT_CODE = '1532000' /* 해양경찰청 */
+									           AND A1.TY_LRGE_CL_CODE = '01'
+									           AND A1.TY_MIDDL_CL_CODE in ('07', '08', '99')
+									           AND A1.TY_SMALL_CL_CODE in ('03', '07', '08')
+									           AND (A1.LOWEST_INSTT_NM LIKE '%해양%')
+									           AND A1.ODR = 3        
+									           AND A1.ALL_INSTT_NM NOT LIKE '%구조%'
+									           AND A1.ALL_INSTT_NM NOT LIKE '%정비%')
+             )
+        SELECT '합계' AS YR
+             , 
+             ( SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME S1 ) AS TOTAL_CNT
+        ]]>             
+        <iterate property="paramList">
+             <![CDATA[
+             , 
+             ( SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME S1 
+                WHERE S1.VIOLT_TY_CODE = #paramList[]# ) AS VALUE_$paramList[]$
+             ]]>
+        </iterate>
+        <![CDATA[
+          FROM DUAL
+         UNION
+           ALL
+        SELECT TO_CHAR(YR)
+             , 
+             ( SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME S1 
+                WHERE S1.VIOLT_YR = R1.YR )
+        ]]>             
+        <iterate property="paramList">
+             <![CDATA[
+             , 
+             ( SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME S1 
+                WHERE S1.VIOLT_TY_CODE = #paramList[]# 
+                  AND S1.VIOLT_YR = R1.YR )
+             ]]>
+        </iterate>
+        <![CDATA[
+          FROM VIEW_YEAR R1
+        ]]>
+    </select>
+    
+    <!-- 최근5년간 위반현황 - 원인별 현황 -->
+    <select id="mrenvVioltCrimeStatDAO.selectCauseStat" parameterClass="mrenvVioltCrimeStatVO" resultClass="egovMap" remapResults="true">
+        <include refid="MrenvVioltCrimeStat_SQL_Tibero.VIEW_YEAR"/>
+        <![CDATA[
+        /* MrenvVioltCrimeStat_SQL_Tibero.mrenvVioltCrimeStatDAO.selectCauseStat.01 20180726 */
+             , VIEW_MRENV_VIOLT_CRIME /* 해양환경위반사범 뷰 */
+            AS
+             ( SELECT TO_CHAR(A1.VIOLT_DT, 'YYYY') AS VIOLT_YR /* 위반년도 */ 
+                    , A1.ACDNT_CAUSE_CODE /* 사고원인코드 */
+                 FROM TPM_MRENV_VIOLT_CRIME A1 /* 해양환경위반사범 */
+                WHERE 1 = 1
+                  AND A1.ACDNT_CAUSE_CODE IS NOT NULL
+                  AND A1.VIOLT_DT IS NOT NULL
+                  AND A1.STTUS_CODE <> 'R' /* 상태코드 [R]삭제가 아닌 경우만 */
+                  AND A1.CLOS_AT = 'Y' /* 마감여부 'Y'인 경우만 */
+                  AND A1.NMPA_OFE_CODE IN ( SELECT A1.INSTT_CODE  /* 해경서코드 */
+									          FROM TCM_INSTT_CODE A1 /* 기관코드 */ 
+									         WHERE 1 = 1  
+									           AND A1.REPRSNT_INSTT_CODE = '1532000' /* 해양경찰청 */
+									           AND A1.TY_LRGE_CL_CODE = '01'
+									           AND A1.TY_MIDDL_CL_CODE in ('07', '08', '99')
+									           AND A1.TY_SMALL_CL_CODE in ('03', '07', '08')
+									           AND (A1.LOWEST_INSTT_NM LIKE '%해양%')
+									           AND A1.ODR = 3        
+									           AND A1.ALL_INSTT_NM NOT LIKE '%구조%'
+									           AND A1.ALL_INSTT_NM NOT LIKE '%정비%')
+             )
+        SELECT '합계' AS YR
+             , 
+             ( SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME S1 ) AS TOTAL_CNT
+        ]]>             
+        <iterate property="paramList">
+             <![CDATA[
+             , 
+             ( SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME S1,TCM_CMMN_DTL_CODE CM1
+                WHERE  
+                	CM1.CODE = S1.ACDNT_CAUSE_CODE 
+                	AND CM1.UPPER_CODE = #paramList[]# 
+                ) AS VALUE_$paramList[]$
+             ]]>
+        </iterate>
+        <![CDATA[
+          FROM DUAL
+         UNION
+           ALL
+        SELECT TO_CHAR(YR)
+             , 
+             ( SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME S1 
+                WHERE S1.VIOLT_YR = R1.YR )
+        ]]>             
+        <iterate property="paramList">
+             <![CDATA[
+             , 
+             ( SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME S1 , TCM_CMMN_DTL_CODE CM1
+                WHERE
+	                CM1.CODE = S1.ACDNT_CAUSE_CODE 
+	                AND CM1.UPPER_CODE = #paramList[]# 
+                  	AND S1.VIOLT_YR = R1.YR )
+             ]]>
+        </iterate>
+        <![CDATA[
+          FROM VIEW_YEAR R1
+        ]]>
+    </select>
+    
+     <!-- 대상별  COL LIST -->
+    <select id="mrenvVioltCrimeStatDAO.selectInspctPurpsCodeList" parameterClass="mrenvVioltCrimeStatVO" resultClass="egovMap">
+        <![CDATA[
+			WITH VIEW_STDR_CODE  
+			    AS
+			     ( SELECT C1.CODE /* 코드 */
+			            , C1.CODE_NM /* 코드명 */
+			            , C1.UPPER_CODE /* 상위코드 */
+			            , C1.ORDR /* 순서 */
+			         FROM TCM_CMMN_DTL_CODE C1 /* 공통상세코드 */
+			        WHERE 1 = 1
+			          AND C1.USE_AT = 'Y' /* 공통상세코드 사용여부 'Y' */
+			     )
+			SELECT C1.CODE AS UPPER_CODE /* 상위코드 */
+			     , DECODE(C1.CODE_NM, (LAG(C1.CODE_NM) OVER (ORDER BY C1.ORDR ASC, C2.ORDR ASC)), NULL, C1.CODE_NM) AS UPPER_CODE_NM /* 상위코드명 */
+			     , (SELECT COUNT(*) FROM VIEW_STDR_CODE S1 WHERE S1.UPPER_CODE = C1.CODE) AS LOWER_CNT /* 하위코드 개수 */
+			     , C2.CODE /* 하위코드 */
+			     , C2.CODE_NM /* 하위코드명 */
+			  FROM VIEW_STDR_CODE C1 /* 상위코드 */
+			     , VIEW_STDR_CODE C2 /* 하위코드 */
+			 WHERE 1 = 1
+			   AND C1.CODE = C2.UPPER_CODE(+)
+			   AND C1.CODE = #codeId#
+			 ORDER
+			    BY C1.ORDR ASC
+			     , C2.ORDR ASC
+        ]]>
+    </select>
+    
+    <!-- 대상별 -->
+    <!-- 대상별  LIST -->
+    <select id="mrenvVioltCrimeStatDAO.selectTargetStatList" parameterClass="mrenvVioltCrimeStatVO" resultClass="egovMap">
+		WITH VIE_SHIP /* 선박 뷰 */ AS 
+		(
+		 select 
+		      CASE 
+		      	WHEN B1.SHIP_NLTY_CODE = 'AS203'  THEN 'D' /* [A]선박이고 대한민국인 경우 내국적 */
+		      	WHEN B1.SHIP_NLTY_CODE<![CDATA[<>]]>'AS203'  THEN 'O' /* [A]선박이고 대한민국이 아닌경우 외국적 */ 
+		  	    ELSE NULL
+		  	  END AS SHIP_NLTY_CODE /* 선박국적코드 */, 
+		  	   'A' AS POLTNSRC_SE_CODE/*선박,시설 구분*/, 
+			   CASE WHEN (SELECT UPPER_CODE FROM TCM_CMMN_DTL_CODE C WHERE C.CODE=B1.VSLKND_CODE) = 'PM119'
+				    THEN B1.VSLKND_CODE
+				    WHEN (SELECT UPPER_CODE FROM TCM_CMMN_DTL_CODE C WHERE C.CODE=B1.VSLKND_CODE) IN ('PM120','PM132','PM148','PM151')
+				    THEN (SELECT UPPER_CODE FROM TCM_CMMN_DTL_CODE C WHERE C.CODE=B1.VSLKND_CODE)
+			   END AS VSLKND_FCLTY_KND_CODE /*선종코드-상위*/,
+	     	   A1.VIOLT_TY_CODE  as DISCL_CRCMSTNCS_CODE /*위반유형코드*/,
+		       VIOLT_DT
+		  FROM TPM_MRENV_VIOLT_CRIME A1 /* 해양환경위반사범 */,
+		      TPM_SHIP_INFO B1 /* 선박정보 */
+		WHERE 1 = 1
+		  AND A1.POLTNSRC_NM_ALL = B1.CLSGN_VALUE(+)
+		  AND A1.POLTNSRC_SE_CODE='A'
+		  AND A1.VIOLT_DT IS NOT NULL
+		  AND A1.CLOS_AT = 'Y' 
+		  AND A1.STTUS_CODE<![CDATA[<>]]>'R'
+		  AND A1.NMPA_OFE_CODE IN (
+					   SELECT INSTT_CODE FROM TCM_INSTT_CODE D 
+					    WHERE D.REPRSNT_INSTT_CODE = '1532000' /* 해양경찰청 */
+	               	      AND D.TY_LRGE_CL_CODE = '01'
+                          AND D.TY_MIDDL_CL_CODE in('07','08','99')
+	                      AND D.TY_SMALL_CL_CODE in('03','07','08')
+	                      AND D.LOWEST_INSTT_NM LIKE '%해양%'
+	                      AND D.ODR = 3
+		                  AND D.ALL_INSTT_NM NOT LIKE '%구조%' 
+		                  AND D.ALL_INSTT_NM NOT LIKE '%정비%'
+		                  <isNotEmpty property="searchNmpaOfeCode">
+ 						  AND D.INSTT_CODE = #searchNmpaOfeCode#
+		 				  </isNotEmpty>
+		 					  )
+		UNION ALL
+		select 
+		       '' AS SHIP_NLTY_CODE /* 시설 국적코드 */, 
+		  	   'B' AS POLTNSRC_SE_CODE/*선박,시설 구분*/, 
+			   CASE WHEN (SELECT UPPER_CODE FROM TCM_CMMN_DTL_CODE C WHERE C.CODE=D1.FCLTY_KND_CODE) = 'PM1' /* LV1 */
+					THEN D1.FCLTY_KND_CODE
+					WHEN (SELECT UPPER_CODE FROM TCM_CMMN_DTL_CODE C WHERE C.CODE=D1.FCLTY_KND_CODE) IN ('PM2','PM3','PM3','PM4') /* LV2 */
+					THEN (SELECT UPPER_CODE FROM TCM_CMMN_DTL_CODE C WHERE C.CODE=D1.FCLTY_KND_CODE)
+					WHEN (SELECT UPPER_CODE FROM TCM_CMMN_DTL_CODE C WHERE C.CODE=D1.FCLTY_KND_CODE) IN ('PM5') /* LV3 */
+					THEN (SELECT UPPER_CODE FROM TCM_CMMN_DTL_CODE C WHERE C.CODE=(SELECT UPPER_CODE FROM TCM_CMMN_DTL_CODE C WHERE C.CODE=D1.FCLTY_KND_CODE))
+				END AS VSLKND_FCLTY_KND_CODE /*시설코드명 상위로 포함*/,
+   	     	   C1.VIOLT_TY_CODE  as DISCL_CRCMSTNCS_CODE /*위반유형코드*/,
+		       VIOLT_DT
+		  FROM TPM_MRENV_VIOLT_CRIME C1 /* 해양환경위반사범 */,
+		       TPM_FCLTY_INFO D1
+		 WHERE C1.POLTNSRC_NM_ALL=D1.FCLTY_SN(+)
+		   AND C1.POLTNSRC_SE_CODE='B'
+		   AND C1.VIOLT_DT IS NOT NULL
+		   AND C1.CLOS_AT = 'Y' 
+		   AND C1.STTUS_CODE<![CDATA[<>]]>'R'
+		   AND C1.NMPA_OFE_CODE IN (
+					   SELECT INSTT_CODE FROM TCM_INSTT_CODE D 
+					    WHERE D.REPRSNT_INSTT_CODE = '1532000' /* 해양경찰청 */
+	               	      AND D.TY_LRGE_CL_CODE = '01'
+                          AND D.TY_MIDDL_CL_CODE in('07','08','99')
+	                      AND D.TY_SMALL_CL_CODE in('03','07','08')
+	                      AND D.LOWEST_INSTT_NM LIKE '%해양%'
+	                      AND D.ODR = 3
+		                  AND D.ALL_INSTT_NM NOT LIKE '%구조%' 
+		                  AND D.ALL_INSTT_NM NOT LIKE '%정비%'
+		                  <isNotEmpty property="searchNmpaOfeCode">
+ 						  AND D.INSTT_CODE = #searchNmpaOfeCode#
+		 				  </isNotEmpty>
+		 					  )
+		)
+		SELECT 'M' AS DATA_TYPE /* [M]월, [C]누계 */,
+			   POLTNSRC_SE_CODE/*선박 시설 구분*/,
+			   DISCL_CRCMSTNCS_CODE/*검사목적*/,
+			   GROUPING(DISCL_CRCMSTNCS_CODE)+GROUPING(VSLKND_FCLTY_KND_CODE) + GROUPING(SHIP_NLTY_CODE)+GROUPING(POLTNSRC_SE_CODE) AS GROUPING_CNT,
+			   SHIP_NLTY_CODE/*국적*/,
+			   VSLKND_FCLTY_KND_CODE/*선종시설*/,
+			   COUNT(*) AS CNT
+		  FROM VIE_SHIP
+ 		WHERE TO_CHAR(VIOLT_DT, 'YYYYMM') = #searchYr# || #searchMt#
+		GROUP BY CUBE(DISCL_CRCMSTNCS_CODE,VSLKND_FCLTY_KND_CODE,SHIP_NLTY_CODE,POLTNSRC_SE_CODE)
+		UNION ALL
+		SELECT 'C' AS DATA_TYPE /* [M]월, [C]누계 */,
+			   POLTNSRC_SE_CODE/*선박 시설 구분*/,
+			   DISCL_CRCMSTNCS_CODE/*검사목적*/,
+			   GROUPING(DISCL_CRCMSTNCS_CODE)+GROUPING(VSLKND_FCLTY_KND_CODE) + GROUPING(SHIP_NLTY_CODE)+GROUPING(POLTNSRC_SE_CODE) AS GROUPING_CNT,
+			   SHIP_NLTY_CODE/*국적*/,
+			   VSLKND_FCLTY_KND_CODE,
+			   COUNT(*) AS CNT
+		  FROM VIE_SHIP
+ 		 WHERE TO_CHAR(VIOLT_DT, 'YYYYMM') BETWEEN #searchYr# || '01' AND #searchYr# || #searchMt#
+		GROUP BY CUBE(DISCL_CRCMSTNCS_CODE,VSLKND_FCLTY_KND_CODE,SHIP_NLTY_CODE,POLTNSRC_SE_CODE)
+    
+    </select>
+    
+    <!-- 위반유형별 위반사범 현황 -->
+    <!-- 위반유형별 위반사범 현황 LIST -->
+    <select id="mrenvVioltCrimeStatDAO.selectTypeStatList" parameterClass="mrenvVioltCrimeStatVO" resultClass="egovMap">
+		WITH VIE_SHIP /* 선박 뷰 */ AS 
+		(
+		SELECT A1.POLTNSRC_SE_CODE/*선박,시설 구분*/, 
+			   A1.NMPA_OFE_CODE AS VSLKND_FCLTY_KND_CODE /* 해경서코드 */,
+	     	   A1.VIOLT_TY_CODE  AS DISCL_CRCMSTNCS_CODE /*검사목적*/,
+		       VIOLT_DT
+		  FROM TPM_MRENV_VIOLT_CRIME A1 /* 해양환경위반사범 */		       
+		WHERE 1 = 1
+	  	  AND A1.NMPA_OFE_CODE IS NOT NULL
+		  AND A1.VIOLT_DT IS NOT NULL
+		  AND A1.CLOS_AT = 'Y' /* 마감여부 'Y'인 경우만 */
+		  AND A1.STTUS_CODE<![CDATA[<>]]>'R'
+		  AND A1.NMPA_OFE_CODE IN (
+					   SELECT INSTT_CODE FROM TCM_INSTT_CODE D 
+					    WHERE D.REPRSNT_INSTT_CODE = '1532000' /* 해양경찰청 */
+	               	      AND D.TY_LRGE_CL_CODE = '01'
+                          AND D.TY_MIDDL_CL_CODE in('07','08','99')
+	                      AND D.TY_SMALL_CL_CODE in('03','07','08')
+	                      AND D.LOWEST_INSTT_NM LIKE '%해양%'
+	                      AND D.ODR = 3 
+		                  AND D.ALL_INSTT_NM NOT LIKE '%구조%' 
+		                  AND D.ALL_INSTT_NM NOT LIKE '%정비%'
+		                  <isNotEmpty property="searchNmpaOfeCode">
+ 							  AND D.INSTT_CODE = #searchNmpaOfeCode#
+		 				  </isNotEmpty>
+		 				  )
+		  <isNotEmpty property="searchPoltnsrcSeCode">
+		  	AND A1.POLTNSRC_SE_CODE = #searchPoltnsrcSeCode#
+		  </isNotEmpty>
+		  <isNotEmpty property="searchVioltTyCode">
+		  	AND A1.VIOLT_TY_CODE = #searchVioltTyCode#
+		  </isNotEmpty>
+		)
+		SELECT 'M' AS DATA_TYPE /* [M]월, [C]누계 */,
+		   	   NVL(POLTNSRC_SE_CODE,'D') AS SE_CODE	/*총괄,선박,시설,미상 구분*/,
+			   DISCL_CRCMSTNCS_CODE/*검사목적*/,
+			   GROUPING(DISCL_CRCMSTNCS_CODE)+GROUPING(VSLKND_FCLTY_KND_CODE) ++GROUPING(POLTNSRC_SE_CODE) AS GROUPING_CNT,
+			   VSLKND_FCLTY_KND_CODE/*선종시설*/,
+			   COUNT(*) AS CNT
+		  FROM VIE_SHIP
+ 		WHERE TO_CHAR(VIOLT_DT,'YYYYMM') = #searchYr# || #searchMt#
+		GROUP BY CUBE(DISCL_CRCMSTNCS_CODE,VSLKND_FCLTY_KND_CODE,POLTNSRC_SE_CODE)
+		UNION ALL
+		SELECT 'C' AS DATA_TYPE /* [M]월, [C]누계 */,
+			   NVL(POLTNSRC_SE_CODE,'D') AS SE_CODE	/*총괄,선박,시설 구분*/,
+			   DISCL_CRCMSTNCS_CODE/*검사목적*/,
+			   GROUPING(DISCL_CRCMSTNCS_CODE)+GROUPING(VSLKND_FCLTY_KND_CODE) + GROUPING(POLTNSRC_SE_CODE) AS GROUPING_CNT,
+			   VSLKND_FCLTY_KND_CODE,
+			   COUNT(*) AS CNT
+		  FROM VIE_SHIP
+ 		 WHERE TO_CHAR(VIOLT_DT,'YYYYMM') BETWEEN #searchYr# ||'01' AND #searchYr# ||#searchMt#
+		GROUP BY CUBE(DISCL_CRCMSTNCS_CODE,VSLKND_FCLTY_KND_CODE,POLTNSRC_SE_CODE)
+    
+    </select>
+  
+    <!-- 위반원인별 위반사범 현황 -->
+    <!-- 위반원인별 위반사범 현황 LIST -->
+    <select id="mrenvVioltCrimeStatDAO.selectCauseStatList" parameterClass="mrenvVioltCrimeStatVO" resultClass="egovMap">
+		WITH VIE_SHIP /* 선박 뷰 */ AS 
+		(
+		SELECT  
+			   A1.NMPA_OFE_CODE AS VSLKND_FCLTY_KND_CODE /* 해경서코드 */,
+	     	   FN_GET_CMMN_UPPERCODE(A1.ACDNT_CAUSE_CODE)  AS DISCL_CRCMSTNCS_CODE /*원인*/,
+		       VIOLT_DT
+		  FROM TPM_MRENV_VIOLT_CRIME A1 /* 해양환경위반사범 */		       
+		WHERE 1 = 1
+	  	  AND A1.NMPA_OFE_CODE IS NOT NULL
+		  AND A1.VIOLT_DT IS NOT NULL
+		  AND A1.CLOS_AT = 'Y' /* 마감여부 'Y'인 경우만 */
+		  AND A1.STTUS_CODE<![CDATA[<>]]>'R'
+		  AND A1.NMPA_OFE_CODE IN (
+					   SELECT INSTT_CODE FROM TCM_INSTT_CODE D 
+					    WHERE D.REPRSNT_INSTT_CODE = '1532000' /* 해양경찰청 */
+	               	      AND D.TY_LRGE_CL_CODE = '01'
+                          AND D.TY_MIDDL_CL_CODE in('07','08','99')
+	                      AND D.TY_SMALL_CL_CODE in('03','07','08')
+	                      AND D.LOWEST_INSTT_NM LIKE '%해양%'
+	                      AND D.ODR = 3 
+		                  AND D.ALL_INSTT_NM NOT LIKE '%구조%' 
+		                  AND D.ALL_INSTT_NM NOT LIKE '%정비%'
+		 				  )
+		)
+		SELECT 'M' AS DATA_TYPE /* [M]월, [C]누계 */,
+			   DISCL_CRCMSTNCS_CODE/*원인*/,
+			   GROUPING(DISCL_CRCMSTNCS_CODE)+GROUPING(VSLKND_FCLTY_KND_CODE) AS GROUPING_CNT,
+			   VSLKND_FCLTY_KND_CODE/*선종시설*/,
+			   COUNT(*) AS CNT
+		  FROM VIE_SHIP
+ 		WHERE TO_CHAR(VIOLT_DT,'YYYYMM') = #searchYr# || #searchMt#
+		GROUP BY CUBE(DISCL_CRCMSTNCS_CODE,VSLKND_FCLTY_KND_CODE)
+		UNION ALL
+		SELECT 'C' AS DATA_TYPE /* [M]월, [C]누계 */,
+			   DISCL_CRCMSTNCS_CODE/*원인*/,
+			   GROUPING(DISCL_CRCMSTNCS_CODE)+GROUPING(VSLKND_FCLTY_KND_CODE) AS GROUPING_CNT,
+			   VSLKND_FCLTY_KND_CODE,
+			   COUNT(*) AS CNT
+		  FROM VIE_SHIP
+ 		 WHERE TO_CHAR(VIOLT_DT,'YYYYMM') BETWEEN #searchYr# ||'01' AND #searchYr# ||#searchMt#
+		GROUP BY CUBE(DISCL_CRCMSTNCS_CODE,VSLKND_FCLTY_KND_CODE)
+    
+    </select>
+    
+    <!-- 적발경위 조회 -->
+    <select id="mrenvVioltCrimeStatDAO.selectDisclCrcmstncsList" parameterClass="mrenvVioltCrimeStatVO" resultClass="egovMap">
+        <![CDATA[
+        /* MrenvVioltCrimeStat_SQL_Tibero.mrenvVioltCrimeStatDAO.selectDisclCrcmstncsList.01 20180726 */
+          WITH VIEW_STDR_CODE  
+            AS
+             ( SELECT C1.CODE /* 코드 */
+                    , C1.CODE_NM /* 코드명 */
+                    , C1.UPPER_CODE /* 상위코드 */
+                    , C1.ORDR /* 순서 */
+                 FROM TCM_CMMN_DTL_CODE C1 /* 공통상세코드 */
+                WHERE 1 = 1
+             )
+        SELECT C1.CODE AS UPPER_CODE /* 상위코드 */
+             , DECODE(C1.CODE_NM, (LAG(C1.CODE_NM) OVER (ORDER BY C1.ORDR ASC, C2.ORDR ASC)), NULL, C1.CODE_NM) AS UPPER_CODE_NM /* 상위코드명 */
+             , (SELECT COUNT(*) FROM VIEW_STDR_CODE S1 WHERE S1.UPPER_CODE = C1.CODE) AS LOWER_CNT /* 하위코드 개수 */
+             , C2.CODE /* 하위코드 */
+             , C2.CODE_NM /* 하위코드명 */
+          FROM VIEW_STDR_CODE C1 /* 상위코드 */
+             , VIEW_STDR_CODE C2 /* 하위코드 */
+         WHERE 1 = 1
+           AND C1.CODE = C2.UPPER_CODE(+)
+           AND C1.CODE IN ('PM367' , 'PM377', 'PM381')
+         ORDER
+            BY C1.ORDR ASC
+             , C2.ORDR ASC
+        ]]>
+    </select>
+    
+    <!-- 적발경위별 현황 -->
+    <select id="mrenvVioltCrimeStatDAO.selectDisclCrcmstncsStat" parameterClass="mrenvVioltCrimeStatVO" resultClass="egovMap">
+        <![CDATA[
+        /* MrenvVioltCrimeStat_SQL_Tibero.mrenvVioltCrimeStatDAO.selectDisclCrcmstncsStat.01 20180726 */
+          WITH VIEW_MRENV_VIOLT_CRIME /* 해양환경위반사범 뷰 */
+            AS
+             ( SELECT TO_CHAR(A1.VIOLT_DT, 'YYYYMM') AS VIOLT_YM /* 위반년월 */
+                    , DECODE( (SELECT S1.LEVEL_VALUE 
+                                 FROM TCM_CMMN_DTL_CODE S1 /* 공통상세코드 */ 
+                                WHERE S1.CODE = A1.DISCL_CRCMSTNCS_CODE), '5', A1.DISCL_CRCMSTNCS_CODE
+                            , (SELECT S1.UPPER_CODE 
+                                 FROM TCM_CMMN_DTL_CODE S1 /* 공통상세코드 */ 
+                                WHERE S1.CODE = A1.DISCL_CRCMSTNCS_CODE)
+                      ) AS DISCL_CRCMSTNCS_CODE /* 적발경위코드 */
+                    , A1.POLTNSRC_SE_CODE /* 오염원구분코드 */
+                    , CASE WHEN A1.POLTNSRC_SE_CODE = 'A' AND B1.SHIP_NLTY_CODE = 'AS203' THEN 'D' /* [A]선박이고 대한민국인 경우 내국적 */
+                           WHEN A1.POLTNSRC_SE_CODE = 'A' AND B1.SHIP_NLTY_CODE <> 'AS203' THEN 'O' /* [A]선박이고 대한민국이 아닌경우 외국적 */
+                           ELSE NULL END AS SHIP_NLTY_CODE /* 선박국적코드 */
+                    , DECODE(A1.POLTNSRC_SE_CODE, 'A', ( SELECT S1.UPPER_CODE /* 상위코드 */
+                                                           FROM TCM_CMMN_DTL_CODE S1 /* 공통상세코드 */
+                                                          WHERE S1.CODE = B1.VSLKND_CODE  ) /* 선종코드 */
+                                                , 'B', ( SELECT S1.UPPER_CODE /* 상위코드 */
+                                                           FROM TCM_CMMN_DTL_CODE S1 /* 공통상세코드 */
+                                                          WHERE S1.CODE = C1.FCLTY_KND_CODE )
+                                                , 'C', NULL
+                      ) AS VSLKND_FCLTY_KND_CODE /* 선종시설종류코드 */
+                 FROM TPM_MRENV_VIOLT_CRIME A1 /* 해양환경위반사범 */
+                    , TPM_SHIP_INFO B1 /* 선박정보 */
+                    , TPM_FCLTY_INFO C1 /* 시설정보 */
+                WHERE 1 = 1
+                  AND A1.POLTNSRC_NM_ALL = B1.CLSGN_VALUE(+)
+                  AND A1.POLTNSRC_NM_ALL = C1.FCLTY_SN(+)
+                  AND A1.VIOLT_DT IS NOT NULL
+                  AND A1.STTUS_CODE <> 'R' /* 상태코드 [R]삭제가 아닌 경우만 */
+                  AND A1.CLOS_AT = 'Y' /* 마감여부 'Y'인 경우만 */
+                  AND A1.NMPA_OFE_CODE IN ( SELECT A1.INSTT_CODE  /* 해경서코드 */
+									          FROM TCM_INSTT_CODE A1 /* 기관코드 */ 
+									         WHERE 1 = 1  
+									           AND A1.REPRSNT_INSTT_CODE = '1532000' /* 해양경찰청 */
+									           AND A1.TY_LRGE_CL_CODE = '01'
+									           AND A1.TY_MIDDL_CL_CODE in ('07', '08', '99')
+									           AND A1.TY_SMALL_CL_CODE in ('03', '07', '08')
+									           AND (A1.LOWEST_INSTT_NM LIKE '%해양%')
+									           AND A1.ODR = 3        
+									           AND A1.ALL_INSTT_NM NOT LIKE '%구조%'
+									           AND A1.ALL_INSTT_NM NOT LIKE '%정비%')
+        ]]>                  
+        <isNotEmpty property="searchNmpaOfeCode">
+                  <![CDATA[
+                  /* 검색조건 : 해경서코드 */
+                  AND A1.NMPA_OFE_CODE = #searchNmpaOfeCode#
+                  ]]>
+        </isNotEmpty>
+        <isNotEmpty property="searchVioltTyCode">
+                  <![CDATA[
+                  /* 검색조건 : 위반유형코드 */
+                  AND A1.VIOLT_TY_CODE = #searchVioltTyCode#
+                  ]]>
+        </isNotEmpty>
+        <![CDATA[
+             )
+        SELECT 'M' AS DATA_TYPE /* [M]월, [C]누계 */
+             , GROUPING(DISCL_CRCMSTNCS_CODE) + GROUPING(POLTNSRC_SE_CODE) + GROUPING(SHIP_NLTY_CODE) + GROUPING(VSLKND_FCLTY_KND_CODE) AS GROUPING_CNT
+             , DISCL_CRCMSTNCS_CODE /* 적발경위코드 */
+             , POLTNSRC_SE_CODE /* 오염원구분코드 */
+             , SHIP_NLTY_CODE /* 선박국적코드 */
+             , VSLKND_FCLTY_KND_CODE /* 선종시설종류코드 */
+             , COUNT(*) AS CNT
+          FROM VIEW_MRENV_VIOLT_CRIME
+         WHERE VIOLT_YM = #searchYr# || #searchMt#
+         GROUP
+            BY
+          CUBE
+             ( DISCL_CRCMSTNCS_CODE /* 적발경위코드 */
+             , POLTNSRC_SE_CODE /* 오염원구분코드 */
+             , SHIP_NLTY_CODE /* 선박국적코드 */
+             , VSLKND_FCLTY_KND_CODE /* 선종시설종류코드 */
+             )
+         UNION
+           ALL
+        SELECT 'C' AS DATA_TYPE /* [M]월, [C]누계 */
+             , GROUPING(DISCL_CRCMSTNCS_CODE) + GROUPING(POLTNSRC_SE_CODE) + GROUPING(SHIP_NLTY_CODE) + GROUPING(VSLKND_FCLTY_KND_CODE) AS GROUPING_CNT
+             , DISCL_CRCMSTNCS_CODE /* 적발경위코드 */
+             , POLTNSRC_SE_CODE /* 오염원구분코드 */
+             , SHIP_NLTY_CODE /* 선박국적코드 */
+             , VSLKND_FCLTY_KND_CODE /* 선종시설종류코드 */
+             , COUNT(*) AS CNT
+          FROM VIEW_MRENV_VIOLT_CRIME
+         WHERE VIOLT_YM BETWEEN #searchYr# || '01' AND #searchYr# || #searchMt#
+         GROUP
+            BY
+          CUBE
+             ( DISCL_CRCMSTNCS_CODE /* 적발경위코드 */
+             , POLTNSRC_SE_CODE /* 오염원구분코드 */
+             , SHIP_NLTY_CODE /* 선박국적코드 */
+             , VSLKND_FCLTY_KND_CODE /* 선종시설종류코드 */
+             )
+        ]]>
+    </select>
+    
+    <!-- 조치별 현황 -->
+    <select id="mrenvVioltCrimeStatDAO.selectManagtStat" parameterClass="mrenvVioltCrimeStatVO" resultClass="egovMap">
+        <![CDATA[
+        /* MrenvVioltCrimeStat_SQL_Tibero.mrenvVioltCrimeStatDAO.selectManagtStat.01 20180726 */
+          WITH VIEW_MRENV_VIOLT_CRIME /* 해양환경위반사범 뷰 */
+            AS
+             ( SELECT TO_CHAR(A1.VIOLT_DT, 'YYYYMM') AS VIOLT_YM /* 위반년월 */
+                    , A1.MANAGT_RESULT_CODE /* 조치결과코드 */
+                    , A1.POLTNSRC_SE_CODE /* 오염원구분코드 */
+                    , A1.NMPA_OFE_CODE /* 해경서코드 */
+                 FROM (SELECT *
+                   FROM TPM_MRENV_VIOLT_CRIME
+                  WHERE NMPA_OFE_CODE IN
+                           (SELECT INSTT_CODE
+                              FROM TCM_INSTT_CODE D
+                             WHERE     D.REPRSNT_INSTT_CODE = '1532000' /* 해양경찰청 */
+                                   AND D.TY_LRGE_CL_CODE = '01'
+                                   AND D.TY_MIDDL_CL_CODE IN
+                                          ('07', '08', '99')
+                                   AND D.TY_SMALL_CL_CODE IN
+                                          ('03', '07', '08')
+                                   AND D.LOWEST_INSTT_NM LIKE '%해양%'
+                                   AND (D.ODR = 3)
+                                   AND D.ALL_INSTT_NM NOT LIKE '%구조%'
+                                   AND D.ALL_INSTT_NM NOT LIKE '%정비%')) A1 /* 해양환경위반사범 */
+                WHERE 1 = 1
+                  AND A1.VIOLT_DT IS NOT NULL
+                  AND A1.STTUS_CODE <> 'R' /* 상태코드 [R]삭제가 아닌 경우만 */
+                  AND A1.CLOS_AT = 'Y' /* 마감여부 'Y'인 경우만 */
+             )
+        SELECT 'M' AS DATA_TYPE /* [M]월, [C]누계 */
+             , GROUPING(MANAGT_RESULT_CODE) + GROUPING(POLTNSRC_SE_CODE) + GROUPING(NMPA_OFE_CODE) AS GROUPING_CNT
+             , MANAGT_RESULT_CODE /* 조치결과코드 */
+             , POLTNSRC_SE_CODE /* 오염원구분코드 */
+             , NMPA_OFE_CODE /* 해경서코드 */
+             , COUNT(*) AS CNT
+          FROM VIEW_MRENV_VIOLT_CRIME
+         WHERE VIOLT_YM = #searchYr# || #searchMt#
+         GROUP
+            BY
+          CUBE
+             ( MANAGT_RESULT_CODE /* 조치결과코드 */
+             , POLTNSRC_SE_CODE /* 오염원구분코드 */
+             , NMPA_OFE_CODE /* 해경서코드 */
+             )
+         UNION
+           ALL
+        SELECT 'C' AS DATA_TYPE /* [M]월, [C]누계 */
+             , GROUPING(MANAGT_RESULT_CODE) + GROUPING(POLTNSRC_SE_CODE) + GROUPING(NMPA_OFE_CODE) AS GROUPING_CNT
+             , MANAGT_RESULT_CODE /* 조치결과코드 */
+             , POLTNSRC_SE_CODE /* 오염원구분코드 */
+             , NMPA_OFE_CODE /* 해경서코드 */
+             , COUNT(*) AS CNT
+          FROM VIEW_MRENV_VIOLT_CRIME
+         WHERE VIOLT_YM BETWEEN #searchYr# || '01' AND #searchYr# || #searchMt#
+         GROUP
+            BY
+          CUBE
+             ( MANAGT_RESULT_CODE /* 조치결과코드 */
+             , POLTNSRC_SE_CODE /* 오염원구분코드 */
+             , NMPA_OFE_CODE /* 해경서코드 */
+             )
+        ]]>
+    </select>
+    
+    <!-- 지방관청, 해경서 조회 -->
+    <select id="mrenvVioltCrimeStatDAO.selectLcltyGrcNmpaList" parameterClass="mrenvVioltCrimeStatVO" resultClass="egovMap">
+        <![CDATA[
+        /* MrenvVioltCrimeStat_SQL_Tibero.mrenvVioltCrimeStatDAO.selectLcltyGrcNmpaList.01 20180726 */
+            WITH VIEW_INSTT_CODE
+              AS
+               ( SELECT A1.SEHIGH_INSTT_CODE AS LCLTY_GRC_CODE /* 지방관청코드 */
+                      , A1.INSTT_CODE AS NMPA_OFE_CODE /* 해경서코드 */
+                      , A1.LOWEST_INSTT_NM AS NMPA_OFE_NM /* 해경서명 */
+                   FROM TCM_INSTT_CODE A1 /* 기관코드 */ 
+                  WHERE 1 = 1  
+                    AND A1.REPRSNT_INSTT_CODE = '1532000' /* 해양경찰청 */
+                    AND A1.TY_LRGE_CL_CODE = '01'
+                    AND A1.TY_MIDDL_CL_CODE in ('07', '08', '99')
+                    AND A1.TY_SMALL_CL_CODE in ('03', '07', '08')
+                    AND A1.LOWEST_INSTT_NM LIKE '%해양%' 
+                    AND A1.ODR = 3
+                    AND ALL_INSTT_NM NOT LIKE '%구조%'
+                    AND ALL_INSTT_NM NOT LIKE '%정비%' 
+               )
+          SELECT DISTINCT
+                 A1.LCLTY_GRC_CODE /* 지방관청코드 */
+               , REPLACE(FN_GET_INSTTNM(A1.LCLTY_GRC_CODE), '해양경찰', '') AS NMPA_OFE_NM /* 해경서명 */
+               , A1.LCLTY_GRC_CODE AS ORDER_COLUMN1 /* 정렬1 */
+               , '1' AS ORDER_COLUMN2 /* 정렬2 */
+            FROM VIEW_INSTT_CODE A1 /* 기관코드 */ 
+           UNION 
+             ALL
+          SELECT A1.NMPA_OFE_CODE /* 해경서코드 */
+               , REPLACE(A1.NMPA_OFE_NM, '해양경찰서', '') AS NMPA_OFE_NM /* 해경서명 */
+               , A1.LCLTY_GRC_CODE AS ORDER_COLUMN1 /* 정렬1 */
+               , '2' AS ORDER_COLUMN2 /* 정렬2 */
+            FROM VIEW_INSTT_CODE A1 /* 기관코드 */   
+           ORDER 
+              BY ORDER_COLUMN1
+               , ORDER_COLUMN2
+               , LCLTY_GRC_CODE 
+        ]]>
+    </select>
+    
+    <!-- 조건별 현황 -->
+    <select id="mrenvVioltCrimeStatDAO.selectCndStat" parameterClass="mrenvVioltCrimeStatVO" resultClass="egovMap">
+        <![CDATA[
+        /* MrenvVioltCrimeStat_SQL_Tibero.mrenvVioltCrimeStatDAO.selectCndStat.01 20180726 */
+        SELECT * FROM(
+          WITH VIEW_MRENV_VIOLT_CRIME /* 해양환경위반사범 뷰 */
+            AS
+             ( SELECT TO_CHAR(A1.VIOLT_DT, 'YYYYMM') AS VIOLT_YM /* 위반년월 */
+                    , A1.POLTNSRC_SE_CODE /* 오염원구분코드 */
+                    , ( 
+                    SELECT S1.CODE  FROM TCM_CMMN_DTL_CODE S1  WHERE S1.LEVEL_VALUE = 4 START WITH S1.CODE=B1.VSLKND_CODE CONNECT BY  S1.CODE= PRIOR S1.UPPER_CODE
+                    ) AS VSLKND_CODE /* 선종코드 */
+                    , ( 
+                    SELECT S1.CODE  FROM TCM_CMMN_DTL_CODE S1  WHERE S1.LEVEL_VALUE = 4 START WITH S1.CODE=C1.FCLTY_KND_CODE CONNECT BY  S1.CODE= PRIOR S1.UPPER_CODE
+                    ) AS FCLTY_KND_CODE /* 시설종류코드 */
+                    , D1.SEHIGH_INSTT_CODE AS LCLTY_GRC_CODE /* 지방관청코드 */
+                    , A1.NMPA_OFE_CODE /* 해경서코드 */
+                 FROM (SELECT * FROM TPM_MRENV_VIOLT_CRIME WHERE NMPA_OFE_CODE IN(
+	           				SELECT INSTT_CODE FROM TCM_INSTT_CODE D 
+						    WHERE D.REPRSNT_INSTT_CODE = '1532000' /* 해양경찰청 */
+		               	      AND D.TY_LRGE_CL_CODE = '01'
+	                          AND D.TY_MIDDL_CL_CODE in('07','08','99')
+		                      AND D.TY_SMALL_CL_CODE in('03','07','08')
+		                      AND D.LOWEST_INSTT_NM LIKE '%해양%'
+		                      AND (D.ODR = 3 OR D.ODR = 2)
+				                  AND D.ALL_INSTT_NM NOT LIKE '%구조%' 
+				                  AND D.ALL_INSTT_NM NOT LIKE '%정비%'
+	                  		)
+	                  )A1  /* 해양환경위반사범 */
+                    , (SELECT * FROM VIEW_TPM_SHIP_INFO2 WHERE DATA_CODE = 'MPC') B1 /* 선박정보 */
+                    , TPM_FCLTY_INFO C1 /* 시설정보 */
+                    , TCM_INSTT_CODE D1 /* 기관코드 */
+                WHERE 1 = 1
+                  AND A1.POLTNSRC_NM_ALL = B1.CLSGN_VALUE(+)
+                  AND A1.POLTNSRC_NM_ALL = C1.FCLTY_SN(+)
+                  AND A1.NMPA_OFE_CODE = D1.INSTT_CODE(+)
+                  AND A1.VIOLT_DT IS NOT NULL
+                  AND A1.POLTNSRC_SE_CODE IN ('A', 'B') /* [A]선박, [B]시설만 */
+                  AND A1.STTUS_CODE <> 'R' /* 상태코드 [R]삭제가 아닌 경우만 */
+                  AND A1.CLOS_AT = 'Y' /* 마감여부 'Y'인 경우만 */
+        ]]>                  
+        <isNotEmpty property="searchVioltTyCode">
+                  <![CDATA[
+                  /* 검색조건 : 위반유형코드 */
+                  AND A1.VIOLT_TY_CODE = #searchVioltTyCode#
+                  ]]>
+        </isNotEmpty>
+        <isNotEmpty property="searchApplcTxtlawCode">
+                  <![CDATA[
+                  /* 검색조건 : 적용법조코드 */
+                  AND A1.APPLC_TXTLAW_CODE = #searchApplcTxtlawCode#
+                  ]]>
+        </isNotEmpty>
+        <isNotEmpty property="searchVioltCnCode">
+                  <![CDATA[
+                  /* 검색조건 : 위반내용코드 */
+                  AND A1.VIOLT_CN_CODE = #searchVioltCnCode#
+                  ]]>
+        </isNotEmpty>
+        <isNotEmpty property="searchAcdntCauseCode1">
+        		<isEmpty property="searchAcdntCauseCode2">
+        			<![CDATA[
+                  		/* 검색조건 : 사고원인코드 */
+                  		AND A1.ACDNT_CAUSE_CODE IN (SELECT CODE FROM TCM_CMMN_DTL_CODE WHERE UPPER_CODE = #searchAcdntCauseCode1#)
+                  	]]>
+        		</isEmpty>
+        		<isNotEmpty property="searchAcdntCauseCode2">
+        			<![CDATA[
+                  		/* 검색조건 : 사고원인코드 */
+                  		AND A1.ACDNT_CAUSE_CODE = #searchAcdntCauseCode2#
+                  	]]>
+        		</isNotEmpty>
+        		
+                  
+        </isNotEmpty>
+        <isNotEmpty property="searchDisclCrcmstncsCode">
+                  <![CDATA[
+                  /* 검색조건 : 적발경위코드 */
+                  AND A1.DISCL_CRCMSTNCS_CODE = #searchDisclCrcmstncsCode#
+                  ]]>
+        </isNotEmpty>
+        <isNotEmpty property="searchCntmnntCode">
+                  <![CDATA[
+                  /* 검색조건 : 오염물질코드 */
+                  AND (
+                      A1.CNTMNNT_CODE1 = #searchCntmnntCode#
+                      OR
+                      A1.CNTMNNT_CODE2 = #searchCntmnntCode#
+                      )
+                  ]]>
+        </isNotEmpty>
+        <isNotEmpty property="searchYr">
+            <isNotEmpty property="searchEndYr">
+                  <![CDATA[
+                  /* 검색조건 : 시작위반년월 ~ 종료위반년월 */
+                  AND TO_CHAR(A1.VIOLT_DT, 'YYYYMM') BETWEEN #searchYr# || #searchMt# AND #searchEndYr# || #searchEndMt# 
+                  ]]>
+            </isNotEmpty>
+        </isNotEmpty>
+        <isNotEmpty property="searchYr">
+            <isEmpty property="searchEndYr">
+                  <![CDATA[
+                  /* 검색조건 : 시작위반년월 */
+                  AND TO_CHAR(A1.VIOLT_DT, 'YYYYMM') >= #searchYr# || #searchMt#
+                  ]]>
+            </isEmpty>
+        </isNotEmpty>
+        <isEmpty property="searchYr">
+            <isNotEmpty property="searchEndYr">
+                  <![CDATA[
+                  /* 검색조건 : 종료위반년월 */
+                  AND TO_CHAR(A1.VIOLT_DT, 'YYYYMM') <= #searchEndYr# || #searchEndMt#
+                  ]]>
+            </isNotEmpty>
+        </isEmpty>
+        <![CDATA[
+             )
+        SELECT GROUPING(POLTNSRC_SE_CODE) + GROUPING(VSLKND_CODE) + GROUPING(FCLTY_KND_CODE) + GROUPING(LCLTY_GRC_CODE) + GROUPING(NMPA_OFE_CODE) AS GROUPING_CNT
+             , POLTNSRC_SE_CODE /* 오염원구분코드 */
+             , VSLKND_CODE /* 선종코드 */
+             , FCLTY_KND_CODE /* 시설종류코드 */
+             , LCLTY_GRC_CODE /* 지방관청코드 */
+             , NMPA_OFE_CODE /* 해경서코드 */
+             , DECODE(POLTNSRC_SE_CODE, 'A', COUNT(VSLKND_CODE), 'B', COUNT(FCLTY_KND_CODE), 0) AS CNT
+          FROM VIEW_MRENV_VIOLT_CRIME
+         GROUP
+            BY
+          CUBE
+             ( POLTNSRC_SE_CODE /* 오염원구분코드 */
+             , VSLKND_CODE /* 선종코드 */
+             , FCLTY_KND_CODE /* 시설종류코드 */
+             , LCLTY_GRC_CODE /* 지방관청코드 */
+             , NMPA_OFE_CODE /* 해경서코드 */
+             )) ORDER BY POLTNSRC_SE_CODE, LCLTY_GRC_CODE, NMPA_OFE_CODE ASC
+        ]]>
+    </select>
+    
+    
+    <!-- 과태료징수현황통계 -->
+    
+	<!-- 검색기간 조회-->
+	<select id="mrenvVioltCrimeStatDAO.selectSearchYrList" resultClass="egovMap">
+		SELECT YR
+		  FROM TPM_OCMNNT_ANALS_MNG
+		<![CDATA[ WHERE STTUS_CODE <> 'R' ]]>
+		GROUP BY YR
+		ORDER BY YR
+	</select>
+	
+	<!-- 해경서 조회 -->
+	<select id="mrenvVioltCrimeStatDAO.selectNmpaOfeNmList" resultClass="egovMap">
+		SELECT UPPER_CODE,UPPER_CODE_NM,CODE,CODE_NM,LOWER_CODE_CNT
+		FROM (WITH BASE AS ( 
+				SELECT C.SEHIGH_INSTT_CODE AS LCLTY_GRC_CODE /* 지방관청코드 */,
+		                C.INSTT_CODE AS NMPA_OFE_CODE /* 해경서코드 */,
+		                C.LOWEST_INSTT_NM AS NMPA_OFE_NM /* 해경서명 */,
+		                C.ODR,
+		                C.ORD
+		           FROM TCM_INSTT_CODE C /* 기관코드 */
+		          WHERE 1 = 1
+		            AND C.REPRSNT_INSTT_CODE = '1532000' /* 해양경찰청 */
+		            AND C.TY_LRGE_CL_CODE = '01'
+		            AND C.TY_MIDDL_CL_CODE in('07','08','99')
+		            AND C.TY_SMALL_CL_CODE in('03','07','08')
+		            AND (C.LOWEST_INSTT_NM LIKE '%해양%')
+		            AND C.ODR = 3
+		            AND ALL_INSTT_NM NOT LIKE '%구조%'
+                    AND ALL_INSTT_NM NOT LIKE '%정비%') SELECT R1.LCLTY_GRC_CODE AS UPPER_CODE /* 지방관청코드 */,
+		                                  DECODE(R1.LCLTY_GRC_CODE, (LAG(R1.LCLTY_GRC_CODE) OVER (
+		                            ORDER BY R1.LCLTY_GRC_CODE,
+		                                  R1.NMPA_OFE_CODE) ),NULL,
+		                                  REPLACE(FN_GET_INSTTNM (R1.LCLTY_GRC_CODE),'지방해양경찰','') ) AS UPPER_CODE_NM /* 지방관청명 */,
+		                                  R1.NMPA_OFE_CODE AS CODE /* 해경서코드 */,
+		                                  REPLACE(R1.NMPA_OFE_NM,'해양경찰','') AS CODE_NM /* 해경서명 */,
+		                                  ( SELECT COUNT(*) FROM BASE S
+		                                     WHERE S.LCLTY_GRC_CODE = R1.LCLTY_GRC_CODE
+		                                       AND S.NMPA_OFE_CODE IS NOT NULL ) AS LOWER_CODE_CNT /* 하위코드개수 */
+		                             FROM BASE R1
+		                            ORDER BY R1.LCLTY_GRC_CODE ASC /* 지방관청코드 */,
+		                                  R1.NMPA_OFE_CODE ASC /* 해경서코드 */ ) 
+				  ORDER BY UPPER_CODE,CODE ASC
+	</select>    
+
+    <!-- 과태료징수현황통계 LIST -->
+    <select id="mrenvVioltCrimeStatDAO.selectFfnlgValueStatList" parameterClass="ffnlgValueStatVO" resultClass="egovMap">
+		/*과태료징수현황통계*/
+		WITH VIEW_MRENV_VIOLT_CRIME AS 
+		(	
+		SELECT (SELECT SEHIGH_INSTT_CODE FROM TCM_INSTT_CODE WHERE INSTT_CODE=NMPA_OFE_CODE)  AS UPPER_NMPA_OFE_CODE,
+			   FN_GET_INSTTNM((SELECT SEHIGH_INSTT_CODE FROM TCM_INSTT_CODE WHERE INSTT_CODE=NMPA_OFE_CODE)) AS UPPER_NMPA_OFE_CODE_NM,
+			   NMPA_OFE_CODE		/*해경서코드*/,
+			   FN_GET_INSTTNM(NMPA_OFE_CODE ) AS NMPA_OFE_CODE_NM /*해경서*/,
+			   FN_GET_CMMN_CODENM(MANAGT_RESULT_CODE) AS MANAGT_RESULT_CODE_NM	/*조치결과*/,
+			   NVL(FFNLG_VALUE,0) AS FFNLG_VALUE			/*과태료값*/ ,
+			   NVL(FFNLG_LEV_AT,'N') AS FFNLG_LEV_AT	/*과태료 징수여부*/,
+			   VIOLT_CN_CODE		/*위반내용코드*/,
+			   FN_GET_CMMN_CODENM(VIOLT_CN_CODE) AS VIOLT_CN_CODE_NM		/*위반내용코드*/,
+			   POLTNSRC_SE_CODE,
+			   VIOLT_TRGET_CODE,
+			   CASE WHEN POLTNSRC_SE_CODE='A'  THEN '선박'
+			   		WHEN POLTNSRC_SE_CODE='B'
+			   		THEN DECODE((SELECT FCLTY_KND_CODE  FROM TPM_FCLTY_INFO WHERE FCLTY_SN=A.POLTNSRC_NM_ALL),
+		   					      'PM2','해양시설','PM3','방제유창','기타')
+			   		ELSE '기타'
+			   END AS POLTNSRC_SE_CODE_TYPE	/*발생구분*/,
+			   TO_CHAR(VIOLT_DT,'YYYY') AS YR	/*위반일시*/,
+			   TO_CHAR(VIOLT_DT,'MM') AS MT	/*위반일시*/
+		  FROM TPM_MRENV_VIOLT_CRIME A
+		 WHERE MANAGT_RESULT_CODE='PM387' /*과태료 대상*/
+			   <![CDATA[
+			   AND STTUS_CODE <> 'R'
+			   ]]>
+		   	   AND VIOLT_DT IS NOT NULL
+		   	   AND CLOS_AT = 'Y' /* 마감여부 'Y'인 경우만 */
+		   	   AND NMPA_OFE_CODE IN (SELECT C.INSTT_CODE AS NMPA_OFE_CODE /* 해경서코드 */
+			           FROM TCM_INSTT_CODE C /* 기관코드 */
+			          WHERE 1 = 1
+			            AND C.REPRSNT_INSTT_CODE = '1532000' /* 해양경찰청 */
+			            AND C.TY_LRGE_CL_CODE = '01'
+			            AND C.TY_MIDDL_CL_CODE in('07','08','99')
+			            AND C.TY_SMALL_CL_CODE in('03','07','08')
+			            AND (C.LOWEST_INSTT_NM LIKE '%해양%')
+			            AND C.ODR = 3
+			            AND ALL_INSTT_NM NOT LIKE '%구조%'
+                    	AND ALL_INSTT_NM NOT LIKE '%정비%')
+		),	
+		BASE AS ( 
+					SELECT C.SEHIGH_INSTT_CODE AS LCLTY_GRC_CODE /* 지방관청코드 */,
+			                C.INSTT_CODE AS NMPA_OFE_CODE /* 해경서코드 */,
+			                C.LOWEST_INSTT_NM AS NMPA_OFE_NM /* 해경서명 */,
+			                C.ODR,
+			                C.ORD
+			           FROM TCM_INSTT_CODE C /* 기관코드 */
+			          WHERE 1 = 1
+			            AND C.REPRSNT_INSTT_CODE = '1532000' /* 해양경찰청 */
+			            AND C.TY_LRGE_CL_CODE = '01'
+			            AND C.TY_MIDDL_CL_CODE in('07','08','99')
+			            AND C.TY_SMALL_CL_CODE in('03','07','08')
+			            AND (C.LOWEST_INSTT_NM LIKE '%해양%')
+			            AND C.ODR = 3
+			            AND ALL_INSTT_NM NOT LIKE '%구조%'
+                    	AND ALL_INSTT_NM NOT LIKE '%정비%') 		
+		/*월계 총계*/
+		SELECT  'TOTAL_MONTH' AS DATA_TYPE,
+			   '' AS UPPER_NMPA_OFE_CODE,
+			   '' AS UPPER_NMPA_OFE_CODE_NM,
+			   '' AS NMPA_OFE_CODE,
+			   '' AS NMPA_OFE_CODE_NM,
+			   YR, 
+			   MT, 
+			   /*징수현황*/
+			   NVL(COUNT(FFNLG_VALUE),0) AS FFNLG_CNT,
+			   NVL(SUM(FFNLG_VALUE),0) AS FFNLG_VALUE_SUM	/*부과금액 SUM*/,
+			   NVL(COUNT(CASE WHEN FFNLG_LEV_AT='Y' THEN FFNLG_LEV_AT END),0) AS FFNLG_LEV_AT_Y_CNT	/* 과태료징수 건CNT */,
+   			   NVL(SUM(  CASE WHEN FFNLG_LEV_AT='Y' THEN FFNLG_VALUE END),0) AS FFNLG_LEV_AT_Y_PRICE_SUM	/*과태료징수 금액 SUM*/,
+			   NVL(COUNT(CASE WHEN FFNLG_LEV_AT='N' THEN FFNLG_LEV_AT END),0) AS FFNLG_LEV_AT_N_CNT	/* 과태료징수 건CNT */,
+			   NVL(SUM(  CASE WHEN FFNLG_LEV_AT='N' THEN FFNLG_VALUE END),0) AS FFNLG_LEV_AT_N_PRICE_SUM	/*과태료징수 금액 SUM*/,
+			   /*위반내용*/
+			   NVL(COUNT(CASE WHEN VIOLT_CN_CODE IN('PM468') THEN FFNLG_VALUE END),0) AS VIOLT_CN_A_CNT	/* 위반내용 폐유저장용기 미비치*/,
+			   NVL(SUM(  CASE WHEN VIOLT_CN_CODE IN('PM468') THEN FFNLG_VALUE END),0) AS VIOLT_CN_A_SUM	/*위반내용 폐유저장용기 미비치 금액*/,
+			   NVL(COUNT(CASE WHEN VIOLT_CN_CODE IN('PM443','PM444') THEN FFNLG_VALUE END),0)AS VIOLT_CN_B_CNT	/*오염방지 관리인 관련*/,
+			   NVL(SUM(  CASE WHEN VIOLT_CN_CODE IN('PM443','PM444') THEN FFNLG_VALUE END),0) AS VIOLT_CN_B_SUM	/*오염방지 관리인 관련 금액*/,
+			   NVL(COUNT(CASE WHEN VIOLT_CN_CODE IN('PM434','PM435','436') THEN FFNLG_VALUE END),0) AS VIOLT_CN_C_CNT	/*오염물질기록부 관련*/,
+			   NVL(SUM(  CASE WHEN VIOLT_CN_CODE IN('PM434','PM435','436') THEN FFNLG_VALUE END),0) AS VIOLT_CN_C_SUM	/*오염물질기록부 관련 금액*/,
+			   NVL(COUNT(CASE WHEN VIOLT_CN_CODE NOT IN('PM468','PM443','PM444','PM434','PM435','436') THEN FFNLG_VALUE END),0) AS VIOLT_CN_D_CNT	/*기타*/,
+			   NVL(SUM(  CASE WHEN VIOLT_CN_CODE NOT IN('PM468','PM443','PM444','PM434','PM435','436') THEN FFNLG_VALUE END),0) AS VIOLT_CN_D_SUM	/*기타 금액*/,
+			   /*발생구분*/
+			   NVL(COUNT(CASE WHEN POLTNSRC_SE_CODE_TYPE='선박' THEN FFNLG_VALUE END), 0) AS SHIP_CNT	/*선박*/, 
+			   NVL(COUNT(CASE WHEN POLTNSRC_SE_CODE_TYPE='해양시설' THEN FFNLG_VALUE END), 0) AS FCLTY_A_CNT	/*해양시설*/,
+			   NVL(COUNT(CASE WHEN POLTNSRC_SE_CODE_TYPE='방제유창' THEN FFNLG_VALUE END), 0) AS FCLTY_B_CNT	/*방제유창*/,
+   			   NVL(COUNT(CASE WHEN POLTNSRC_SE_CODE_TYPE='기타' THEN FFNLG_VALUE END), 0) AS ETC_CNT	/*기타*/		
+		  FROM VIEW_MRENV_VIOLT_CRIME
+		 WHERE	1=1   /*검색기간*/
+		 <![CDATA[
+		  AND ((YR=#searchYr# AND MT=#searchMt#) OR (YR IS null AND MT IS null))
+		 ]]>
+		GROUP BY YR,MT
+		
+		UNION ALL
+		
+		/*누계 총계*/
+		SELECT  'TOTAL_ALL' AS DATA_TYPE,
+			   '' AS UPPER_NMPA_OFE_CODE,
+			   '' AS UPPER_NMPA_OFE_CODE_NM,
+			   '' AS NMPA_OFE_CODE,
+			   '' AS NMPA_OFE_CODE_NM,
+			   '' AS YR,
+			   '' AS MT,
+			   /*징수현황*/
+			   NVL(COUNT(FFNLG_VALUE),0) AS FFNLG_CNT,
+			   NVL(SUM(FFNLG_VALUE),0) AS FFNLG_VALUE_SUM	/*부과금액 SUM*/,
+			   NVL(COUNT(CASE WHEN FFNLG_LEV_AT='Y' THEN FFNLG_LEV_AT END),0) AS FFNLG_LEV_AT_Y_CNT	/* 과태료징수 건CNT */,
+   			   NVL(SUM(  CASE WHEN FFNLG_LEV_AT='Y' THEN FFNLG_VALUE END),0) AS FFNLG_LEV_AT_Y_PRICE_SUM	/*과태료징수 금액 SUM*/,
+			   NVL(COUNT(CASE WHEN FFNLG_LEV_AT='N' THEN FFNLG_LEV_AT END),0) AS FFNLG_LEV_AT_N_CNT	/* 과태료징수 건CNT */,
+			   NVL(SUM(  CASE WHEN FFNLG_LEV_AT='N' THEN FFNLG_VALUE END),0) AS FFNLG_LEV_AT_N_PRICE_SUM	/*과태료징수 금액 SUM*/,
+			   /*위반내용*/
+			   NVL(COUNT(CASE WHEN VIOLT_CN_CODE IN('PM468') THEN FFNLG_VALUE END),0) AS VIOLT_CN_A_CNT	/* 위반내용 폐유저장용기 미비치*/,
+			   NVL(SUM(  CASE WHEN VIOLT_CN_CODE IN('PM468') THEN FFNLG_VALUE END),0) AS VIOLT_CN_A_SUM	/*위반내용 폐유저장용기 미비치 금액*/,
+			   NVL(COUNT(CASE WHEN VIOLT_CN_CODE IN('PM443','PM444') THEN FFNLG_VALUE END),0)AS VIOLT_CN_B_CNT	/*오염방지 관리인 관련*/,
+			   NVL(SUM(  CASE WHEN VIOLT_CN_CODE IN('PM443','PM444') THEN FFNLG_VALUE END),0) AS VIOLT_CN_B_SUM	/*오염방지 관리인 관련 금액*/,
+			   NVL(COUNT(CASE WHEN VIOLT_CN_CODE IN('PM434','PM435','436') THEN FFNLG_VALUE END),0) AS VIOLT_CN_C_CNT	/*오염물질기록부 관련*/,
+			   NVL(SUM(  CASE WHEN VIOLT_CN_CODE IN('PM434','PM435','436') THEN FFNLG_VALUE END),0) AS VIOLT_CN_C_SUM	/*오염물질기록부 관련 금액*/,
+			   NVL(COUNT(CASE WHEN VIOLT_CN_CODE NOT IN('PM468','PM443','PM444','PM434','PM435','436') THEN FFNLG_VALUE END),0) AS VIOLT_CN_D_CNT	/*기타*/,
+			   NVL(SUM(  CASE WHEN VIOLT_CN_CODE NOT IN('PM468','PM443','PM444','PM434','PM435','436') THEN FFNLG_VALUE END),0) AS VIOLT_CN_D_SUM	/*기타 금액*/,
+			   /*발생구분*/
+			   NVL(COUNT(CASE WHEN POLTNSRC_SE_CODE_TYPE='선박' THEN FFNLG_VALUE END), 0) AS SHIP_CNT	/*선박*/, 
+			   NVL(COUNT(CASE WHEN POLTNSRC_SE_CODE_TYPE='해양시설' THEN FFNLG_VALUE END), 0) AS FCLTY_A_CNT	/*해양시설*/,
+			   NVL(COUNT(CASE WHEN POLTNSRC_SE_CODE_TYPE='방제유창' THEN FFNLG_VALUE END), 0) AS FCLTY_B_CNT	/*방제유창*/,
+   			   NVL(COUNT(CASE WHEN POLTNSRC_SE_CODE_TYPE='기타' THEN FFNLG_VALUE END), 0) AS ETC_CNT	/*기타*/	
+		  FROM VIEW_MRENV_VIOLT_CRIME
+		  <![CDATA[
+				  /*검색기간*/
+				 WHERE ((YR=#searchYr# AND MT<=#searchMt#) OR (YR IS NULL AND MT IS NULL))
+		  ]]>
+		UNION ALL
+		
+		/*청별 월(소계)*/
+		SELECT 'UPPER_NMPA_OFE_CODE_MONTH' AS DATA_TYPE,
+			   UPPER_CODE AS UPPER_NMPA_OFE_CODE,
+			   UPPER_CODE_NM AS UPPER_NMPA_OFE_CODE_NM,
+			   '' AS NMPA_OFE_CODE,
+			   '' AS NMPA_OFE_CODE_NM,
+		   	   YR,
+			   MT,
+			   NVL(FFNLG_CNT,0) AS	FFNLG_CNT,
+			   NVL(FFNLG_VALUE_SUM,0) AS    FFNLG_VALUE_SUM,
+			   NVL(FFNLG_LEV_AT_Y_CNT,0) AS    FFNLG_LEV_AT_Y_CNT,
+			   NVL(FFNLG_LEV_AT_Y_PRICE_SUM,0) AS    FFNLG_LEV_AT_Y_PRICE_SUM,
+			   NVL(FFNLG_LEV_AT_N_CNT,0) AS    FFNLG_LEV_AT_N_CNT,
+			   NVL(FFNLG_LEV_AT_N_PRICE_SUM,0) AS    FFNLG_LEV_AT_N_PRICE_SUM,
+			   NVL(VIOLT_CN_A_CNT,0) AS    VIOLT_CN_A_CNT,
+			   NVL(VIOLT_CN_A_SUM,0) AS    VIOLT_CN_A_SUM,
+			   NVL(VIOLT_CN_B_CNT,0) AS    VIOLT_CN_B_CNT,
+			   NVL(VIOLT_CN_B_SUM,0) AS    VIOLT_CN_B_SUM,
+			   NVL(VIOLT_CN_C_CNT,0) AS    VIOLT_CN_C_CNT,
+			   NVL(VIOLT_CN_C_SUM,0) AS    VIOLT_CN_C_SUM,
+			   NVL(VIOLT_CN_D_CNT,0) AS    VIOLT_CN_D_CNT,
+			   NVL(VIOLT_CN_D_SUM,0) AS    VIOLT_CN_D_SUM,
+			   NVL(SHIP_CNT,0) AS    SHIP_CNT,
+			   NVL(FCLTY_A_CNT,0) AS    FCLTY_A_CNT,
+			   NVL(FCLTY_B_CNT,0) AS    FCLTY_B_CNT,
+			   NVL(ETC_CNT,0) AS    ETC_CNT
+		  FROM(
+			SELECT * FROM (	
+				SELECT '' AS DATA_TYPE,
+					   UPPER_NMPA_OFE_CODE,
+					   UPPER_NMPA_OFE_CODE_NM,
+					   '' AS NMPA_OFE_CODE,
+					   '' AS NMPA_OFE_CODE_NM,
+				   	   YR,
+					   MT,
+					   /*징수현황*/
+					   COUNT(FFNLG_VALUE) AS FFNLG_CNT,
+					   SUM(FFNLG_VALUE) AS FFNLG_VALUE_SUM	/*부과금액 SUM*/,
+					   COUNT(CASE WHEN FFNLG_LEV_AT='Y' THEN FFNLG_LEV_AT END) AS FFNLG_LEV_AT_Y_CNT	/* 과태료징수 건CNT */,
+		   			   SUM(  CASE WHEN FFNLG_LEV_AT='Y' THEN FFNLG_VALUE END) AS FFNLG_LEV_AT_Y_PRICE_SUM	/*과태료징수 금액 SUM*/,
+					   COUNT(CASE WHEN FFNLG_LEV_AT='N' THEN FFNLG_LEV_AT END) AS FFNLG_LEV_AT_N_CNT	/* 과태료징수 건CNT */,
+					   SUM(  CASE WHEN FFNLG_LEV_AT='N' THEN FFNLG_VALUE END) AS FFNLG_LEV_AT_N_PRICE_SUM	/*과태료징수 금액 SUM*/,
+					   /*위반내용*/
+					   COUNT(CASE WHEN VIOLT_CN_CODE IN('PM468') THEN FFNLG_VALUE END) AS VIOLT_CN_A_CNT	/* 위반내용 폐유저장용기 미비치*/,
+					   SUM(  CASE WHEN VIOLT_CN_CODE IN('PM468') THEN FFNLG_VALUE END) AS VIOLT_CN_A_SUM	/*위반내용 폐유저장용기 미비치 금액*/,
+					   COUNT(CASE WHEN VIOLT_CN_CODE IN('PM443','PM444') THEN FFNLG_VALUE END) AS VIOLT_CN_B_CNT	/*오염방지 관리인 관련*/,
+					   SUM(  CASE WHEN VIOLT_CN_CODE IN('PM443','PM444') THEN FFNLG_VALUE END) AS VIOLT_CN_B_SUM	/*오염방지 관리인 관련 금액*/,
+					   COUNT(CASE WHEN VIOLT_CN_CODE IN('PM434','PM435','436') THEN FFNLG_VALUE END) AS VIOLT_CN_C_CNT	/*오염물질기록부 관련*/,
+					   SUM(  CASE WHEN VIOLT_CN_CODE IN('PM434','PM435','436') THEN FFNLG_VALUE END) AS VIOLT_CN_C_SUM	/*오염물질기록부 관련 금액*/,
+					   COUNT(CASE WHEN VIOLT_CN_CODE NOT IN('PM468','PM443','PM444','PM434','PM435','436') THEN FFNLG_VALUE END) AS VIOLT_CN_D_CNT	/*기타*/,
+					   SUM(  CASE WHEN VIOLT_CN_CODE NOT IN('PM468','PM443','PM444','PM434','PM435','436') THEN FFNLG_VALUE END) AS VIOLT_CN_D_SUM	/*기타 금액*/,
+					   /*발생구분*/
+					   COUNT(CASE WHEN POLTNSRC_SE_CODE_TYPE='선박' THEN FFNLG_VALUE END) AS SHIP_CNT	/*선박*/, 
+					   COUNT(CASE WHEN POLTNSRC_SE_CODE_TYPE='해양시설' THEN FFNLG_VALUE END) AS FCLTY_A_CNT	/*해양시설*/,
+					   COUNT(CASE WHEN POLTNSRC_SE_CODE_TYPE='방제유창' THEN FFNLG_VALUE END) AS FCLTY_B_CNT	/*방제유창*/,
+		   			   COUNT(CASE WHEN POLTNSRC_SE_CODE_TYPE='기타' THEN FFNLG_VALUE END) AS ETC_CNT	/*기타*/		   
+				  FROM VIEW_MRENV_VIOLT_CRIME A
+				  <![CDATA[
+				  /*검색기간*/
+				  WHERE ((A.YR=#searchYr# AND A.MT=#searchMt#) OR (A.YR IS NULL AND A.MT IS NULL))
+				  ]]>
+				GROUP BY UPPER_NMPA_OFE_CODE,UPPER_NMPA_OFE_CODE_NM,YR,MT
+			) AA,
+			(
+			SELECT UPPER_CODE,UPPER_CODE_NM,CODE,CODE_NM
+			 FROM (
+			            SELECT R1.LCLTY_GRC_CODE AS UPPER_CODE /* 지방관청코드 */,
+			                  DECODE(R1.LCLTY_GRC_CODE, (LAG(R1.LCLTY_GRC_CODE) OVER (
+			            ORDER BY R1.LCLTY_GRC_CODE,
+			                  R1.NMPA_OFE_CODE) ),NULL,
+			                  REPLACE(FN_GET_INSTTNM (R1.LCLTY_GRC_CODE),'지방해양경찰','') ) AS UPPER_CODE_NM /* 지방관청명 */,
+			                  R1.NMPA_OFE_CODE AS CODE /* 해경서코드 */,
+			                  REPLACE(R1.NMPA_OFE_NM,'해양경찰','') AS CODE_NM /* 해경서명 */,
+			                  ( SELECT COUNT(*) FROM BASE S
+			                     WHERE S.LCLTY_GRC_CODE = R1.LCLTY_GRC_CODE
+			                       AND S.NMPA_OFE_CODE IS NOT NULL ) AS LOWER_CODE_CNT /* 하위코드개수 */
+			             FROM BASE R1
+			            ORDER BY R1.LCLTY_GRC_CODE ASC /* 지방관청코드 */,
+			                  R1.NMPA_OFE_CODE ASC /* 해경서코드 */ ) 
+			            WHERE UPPER_CODE_NM IS NOT NULL
+					  ORDER BY UPPER_CODE,CODE ASC
+			) BB
+			WHERE AA.UPPER_NMPA_OFE_CODE(+)=BB.UPPER_CODE
+			ORDER BY UPPER_CODE,CODE ASC
+		)
+		
+		UNION ALL
+		
+		/*청별 누계(소계)*/
+		SELECT 'UPPER_NMPA_OFE_CODE_STAC' AS DATA_TYPE,
+			   UPPER_CODE AS UPPER_NMPA_OFE_CODE,
+			   UPPER_CODE_NM AS UPPER_NMPA_OFE_CODE_NM,
+			   '' AS NMPA_OFE_CODE,
+			   '' AS NMPA_OFE_CODE_NM,
+		  	   '' AS YR,
+			   '' AS MT,
+			   NVL(FFNLG_CNT,0) AS	FFNLG_CNT,
+			   NVL(FFNLG_VALUE_SUM,0) AS    FFNLG_VALUE_SUM,
+			   NVL(FFNLG_LEV_AT_Y_CNT,0) AS    FFNLG_LEV_AT_Y_CNT,
+			   NVL(FFNLG_LEV_AT_Y_PRICE_SUM,0) AS    FFNLG_LEV_AT_Y_PRICE_SUM,
+			   NVL(FFNLG_LEV_AT_N_CNT,0) AS    FFNLG_LEV_AT_N_CNT,
+			   NVL(FFNLG_LEV_AT_N_PRICE_SUM,0) AS    FFNLG_LEV_AT_N_PRICE_SUM,
+			   NVL(VIOLT_CN_A_CNT,0) AS    VIOLT_CN_A_CNT,
+			   NVL(VIOLT_CN_A_SUM,0) AS    VIOLT_CN_A_SUM,
+			   NVL(VIOLT_CN_B_CNT,0) AS    VIOLT_CN_B_CNT,
+			   NVL(VIOLT_CN_B_SUM,0) AS    VIOLT_CN_B_SUM,
+			   NVL(VIOLT_CN_C_CNT,0) AS    VIOLT_CN_C_CNT,
+			   NVL(VIOLT_CN_C_SUM,0) AS    VIOLT_CN_C_SUM,
+			   NVL(VIOLT_CN_D_CNT,0) AS    VIOLT_CN_D_CNT,
+			   NVL(VIOLT_CN_D_SUM,0) AS    VIOLT_CN_D_SUM,
+			   NVL(SHIP_CNT,0) AS    SHIP_CNT,
+			   NVL(FCLTY_A_CNT,0) AS    FCLTY_A_CNT,
+			   NVL(FCLTY_B_CNT,0) AS    FCLTY_B_CNT,
+			   NVL(ETC_CNT,0) AS    ETC_CNT
+		  FROM(
+			SELECT * FROM (	
+				SELECT '' AS DATA_TYPE,
+					   UPPER_NMPA_OFE_CODE,
+					   UPPER_NMPA_OFE_CODE_NM,
+					   '' AS NMPA_OFE_CODE,
+					   '' AS NMPA_OFE_CODE_NM,
+				  	   '' AS YR,
+					   '' AS MT,	
+					   /*징수현황*/
+					   COUNT(FFNLG_VALUE) AS FFNLG_CNT,
+					   SUM(FFNLG_VALUE) AS FFNLG_VALUE_SUM	/*부과금액 SUM*/,
+					   COUNT(CASE WHEN FFNLG_LEV_AT='Y' THEN FFNLG_LEV_AT END) AS FFNLG_LEV_AT_Y_CNT	/* 과태료징수 건CNT */,
+		   			   SUM(  CASE WHEN FFNLG_LEV_AT='Y' THEN FFNLG_VALUE END) AS FFNLG_LEV_AT_Y_PRICE_SUM	/*과태료징수 금액 SUM*/,
+					   COUNT(CASE WHEN FFNLG_LEV_AT='N' THEN FFNLG_LEV_AT END) AS FFNLG_LEV_AT_N_CNT	/* 과태료징수 건CNT */,
+					   SUM(  CASE WHEN FFNLG_LEV_AT='N' THEN FFNLG_VALUE END) AS FFNLG_LEV_AT_N_PRICE_SUM	/*과태료징수 금액 SUM*/,
+					   /*위반내용*/
+					   COUNT(CASE WHEN VIOLT_CN_CODE IN('PM468') THEN FFNLG_VALUE END) AS VIOLT_CN_A_CNT	/* 위반내용 폐유저장용기 미비치*/,
+					   SUM(  CASE WHEN VIOLT_CN_CODE IN('PM468') THEN FFNLG_VALUE END) AS VIOLT_CN_A_SUM	/*위반내용 폐유저장용기 미비치 금액*/,
+					   COUNT(CASE WHEN VIOLT_CN_CODE IN('PM443','PM444') THEN FFNLG_VALUE END) AS VIOLT_CN_B_CNT	/*오염방지 관리인 관련*/,
+					   SUM(  CASE WHEN VIOLT_CN_CODE IN('PM443','PM444') THEN FFNLG_VALUE END) AS VIOLT_CN_B_SUM	/*오염방지 관리인 관련 금액*/,
+					   COUNT(CASE WHEN VIOLT_CN_CODE IN('PM434','PM435','436') THEN FFNLG_VALUE END) AS VIOLT_CN_C_CNT	/*오염물질기록부 관련*/,
+					   SUM(  CASE WHEN VIOLT_CN_CODE IN('PM434','PM435','436') THEN FFNLG_VALUE END) AS VIOLT_CN_C_SUM	/*오염물질기록부 관련 금액*/,
+					   COUNT(CASE WHEN VIOLT_CN_CODE NOT IN('PM468','PM443','PM444','PM434','PM435','436') THEN FFNLG_VALUE END) AS VIOLT_CN_D_CNT	/*기타*/,
+					   SUM(  CASE WHEN VIOLT_CN_CODE NOT IN('PM468','PM443','PM444','PM434','PM435','436') THEN FFNLG_VALUE END) AS VIOLT_CN_D_SUM	/*기타 금액*/,
+					   /*발생구분*/
+					   COUNT(CASE WHEN POLTNSRC_SE_CODE_TYPE='선박' THEN FFNLG_VALUE END) AS SHIP_CNT	/*선박*/, 
+					   COUNT(CASE WHEN POLTNSRC_SE_CODE_TYPE='해양시설' THEN FFNLG_VALUE END) AS FCLTY_A_CNT	/*해양시설*/,
+					   COUNT(CASE WHEN POLTNSRC_SE_CODE_TYPE='방제유창' THEN FFNLG_VALUE END) AS FCLTY_B_CNT	/*방제유창*/,
+		   			   COUNT(CASE WHEN POLTNSRC_SE_CODE_TYPE='기타' THEN FFNLG_VALUE END) AS ETC_CNT	/*기타*/		   
+				  FROM VIEW_MRENV_VIOLT_CRIME A
+	  			<![CDATA[
+				  /*검색기간*/
+				 WHERE ((A.YR=#searchYr# AND A.MT<=#searchMt#) OR (A.YR IS NULL AND A.MT IS NULL))
+				  ]]>
+				GROUP BY UPPER_NMPA_OFE_CODE,UPPER_NMPA_OFE_CODE_NM
+			) AA,
+			(
+			SELECT UPPER_CODE,UPPER_CODE_NM,CODE,CODE_NM
+			 FROM (
+			            SELECT R1.LCLTY_GRC_CODE AS UPPER_CODE /* 지방관청코드 */,
+			                  DECODE(R1.LCLTY_GRC_CODE, (LAG(R1.LCLTY_GRC_CODE) OVER (
+			            ORDER BY R1.LCLTY_GRC_CODE,
+			                  R1.NMPA_OFE_CODE) ),NULL,
+			                  REPLACE(FN_GET_INSTTNM (R1.LCLTY_GRC_CODE),'지방해양경찰','') ) AS UPPER_CODE_NM /* 지방관청명 */,
+			                  R1.NMPA_OFE_CODE AS CODE /* 해경서코드 */,
+			                  REPLACE(R1.NMPA_OFE_NM,'해양경찰','') AS CODE_NM /* 해경서명 */,
+			                  ( SELECT COUNT(*) FROM BASE S
+			                     WHERE S.LCLTY_GRC_CODE = R1.LCLTY_GRC_CODE
+			                       AND S.NMPA_OFE_CODE IS NOT NULL ) AS LOWER_CODE_CNT /* 하위코드개수 */
+			             FROM BASE R1
+			            ORDER BY R1.LCLTY_GRC_CODE ASC /* 지방관청코드 */,
+			                  R1.NMPA_OFE_CODE ASC /* 해경서코드 */ ) 
+			            WHERE UPPER_CODE_NM IS NOT NULL
+					  ORDER BY UPPER_CODE,CODE ASC
+			) BB
+			WHERE AA.UPPER_NMPA_OFE_CODE(+)=BB.UPPER_CODE
+			ORDER BY UPPER_CODE,CODE ASC
+		)
+ 		
+ 		UNION ALL
+ 		
+		/*해경별 월(소계)*/
+		SELECT 'NMPA_OFE_CODE_MONTH' AS DATA_TYPE,
+			   UPPER_CODE AS UPPER_NMPA_OFE_CODE,
+			   UPPER_CODE_NM AS UPPER_NMPA_OFE_CODE_NM,
+			   NMPA_OFE_CODE,
+			   NMPA_OFE_CODE_NM,
+		   	   YR,
+			   MT,
+			   NVL(FFNLG_CNT,0) AS	FFNLG_CNT,
+			   NVL(FFNLG_VALUE_SUM,0) AS    FFNLG_VALUE_SUM,
+			   NVL(FFNLG_LEV_AT_Y_CNT,0) AS    FFNLG_LEV_AT_Y_CNT,
+			   NVL(FFNLG_LEV_AT_Y_PRICE_SUM,0) AS    FFNLG_LEV_AT_Y_PRICE_SUM,
+			   NVL(FFNLG_LEV_AT_N_CNT,0) AS    FFNLG_LEV_AT_N_CNT,
+			   NVL(FFNLG_LEV_AT_N_PRICE_SUM,0) AS    FFNLG_LEV_AT_N_PRICE_SUM,
+			   NVL(VIOLT_CN_A_CNT,0) AS    VIOLT_CN_A_CNT,
+			   NVL(VIOLT_CN_A_SUM,0) AS    VIOLT_CN_A_SUM,
+			   NVL(VIOLT_CN_B_CNT,0) AS    VIOLT_CN_B_CNT,
+			   NVL(VIOLT_CN_B_SUM,0) AS    VIOLT_CN_B_SUM,
+			   NVL(VIOLT_CN_C_CNT,0) AS    VIOLT_CN_C_CNT,
+			   NVL(VIOLT_CN_C_SUM,0) AS    VIOLT_CN_C_SUM,
+			   NVL(VIOLT_CN_D_CNT,0) AS    VIOLT_CN_D_CNT,
+			   NVL(VIOLT_CN_D_SUM,0) AS    VIOLT_CN_D_SUM,
+			   NVL(SHIP_CNT,0) AS    SHIP_CNT,
+			   NVL(FCLTY_A_CNT,0) AS    FCLTY_A_CNT,
+			   NVL(FCLTY_B_CNT,0) AS    FCLTY_B_CNT,
+			   NVL(ETC_CNT,0) AS    ETC_CNT
+		  FROM(
+			SELECT * FROM (	
+				SELECT '' AS DATA_TYPE,
+					   UPPER_NMPA_OFE_CODE,
+					   UPPER_NMPA_OFE_CODE_NM,
+					   NMPA_OFE_CODE,
+					   NMPA_OFE_CODE_NM,
+				   	   YR,
+					   MT,
+					   /*징수현황*/
+					   COUNT(FFNLG_VALUE) AS FFNLG_CNT,
+					   SUM(FFNLG_VALUE) AS FFNLG_VALUE_SUM	/*부과금액 SUM*/,
+					   COUNT(CASE WHEN FFNLG_LEV_AT='Y' THEN FFNLG_LEV_AT END) AS FFNLG_LEV_AT_Y_CNT	/* 과태료징수 건CNT */,
+		   			   SUM(  CASE WHEN FFNLG_LEV_AT='Y' THEN FFNLG_VALUE END) AS FFNLG_LEV_AT_Y_PRICE_SUM	/*과태료징수 금액 SUM*/,
+					   COUNT(CASE WHEN FFNLG_LEV_AT='N' THEN FFNLG_LEV_AT END) AS FFNLG_LEV_AT_N_CNT	/* 과태료징수 건CNT */,
+					   SUM(  CASE WHEN FFNLG_LEV_AT='N' THEN FFNLG_VALUE END) AS FFNLG_LEV_AT_N_PRICE_SUM	/*과태료징수 금액 SUM*/,
+					   /*위반내용*/
+					   COUNT(CASE WHEN VIOLT_CN_CODE IN('PM468') THEN FFNLG_VALUE END) AS VIOLT_CN_A_CNT	/* 위반내용 폐유저장용기 미비치*/,
+					   SUM(  CASE WHEN VIOLT_CN_CODE IN('PM468') THEN FFNLG_VALUE END) AS VIOLT_CN_A_SUM	/*위반내용 폐유저장용기 미비치 금액*/,
+					   COUNT(CASE WHEN VIOLT_CN_CODE IN('PM443','PM444') THEN FFNLG_VALUE END) AS VIOLT_CN_B_CNT	/*오염방지 관리인 관련*/,
+					   SUM(  CASE WHEN VIOLT_CN_CODE IN('PM443','PM444') THEN FFNLG_VALUE END) AS VIOLT_CN_B_SUM	/*오염방지 관리인 관련 금액*/,
+					   COUNT(CASE WHEN VIOLT_CN_CODE IN('PM434','PM435','436') THEN FFNLG_VALUE END) AS VIOLT_CN_C_CNT	/*오염물질기록부 관련*/,
+					   SUM(  CASE WHEN VIOLT_CN_CODE IN('PM434','PM435','436') THEN FFNLG_VALUE END) AS VIOLT_CN_C_SUM	/*오염물질기록부 관련 금액*/,
+					   COUNT(CASE WHEN VIOLT_CN_CODE NOT IN('PM468','PM443','PM444','PM434','PM435','436') THEN FFNLG_VALUE END) AS VIOLT_CN_D_CNT	/*기타*/,
+					   SUM(  CASE WHEN VIOLT_CN_CODE NOT IN('PM468','PM443','PM444','PM434','PM435','436') THEN FFNLG_VALUE END) AS VIOLT_CN_D_SUM	/*기타 금액*/,
+					   /*발생구분*/
+					   COUNT(CASE WHEN POLTNSRC_SE_CODE_TYPE='선박' THEN FFNLG_VALUE END) AS SHIP_CNT	/*선박*/, 
+					   COUNT(CASE WHEN POLTNSRC_SE_CODE_TYPE='해양시설' THEN FFNLG_VALUE END) AS FCLTY_A_CNT	/*해양시설*/,
+					   COUNT(CASE WHEN POLTNSRC_SE_CODE_TYPE='방제유창' THEN FFNLG_VALUE END) AS FCLTY_B_CNT	/*방제유창*/,
+		   			   COUNT(CASE WHEN POLTNSRC_SE_CODE_TYPE='기타' THEN FFNLG_VALUE END) AS ETC_CNT	/*기타*/		   
+				  FROM VIEW_MRENV_VIOLT_CRIME A
+				  <![CDATA[
+				  /*검색기간*/
+				  WHERE ((A.YR=#searchYr# AND A.MT=#searchMt#) OR (A.YR IS NULL AND A.MT IS NULL))
+				  ]]>
+				GROUP BY UPPER_NMPA_OFE_CODE,UPPER_NMPA_OFE_CODE_NM,NMPA_OFE_CODE,NMPA_OFE_CODE_NM,YR,MT
+			) AA,
+			(
+			SELECT UPPER_CODE,UPPER_CODE_NM,CODE,CODE_NM
+			 FROM (
+			            SELECT R1.LCLTY_GRC_CODE AS UPPER_CODE /* 지방관청코드 */,
+			                  DECODE(R1.LCLTY_GRC_CODE, (LAG(R1.LCLTY_GRC_CODE) OVER (
+			            ORDER BY R1.LCLTY_GRC_CODE,
+			                  R1.NMPA_OFE_CODE) ),NULL,
+			                  REPLACE(FN_GET_INSTTNM (R1.LCLTY_GRC_CODE),'지방해양경찰','') ) AS UPPER_CODE_NM /* 지방관청명 */,
+			                  R1.NMPA_OFE_CODE AS CODE /* 해경서코드 */,
+			                  REPLACE(R1.NMPA_OFE_NM,'해양경찰','') AS CODE_NM /* 해경서명 */,
+			                  ( SELECT COUNT(*) FROM BASE S
+			                     WHERE S.LCLTY_GRC_CODE = R1.LCLTY_GRC_CODE
+			                       AND S.NMPA_OFE_CODE IS NOT NULL ) AS LOWER_CODE_CNT /* 하위코드개수 */
+			             FROM BASE R1
+			            ORDER BY R1.LCLTY_GRC_CODE ASC /* 지방관청코드 */,
+			                  R1.NMPA_OFE_CODE ASC /* 해경서코드 */ ) 
+			            WHERE UPPER_CODE_NM IS NOT NULL
+					  ORDER BY UPPER_CODE,CODE ASC
+			) BB
+			WHERE AA.UPPER_NMPA_OFE_CODE(+)=BB.UPPER_CODE
+			ORDER BY UPPER_CODE,CODE ASC
+		)
+ 
+		UNION ALL
+ 
+		/*해경서별 누계(소계)*/
+		SELECT 'NMPA_OFE_CODE_STAC' AS DATA_TYPE,
+			   UPPER_CODE AS UPPER_NMPA_OFE_CODE,
+			   UPPER_CODE_NM AS UPPER_NMPA_OFE_CODE_NM,
+			   NMPA_OFE_CODE,
+			   NMPA_OFE_CODE_NM,
+		  	   '' as YR,
+			   '' as MT,
+			   NVL(FFNLG_CNT,0) AS	FFNLG_CNT,
+			   NVL(FFNLG_VALUE_SUM,0) AS    FFNLG_VALUE_SUM,
+			   NVL(FFNLG_LEV_AT_Y_CNT,0) AS    FFNLG_LEV_AT_Y_CNT,
+			   NVL(FFNLG_LEV_AT_Y_PRICE_SUM,0) AS    FFNLG_LEV_AT_Y_PRICE_SUM,
+			   NVL(FFNLG_LEV_AT_N_CNT,0) AS    FFNLG_LEV_AT_N_CNT,
+			   NVL(FFNLG_LEV_AT_N_PRICE_SUM,0) AS    FFNLG_LEV_AT_N_PRICE_SUM,
+			   NVL(VIOLT_CN_A_CNT,0) AS VIOLT_CN_A_CNT,
+			   NVL(VIOLT_CN_A_SUM,0) AS VIOLT_CN_A_SUM,
+			   NVL(VIOLT_CN_B_CNT,0) AS VIOLT_CN_B_CNT,
+			   NVL(VIOLT_CN_B_SUM,0) AS VIOLT_CN_B_SUM,
+			   NVL(VIOLT_CN_C_CNT,0) AS VIOLT_CN_C_CNT,
+			   NVL(VIOLT_CN_C_SUM,0) AS VIOLT_CN_C_SUM,
+			   NVL(VIOLT_CN_D_CNT,0) AS VIOLT_CN_D_CNT,
+			   NVL(VIOLT_CN_D_SUM,0) AS VIOLT_CN_D_SUM,
+			   NVL(SHIP_CNT,0) AS    SHIP_CNT,
+			   NVL(FCLTY_A_CNT,0) AS    FCLTY_A_CNT,
+			   NVL(FCLTY_B_CNT,0) AS    FCLTY_B_CNT,
+			   NVL(ETC_CNT,0) AS    ETC_CNT
+		  FROM(
+			SELECT * FROM (	
+				SELECT '' AS DATA_TYPE,
+					   UPPER_NMPA_OFE_CODE,
+					   UPPER_NMPA_OFE_CODE_NM,
+					   NMPA_OFE_CODE,
+					   NMPA_OFE_CODE_NM,
+				  	   '' as YR,
+					   '' as MT,	
+					   /*징수현황*/
+					   COUNT(FFNLG_VALUE) AS FFNLG_CNT,
+					   SUM(FFNLG_VALUE) AS FFNLG_VALUE_SUM	/*부과금액 SUM*/,
+					   COUNT(CASE WHEN FFNLG_LEV_AT='Y' THEN FFNLG_LEV_AT END) AS FFNLG_LEV_AT_Y_CNT	/* 과태료징수 건CNT */,
+		   			   SUM(  CASE WHEN FFNLG_LEV_AT='Y' THEN FFNLG_VALUE END) AS FFNLG_LEV_AT_Y_PRICE_SUM	/*과태료징수 금액 SUM*/,
+					   COUNT(CASE WHEN FFNLG_LEV_AT='N' THEN FFNLG_LEV_AT END) AS FFNLG_LEV_AT_N_CNT	/* 과태료징수 건CNT */,
+					   SUM(  CASE WHEN FFNLG_LEV_AT='N' THEN FFNLG_VALUE END) AS FFNLG_LEV_AT_N_PRICE_SUM	/*과태료징수 금액 SUM*/,
+					   /*위반내용*/
+					   COUNT(CASE WHEN VIOLT_CN_CODE IN('PM468') THEN FFNLG_VALUE END) AS VIOLT_CN_A_CNT	/* 위반내용 폐유저장용기 미비치*/,
+					   SUM(  CASE WHEN VIOLT_CN_CODE IN('PM468') THEN FFNLG_VALUE END) AS VIOLT_CN_A_SUM	/*위반내용 폐유저장용기 미비치 금액*/,
+					   COUNT(CASE WHEN VIOLT_CN_CODE IN('PM443','PM444') THEN FFNLG_VALUE END) AS VIOLT_CN_B_CNT	/*오염방지 관리인 관련*/,
+					   SUM(  CASE WHEN VIOLT_CN_CODE IN('PM443','PM444') THEN FFNLG_VALUE END) AS VIOLT_CN_B_SUM	/*오염방지 관리인 관련 금액*/,
+					   COUNT(CASE WHEN VIOLT_CN_CODE IN('PM434','PM435','436') THEN FFNLG_VALUE END) AS VIOLT_CN_C_CNT	/*오염물질기록부 관련*/,
+					   SUM(  CASE WHEN VIOLT_CN_CODE IN('PM434','PM435','436') THEN FFNLG_VALUE END) AS VIOLT_CN_C_SUM	/*오염물질기록부 관련 금액*/,
+					   COUNT(CASE WHEN VIOLT_CN_CODE NOT IN('PM468','PM443','PM444','PM434','PM435','436') THEN FFNLG_VALUE END) AS VIOLT_CN_D_CNT	/*기타*/,
+					   SUM(  CASE WHEN VIOLT_CN_CODE NOT IN('PM468','PM443','PM444','PM434','PM435','436') THEN FFNLG_VALUE END) AS VIOLT_CN_D_SUM	/*기타 금액*/,
+					   /*발생구분*/
+					   COUNT(CASE WHEN POLTNSRC_SE_CODE_TYPE='선박' THEN FFNLG_VALUE END) AS SHIP_CNT	/*선박*/, 
+					   COUNT(CASE WHEN POLTNSRC_SE_CODE_TYPE='해양시설' THEN FFNLG_VALUE END) AS FCLTY_A_CNT	/*해양시설*/,
+					   COUNT(CASE WHEN POLTNSRC_SE_CODE_TYPE='방제유창' THEN FFNLG_VALUE END) AS FCLTY_B_CNT	/*방제유창*/,
+		   			   COUNT(CASE WHEN POLTNSRC_SE_CODE_TYPE='기타' THEN FFNLG_VALUE END) AS ETC_CNT	/*기타*/		   
+				  FROM VIEW_MRENV_VIOLT_CRIME A
+	  			<![CDATA[
+				  /*검색기간*/
+				 WHERE ((A.YR=#searchYr# AND A.MT<=#searchMt#) OR (A.YR IS NULL AND A.MT IS NULL))
+				  ]]>
+				GROUP BY UPPER_NMPA_OFE_CODE,UPPER_NMPA_OFE_CODE_NM,NMPA_OFE_CODE,NMPA_OFE_CODE_NM
+				
+			) AA,
+			(
+			SELECT UPPER_CODE,UPPER_CODE_NM,CODE,CODE_NM
+			 FROM (
+			            SELECT R1.LCLTY_GRC_CODE AS UPPER_CODE /* 지방관청코드 */,
+			                  DECODE(R1.LCLTY_GRC_CODE, (LAG(R1.LCLTY_GRC_CODE) OVER (
+			            ORDER BY R1.LCLTY_GRC_CODE,
+			                  R1.NMPA_OFE_CODE) ),NULL,
+			                  REPLACE(FN_GET_INSTTNM (R1.LCLTY_GRC_CODE),'지방해양경찰','') ) AS UPPER_CODE_NM /* 지방관청명 */,
+			                  R1.NMPA_OFE_CODE AS CODE /* 해경서코드 */,
+			                  REPLACE(R1.NMPA_OFE_NM,'해양경찰','') AS CODE_NM /* 해경서명 */,
+			                  ( SELECT COUNT(*) FROM BASE S
+			                     WHERE S.LCLTY_GRC_CODE = R1.LCLTY_GRC_CODE
+			                       AND S.NMPA_OFE_CODE IS NOT NULL ) AS LOWER_CODE_CNT /* 하위코드개수 */
+			             FROM BASE R1
+			            ORDER BY R1.LCLTY_GRC_CODE ASC /* 지방관청코드 */,
+			                  R1.NMPA_OFE_CODE ASC /* 해경서코드 */ ) 
+			            WHERE UPPER_CODE_NM IS NOT NULL
+					  ORDER BY UPPER_CODE,CODE ASC
+			) BB
+			WHERE AA.UPPER_NMPA_OFE_CODE(+)=BB.UPPER_CODE
+			ORDER BY UPPER_CODE,CODE ASC
+		)
+ 
+	</select>
+    
+    <!-- 메인 해양환경위반현황 통계 조회 -->
+    <select id="mrenvVioltCrimeStatDAO.selectMainMrenvVioltCrimeCntStat" parameterClass="java.util.HashMap" resultClass="egovMap">
+        /* mrenvVioltCrimeStatDAO.selectMainMrenvVioltCrimeCntStat */
+		<![CDATA[
+		WITH VIEW_MRENV_VIOLT_CRIME
+		AS (
+			SELECT POLTNSRC_SE_CODE, COUNT(POLTNSRC_SE_CODE) FROM TPM_MRENV_VIOLT_CRIME 
+			WHERE TO_CHAR(VIOLT_DT,'yyyyMM') = #yearMonth# AND STTUS_CODE <> 'R' AND CLOS_AT = 'Y'
+			GROUP BY POLTNSRC_SE_CODE
+		) SELECT 
+			(SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME) AS TOTAL_CNT,
+			(SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME WHERE POLTNSRC_SE_CODE = 'A') AS SHIP_CNT,
+			(SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME WHERE POLTNSRC_SE_CODE = 'B') AS FCLTY_CNT,
+			(SELECT COUNT(*) FROM VIEW_MRENV_VIOLT_CRIME WHERE POLTNSRC_SE_CODE = 'C') AS ETC_CNT
+		 FROM DUAL
+		]]>   
+    </select>
+
+</sqlMap>

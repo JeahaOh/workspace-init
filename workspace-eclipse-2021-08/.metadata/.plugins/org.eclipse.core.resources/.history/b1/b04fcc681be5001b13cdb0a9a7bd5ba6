@@ -1,0 +1,118 @@
+package kr.co.hanshinit.NeoCMS.cop.sns.fbApiKey.service;
+
+import kr.co.hanshinit.NeoCMS.cmm.service.CmmModel;
+
+public class FbApiKey extends CmmModel {
+  private static final long serialVersionUID = -154239255659793176L;
+  
+  //  API KEY 관리번호
+  private int keyNo;
+  
+  //  API KEY 관리 명
+  private String mngNm;
+  
+  //  FACEBOOK ID
+  private String fbId;
+  
+  //  FACEBOOK APP ID
+  private String fbAppId;
+  
+  //  FACEBOOK APP SECRET CODE;
+  private String fbAppScrtCd;
+  
+  //  FACEBOOK API TEMP TOKEN
+  private String fbTmpToken;
+  
+  //  FACEBOOK API LONG TERM TOKEN
+  private String fbLngTmToken;
+  
+  //  EXPIRE DATETIME OF FACEBOOK API LONG TERM TOKEN
+  private String exprTm;
+  
+  //  MANAGER E-MAIL
+  private String mngrEmail;
+  
+  //  flag
+  private String flag;
+
+  public int getKeyNo() {
+    return keyNo;
+  }
+
+  public void setKeyNo(int keyNo) {
+    this.keyNo = keyNo;
+  }
+
+  public String getMngNm() {
+    return mngNm;
+  }
+
+  public void setMngNm(String mngNm) {
+    this.mngNm = mngNm;
+  }
+
+  public String getFbId() {
+    return fbId;
+  }
+
+  public void setFbId(String fbId) {
+    this.fbId = fbId;
+  }
+
+  public String getFbAppId() {
+    return fbAppId;
+  }
+
+  public void setFbAppId(String fbAppId) {
+    this.fbAppId = fbAppId;
+  }
+
+  public String getFbAppScrtCd() {
+    return fbAppScrtCd;
+  }
+
+  public void setFbAppScrtCd(String fbAppScrtCd) {
+    this.fbAppScrtCd = fbAppScrtCd;
+  }
+
+  public String getFbTmpToken() {
+    return fbTmpToken;
+  }
+
+  public void setFbTmpToken(String fbTmpToken) {
+    this.fbTmpToken = fbTmpToken;
+  }
+
+  public String getFbLngTmToken() {
+    return fbLngTmToken;
+  }
+
+  public void setFbLngTmToken(String fbLngTmToken) {
+    this.fbLngTmToken = fbLngTmToken;
+  }
+
+  public String getExprTm() {
+    return exprTm;
+  }
+
+  public void setExprTm(String exprTm) {
+    this.exprTm = exprTm;
+  }
+
+  public String getMngrEmail() {
+    return mngrEmail;
+  }
+
+  public void setMngrEmail(String mngrEmail) {
+    this.mngrEmail = mngrEmail;
+  }
+
+  public String getFlag() {
+    return flag;
+  }
+
+  public void setFlag(String flag) {
+    this.flag = flag;
+  }
+  
+}

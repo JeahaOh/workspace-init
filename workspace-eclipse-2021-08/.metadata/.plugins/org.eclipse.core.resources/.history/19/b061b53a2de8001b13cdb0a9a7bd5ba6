@@ -1,0 +1,56 @@
+package kr.co.hanshinit.NeoCMS.cmm.util;
+
+
+import javax.mail.Address;
+import javax.mail.SendFailedException;
+import org.apache.commons.mail.SimpleEmail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
+public class EmailUtil {
+  
+  private final static Logger logger = LoggerFactory.getLogger(EmailUtil.class);
+  
+  // 비밀번호는 개인 메일이므로 공개할 수 없다.
+  private static final String HOSTNAME = "smtp.daum.net";
+  private static final int SMTP_PORT = 456;
+  private static final String FROM = "no_reply_dev@daum.net";
+  private static final String PWD = "DPpHs^~~6429";
+  
+  public static void sendEmail(SimpleEmail email) {
+    
+    try {
+      email.setHostName(HOSTNAME);
+      email.setSmtpPort(SMTP_PORT);
+      email.setAuthentication(FROM, PWD);
+      email.setSSLOnConnect(true);
+      email.setStartTLSEnabled(true);
+      
+      // 한글
+      email.setCharset("euc-kr");
+      
+      //  보내는 주소 및 이름
+      email.setFrom(FROM, "[하남시청 홈페이지 유지보수 알림]");
+      
+      // 메일 전송
+      email.send();
+    } catch( Exception e ) {
+      StringUtil.printException( e, true );
+      Exception ex = e;
+      if (ex instanceof SendFailedException) {
+        SendFailedException sfex = (SendFailedException)ex;
+        Address[] invalid = sfex.getInvalidAddresses();
+        if (invalid != null) {
+          logger.error(" ** Invalid Addresses");
+          if (invalid != null) {
+            for (int i = 0; i < invalid.length; i++)
+              logger.error(" " + invalid[i]);
+          }
+        }
+      }
+      logger.error( "{}", StringUtil.printException( e ) );
+    }
+  }
+
+}

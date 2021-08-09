@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="org.eclipse.jst.jsp.ui.internal.preferences.ui.JSPTemplatePreferencePage$JSPEditTemplateDialog_dialogBounds">
+		<item key="DIALOG_WIDTH" value="827"/>
+		<item key="DIALOG_FONT_NAME" value="1|맑은 고딕|9.0|0|WINDOWS|1|-18|0|0|0|400|0|0|0|1|0|0|0|0|맑은 고딕"/>
+		<item key="DIALOG_HEIGHT" value="508"/>
+		<item key="DIALOG_X_ORIGIN" value="635"/>
+		<item key="DIALOG_Y_ORIGIN" value="399"/>
+	</section>
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
+		<item key="isRegEx" value="false"/>
+		<item key="selection" value="getSchoolYear"/>
+		<item key="casesensitive" value="false"/>
+		<item key="incremental" value="false"/>
+		<item key="wrap" value="true"/>
+		<item key="wholeword" value="false"/>
+		<list key="findhistory">
+			<item value="getSchoolYear"/>
+			<item value="getBndlUserBrthdy"/>
+			<item value="나이제한"/>
+			<item value="수강 신청이 완료 되어있는 강좌 입니다"/>
+			<item value="Multi"/>
+			<item value="mktrace"/>
+			<item value="checkAge("/>
+			<item value="EdcLctreVO checkBooking("/>
+			<item value=" checkBooking("/>
+			<item value="checkBooking("/>
+			<item value="checkBooking"/>
+			<item value="addEdcLctreView"/>
+			<item value="checkAge"/>
+			<item value="check"/>
+			<item value="chck"/>
+		</list>
+		<list key="replacehistory">
+			<item value="  "/>
+			<item value="StringUtil.printException( e );"/>
+			<item value="@Scheduled(cron = &quot;0 */1 * * * ?&quot;)"/>
+			<item value="{} &lt;&lt;\n\n&quot;"/>
+			<item value="&lt;&lt;\n\n"/>
+			<item value="&lt;&lt;\n\n&quot;"/>
+			<item value="logger"/>
+			<item value="&lt;"/>
+			<item value="/board"/>
+			<item value="&gt;\n&lt;input"/>
+			<item value=""/>
+			<item value="resultType"/>
+			<item value="break;\n"/>
+			<item value="#{searchKey}"/>
+		</list>
+	</section>
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
+		<item key="DIALOG_WIDTH" value="288"/>
+		<item key="DIALOG_FONT_NAME" value="1|맑은 고딕|9.0|0|WINDOWS|1|-12|0|0|0|400|0|0|0|1|0|0|0|0|맑은 고딕"/>
+		<item key="DIALOG_HEIGHT" value="382"/>
+		<item key="DIALOG_X_ORIGIN" value="937"/>
+		<item key="DIALOG_Y_ORIGIN" value="27"/>
+	</section>
+	<section name="org.eclipse.ui.texteditor.GotoLineAction$GotoLineDialog_dialogBounds">
+		<item key="DIALOG_X_ORIGIN" value="729"/>
+		<item key="DIALOG_Y_ORIGIN" value="403"/>
+	</section>
+</section>

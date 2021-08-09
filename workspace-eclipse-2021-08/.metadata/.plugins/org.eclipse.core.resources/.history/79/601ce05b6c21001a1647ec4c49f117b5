@@ -1,0 +1,62 @@
+package com.koem.vms.waterdepth.dto;
+
+import java.sql.Timestamp;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
+public class WaterDepthDTO {
+  private int idx;
+  private String geom_type;
+  private String geom;
+  private float dept;
+  private Timestamp survey_date;
+
+  public WaterDepthDTO() {
+    super();
+  }
+
+  public int getIdx() {
+    return idx;
+  }
+
+  public void setIdx(int idx) {
+    this.idx = idx;
+  }
+
+  public String getGeom_type() {
+    return geom_type;
+  }
+
+  public void setGeom_type(String geom_type) {
+    this.geom_type = geom_type;
+  }
+
+  public String getGeom() {
+    return geom;
+  }
+
+  public void setGeom(String geom) {
+    this.geom = geom;
+  }
+
+  public float getDept() {
+    return dept;
+  }
+
+  public void setDept(float dept) {
+    this.dept = dept;
+  }
+
+  public Timestamp getSurvey_date() {
+    return survey_date;
+  }
+
+  public void setSurvey_date(Timestamp survey_date) {
+    this.survey_date = survey_date;
+  }
+
+  @Override
+  public String toString() {
+    return ToStringBuilder.reflectionToString(this, ToStringStyle.JSON_STYLE);
+  }
+}

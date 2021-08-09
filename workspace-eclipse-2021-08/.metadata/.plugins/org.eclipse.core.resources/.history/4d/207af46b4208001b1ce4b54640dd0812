@@ -1,0 +1,26 @@
+package egovframework.mng.bug.service.impl;
+
+import java.util.List;
+import javax.annotation.Resource;
+import org.springframework.stereotype.Repository;
+import egovframework.mng.bug.service.BugService;
+import egovframework.mng.bug.vo.Bug;
+import egovframework.rte.fdl.cmmn.EgovAbstractServiceImpl;
+import egovframework.rte.psl.dataaccess.util.EgovMap;
+
+@Repository("bugService")
+public class BugServiceImpl extends EgovAbstractServiceImpl implements BugService {
+  
+  @Resource(name="bugDAO")
+  private BugDAO bugDAO;
+  
+  @Override
+  public void bugReport(Bug bug) throws Exception {
+    bugDAO.bugReport(bug);
+  }
+  
+  @Override
+  public List<Bug> bugList(Bug searchCondition) throws Exception {
+    return bugDAO.bugList(searchCondition);
+  }
+}

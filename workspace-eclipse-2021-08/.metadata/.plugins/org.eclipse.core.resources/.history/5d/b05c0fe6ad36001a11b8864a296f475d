@@ -1,0 +1,174 @@
+const drawRangeForDepthData = new ol.interaction.Draw({
+  source : null,
+  type : 'LineString',
+  maxPoints : 2
+});
+
+console.log( drawRangeForDepthData );
+
+const getDepthDataAtLine = function() {
+//  console.clear();
+  map.removeInteraction(drawRangeForDepthData);
+  console.group('getDepthDataAtLine');
+  
+  map.addInteraction( drawRangeForDepthData );
+
+  snap = new ol.interaction.Snap({
+    source : source
+  });
+  map.addInteraction(snap);
+
+  drawRangeForDepthData.on('drawend', function(evt) {
+    console.group('drawRangeForDepthData End');
+
+    let feature = evt.feature;
+    // console.log(`feature : `);
+//    console.log(feature);
+//    console.log( feature.getGeometry().getCoordinates() );
+    let selectedCoords = feature.getGeometry().getCoordinates();
+
+    let area = toWKT(feature);
+    console.log( area );
+
+    //  Draw End Finally End.
+    map.removeInteraction(drawRangeForDepthData);
+    map.removeInteraction(snap);
+    console.groupEnd('drawRangeForDepthData End');
+
+    function getData(area) {
+      return new Promise(function(resolve, reject) {
+        console.group('GET DATA');
+        area = {
+          'area' : area
+        };
+        //  console.log( area );
+        $.ajax({
+          type : "POST",
+          url : "reqWaterDepth.do",
+          data : area,
+          dataType : 'json',
+          beforeSend : function(xhr, opts) {
+            console.log("before send");
+            // when validation is false
+            if (false) {
+              xhr.abort();
+            }
+          },
+          success : function(res) {
+            console.log("SUCCESS");
+//            console.log(res);
+            if (res.length === 0
+                && JSON.stringify(res) === JSON.stringify([])) {
+              alert('해당 영역에 수심데이터가 없습니다.');
+              return;
+            } else {
+              resolve(res);
+            }
+          },
+          error : function(err) {
+            console.log("ERR");
+            console.error(err.statusText);
+            alert('데이터를 처리 하던중 에러가 발생했습니다.\n' + err.statusText + ' : ' + err.status);
+            reject(err);
+          }
+        });
+        console.groupEnd('GET DEPTH DATA');
+      });
+    }
+    getData(area).then(function(data) {
+      console.group('THEN PREPARE');
+      GLOBAL_DEPTH_CHART_DATA = data;
+      console.log( GLOBAL_DEPTH_CHART_DATA );
+      let target = $('#unit-list');
+      target.empty();
+      let template = Handlebars.compile( $('#water-depth-li-template').html() );
+//      console.log( $('#water-depth-li-template').html() );
+      
+      GLOBAL_DEPTH_CHART_DATA.forEach(( obj ) => {
+        target.append( template(obj) );
+      });
+      console.groupEnd('THEN PREPARE');
+      return data;
+    }).then( (data) => {
+      console.clear();
+      console.group('THEN CHART');
+      drawDepthDataChart( data );
+      console.groupEnd('THEN CHART');
+    });
+  }); //  drawend
+  console.groupEnd('getDepthDataAtLine');
+} //  lineToSquare
+/*
+14615931 4497472
+14615931 4483591
+14635998 4483591
+14635998 4497472
+
+
+objSource.addFeatures(rw.readFeatures( turf.randomPoint( 5000, {bbox:[14615931, 4483591, 14635998, 4497472]} ) ));
+
+
+objSource.addFeatures( ( new ol.format.GeoJSON()).readFeatures( turf.randomPoint( 5000, {bbox:[-180, -90, 180, 90]} ) ))
+objSource.addFeatures(rw.readFeatures( turf.randomPoint( 5000, {bbox:[131, 38, 136, 40]} ) ));
+
+features = objSource.getFeatures();
+
+for( i in features ) {
+  features[i] = toWKT(features[i])
+}
+
+JSON.stringify( features )
+
+const makeRandomPoints =  function() {
+	objSource.addFeatures(rw.readFeatures( turf.randomPoint( 5000, {bbox:[14615931, 4483591, 14635998, 4497472]} ) ));
+	
+	features = objSource.getFeatures();
+	
+	for( i in features ) {
+	  features[i] = toWKT(features[i])
+	}
+	
+	features = JSON.stringify( features );
+	
+	return features;
+}
+ */
+
+var envSurvWmsSrc = new ol.source.TileWMS({
+  url : 'http://118.220.143.150:8081/geoserver/EnvironmentSurvey/wms?',
+  params : {
+    'LAYERS' : 'EnvironmentSurvey:tb_depth_data',
+    'TILED' : false,
+  },
+  serverType : 'geoserver',
+  projection : 'EPSG:3857',
+  transition : 0,
+  crossOrigin: "anonymous"
+});
+
+var envSurvLyr = new ol.layer.Tile({
+  source : envSurvWmsSrc,
+  //  map의 zoom이 8 이상일 경우에만 layer를 화면에 보이게 한다.
+  minZoom : 8,
+  crossOrigin: "anonymous"
+});
+
+map.addLayer(envSurvLyr);
+
+/**
+
+const makeRandomPoints =  function() {
+	objSource.addFeatures( ( new ol.format.GeoJSON()).readFeatures( turf.randomPoint( 5000, {bbox:[-180, -90, 180, 90]} ) ))
+	
+	features = objSource.getFeatures();
+	
+	for( i in features ) {
+	  features[i] = toWKT(features[i])
+	}
+	
+	features = JSON.stringify( features );
+	
+	return features;
+}
+
+*/

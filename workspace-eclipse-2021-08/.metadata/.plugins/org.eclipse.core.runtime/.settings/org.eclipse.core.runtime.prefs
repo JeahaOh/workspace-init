@@ -1,0 +1,5 @@
+content-types/org.eclipse.core.runtime.text/charset=UTF-8
+content-types/org.eclipse.jdt.core.javaClass/charset=UTF-8
+content-types/org.eclipse.wst.xml.core.xmlsource/file-names=log4jdbc.log4j2.properties,log4j2.xml.origin,log4j2.xml_.origin,log4j2.xml.txt,web.xml.md
+eclipse.preferences.version=1
+line.separator=\n

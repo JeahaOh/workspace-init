@@ -1,0 +1,556 @@
+package egovframework.prvntn.mrenvVioltCrimeStat.web;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import egovframework.acdntStat.service.AcdntStatService;
+import egovframework.com.cmmn.LoginVO;
+import egovframework.com.cmmn.util.DateUtil;
+import egovframework.com.cmmn.util.EgovNumberFormat;
+import egovframework.com.cmmn.util.EgovStringUtil;
+import egovframework.com.cmmn.web.CmmnAbstractController;
+import egovframework.mng.code.vo.DtlCodeVO;
+import egovframework.prvntn.mrenvVioltCrimeStat.service.MrenvVioltCrimeStatService;
+import egovframework.prvntn.mrenvVioltCrimeStat.vo.FfnlgValueStatVO;
+import egovframework.prvntn.mrenvVioltCrimeStat.vo.MrenvVioltCrimeStatVO;
+import egovframework.prvntn.pollutnMttrMng.service.CntkprsAcmsltService;
+import egovframework.rte.psl.dataaccess.util.EgovMap;
+
+/**
+ * 해양환경위반사범 통계 Controller 클래스
+ *
+ * @author hjh
+ * @since 2018.07.26
+ * @version 1.0
+ * @see
+ *
+ *      <pre>
+ * << 개정이력(Modification Information) >>
+ *
+ *      수정일     수정자          수정내용
+ *   -----------  --------   ---------------------
+ *   2018.07.26    hjh          최초 생성
+ *
+ * </pre>
+ */
+@Controller
+public class MrenvVioltCrimeStatController extends CmmnAbstractController {
+
+	@Resource(name = "mrenvVioltCrimeStatService")
+	private MrenvVioltCrimeStatService mrenvVioltCrimeStatService;
+
+	@Resource(name = "cntkprsAcmsltService")
+	private CntkprsAcmsltService cntkprsAcmsltService;
+
+	@Resource(name = "acdntStatService")
+	private AcdntStatService acdntStatService;
+
+	/**
+	 * 최근5년간 위반현황 - 해경서별 현황
+	 *
+	 * @param mrenvVioltCrimeStatVO
+	 * @param model
+	 * @param request
+	 * @return
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+//	@RequestMapping(value = "/ext/mrenvVioltCrimeStat/nmpaStat.do")
+	@RequestMapping(value = {"/prvntn/mrenvVioltCrimeStat/nmpaStat.do", "/ext/mrenvVioltCrimeStat/nmpaStat.do"})
+	public String nmpaStat(@ModelAttribute("mrenvVioltCrimeStatVO") MrenvVioltCrimeStatVO mrenvVioltCrimeStatVO, ModelMap model, HttpServletRequest request) throws Exception {
+	    
+		List<EgovMap> selectNmpaList = mrenvVioltCrimeStatService.selectNmpaList(mrenvVioltCrimeStatVO);
+		List<String> paramList = new ArrayList<String>();
+		for (EgovMap egovMap : selectNmpaList) {
+			paramList.add(String.valueOf(egovMap.get("nmpaOfeCode")));
+		}
+		mrenvVioltCrimeStatVO.setParamList(paramList);
+		List<EgovMap> selectStat = mrenvVioltCrimeStatService.selectNmpaStat(mrenvVioltCrimeStatVO);
+		StringBuffer htmlCodeSb = new StringBuffer();
+		String prevYear = "";
+		StringBuffer prevYearCode = new StringBuffer();
+		for (int i = 0; i < selectStat.size(); i++) {
+			EgovMap egovMap = selectStat.get(i);
+			htmlCodeSb.append("<tr>\r\n");
+			Iterator<String> keys = egovMap.keySet().iterator();
+			boolean isFirst = true;
+			while (keys.hasNext()) { 
+				String key = keys.next();
+				if (isFirst) {
+					htmlCodeSb.append("\t<td class='tc" + (i == 0 ? " th_depth" : "") + "'>" + egovMap.get(key) + "</td>\r\n");
+				} else {
+					htmlCodeSb.append("\t<td class='tr" + (i == 0 ? " th_depth" : "") + "'>" + EgovNumberFormat.formatNumber((Number) egovMap.get(key)) + "</td>\r\n");
+				}
+				isFirst = false;
+			} 
+			htmlCodeSb.append("</tr>\r\n");
+		}
+		
+		
+		EgovMap egovMap = selectStat.get(2);
+		prevYearCode.append("<tr>\r\n");
+		Iterator<String> keys = egovMap.keySet().iterator();
+		boolean isFirst = true;
+		while (keys.hasNext()) { 
+			String key = keys.next();
+			if (isFirst) {
+				prevYearCode.append("\t<td class='tc'>" + egovMap.get(key) + "</td>\r\n");
+				prevYear = (egovMap.get(key).toString());
+			} else {
+				prevYearCode.append("\t<td class='tr'>" + EgovNumberFormat.formatNumber((Number) egovMap.get(key)) + "</td>\r\n");
+			}
+			isFirst = false;
+		} 
+		prevYearCode.append("</tr>\r\n");
+		
+		model.addAttribute("colList", selectNmpaList);
+		model.addAttribute("htmlCode", htmlCodeSb.toString());
+		model.addAttribute("prevYearCode", prevYearCode.toString());
+		model.addAttribute("prevYear", prevYear);
+		return "/prvntn/mrenvVioltCrimeStat/last5yearNmpaStat";
+	}
+
+	/**
+	 * 최근5년간 위반현황 - 대상별 현황
+	 *
+	 * @param mrenvVioltCrimeStatVO
+	 * @param model
+	 * @param request
+	 * @return
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+//	@RequestMapping(value = "/ext/mrenvVioltCrimeStat/targetStat.do")
+	@RequestMapping(value = {"/prvntn/mrenvVioltCrimeStat/targetStat.do", "/ext/mrenvVioltCrimeStat/targetStat.do"})
+	public String targetStat(@ModelAttribute("mrenvVioltCrimeStatVO") MrenvVioltCrimeStatVO mrenvVioltCrimeStatVO, ModelMap model, HttpServletRequest request) throws Exception {
+		List<String> paramList = new ArrayList<String>();
+		List<DtlCodeVO> vslkndCodeList = cmmnCodeService.selectDtlCodeList("PM119");
+		for (DtlCodeVO dtlCodeVO : vslkndCodeList) {
+			paramList.add(dtlCodeVO.getCode());
+		}
+		List<String> paramList2 = new ArrayList<String>();
+		List<DtlCodeVO> fcltyKndCodeList = cmmnCodeService.selectDtlCodeList("PM1");
+		for (DtlCodeVO dtlCodeVO : fcltyKndCodeList) {
+			paramList2.add(dtlCodeVO.getCode());
+		}
+		mrenvVioltCrimeStatVO.setParamList(paramList);
+		mrenvVioltCrimeStatVO.setParamList2(paramList2);
+		List<EgovMap> selectStat = mrenvVioltCrimeStatService.selectTargetStat(mrenvVioltCrimeStatVO);
+		StringBuffer htmlCodeSb = new StringBuffer();
+		for (int i = 0; i < selectStat.size(); i++) {
+			EgovMap egovMap = selectStat.get(i);
+			htmlCodeSb.append("<tr>\r\n");
+			Iterator<String> keys = egovMap.keySet().iterator();
+			boolean isFirst = true;
+			while (keys.hasNext()) {
+				String key = keys.next();
+				if (isFirst) {
+					htmlCodeSb.append("\t<td class='tc" + (i == 0 ? " th_depth" : "") + "'>" + egovMap.get(key) + "</td>\r\n");
+				} else {
+					htmlCodeSb.append("\t<td class='tr" + (i == 0 ? " th_depth" : "") + "'>" + EgovNumberFormat.formatNumber((Number) egovMap.get(key)) + "</td>\r\n");
+				}
+				isFirst = false;
+			}
+			htmlCodeSb.append("</tr>\r\n");
+		}
+		model.addAttribute("colList_ship", vslkndCodeList);
+		model.addAttribute("colList_fclty", fcltyKndCodeList);
+		model.addAttribute("htmlCode", htmlCodeSb.toString());
+		return "/prvntn/mrenvVioltCrimeStat/last5yearTargetStat";
+	}
+
+	/**
+	 * 최근5년간 위반현황 - 유형별 현황
+	 *
+	 * @param mrenvVioltCrimeStatVO
+	 * @param model
+	 * @param request
+	 * @return
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+//	@RequestMapping(value = "/ext/mrenvVioltCrimeStat/tyStat.do")
+	@RequestMapping(value = {"/prvntn/mrenvVioltCrimeStat/tyStat.do", "/ext/mrenvVioltCrimeStat/tyStat.do"})
+	public String tyStat(@ModelAttribute("mrenvVioltCrimeStatVO") MrenvVioltCrimeStatVO mrenvVioltCrimeStatVO, ModelMap model, HttpServletRequest request) throws Exception {
+		List<String> paramList = new ArrayList<String>();
+		List<DtlCodeVO> dtlCodeList = cmmnCodeService.selectDtlCodeList("PM184");
+		for (DtlCodeVO dtlCodeVO : dtlCodeList) {
+			paramList.add(dtlCodeVO.getCode());
+		}
+		mrenvVioltCrimeStatVO.setParamList(paramList);
+		List<EgovMap> selectStat = mrenvVioltCrimeStatService.selectTyStat(mrenvVioltCrimeStatVO);
+		StringBuffer htmlCodeSb = new StringBuffer();
+		for (int i = 0; i < selectStat.size(); i++) {
+			EgovMap egovMap = selectStat.get(i);
+			htmlCodeSb.append("<tr>\r\n");
+			Iterator<String> keys = egovMap.keySet().iterator();
+			boolean isFirst = true;
+			while (keys.hasNext()) {
+				String key = keys.next();
+				if (isFirst) {
+					htmlCodeSb.append("\t<td class='tc" + (i == 0 ? " th_depth" : "") + "'>" + egovMap.get(key) + "</td>\r\n");
+				} else {
+					htmlCodeSb.append("\t<td class='tr" + (i == 0 ? " th_depth" : "") + "'>" + EgovNumberFormat.formatNumber((Number) egovMap.get(key)) + "</td>\r\n");
+				}
+				isFirst = false;
+			}
+			htmlCodeSb.append("</tr>\r\n");
+		}
+		model.addAttribute("colList", dtlCodeList);
+		model.addAttribute("htmlCode", htmlCodeSb.toString());
+		return "/prvntn/mrenvVioltCrimeStat/last5TyStat";
+	}
+
+	/**
+	 * 최근5년간 위반현황 - 원인별 현황
+	 *
+	 * @param mrenvVioltCrimeStatVO
+	 * @param model
+	 * @param request
+	 * @return
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+//	@RequestMapping(value = "/ext/mrenvVioltCrimeStat/causeStat.do")
+	@RequestMapping(value = {"/prvntn/mrenvVioltCrimeStat/causeStat.do", "/ext/mrenvVioltCrimeStat/causeStat.do"})
+	public String causeStat(@ModelAttribute("mrenvVioltCrimeStatVO") MrenvVioltCrimeStatVO mrenvVioltCrimeStatVO, ModelMap model, HttpServletRequest request) throws Exception {
+		List<String> paramList = new ArrayList<String>();
+		//PM285 ---> AS129로 사고 원인 코드 변환
+		List<DtlCodeVO> dtlCodeList = cmmnCodeService.selectDtlCodeList("AS129");
+		for (DtlCodeVO dtlCodeVO : dtlCodeList) {
+			paramList.add(dtlCodeVO.getCode());
+		}
+		mrenvVioltCrimeStatVO.setParamList(paramList);
+		List<EgovMap> selectStat = mrenvVioltCrimeStatService.selectCauseStat(mrenvVioltCrimeStatVO);
+		StringBuffer htmlCodeSb = new StringBuffer();
+		for (int i = 0; i < selectStat.size(); i++) {
+			EgovMap egovMap = selectStat.get(i);
+			htmlCodeSb.append("<tr>\r\n");
+			Iterator<String> keys = egovMap.keySet().iterator();
+			boolean isFirst = true;
+			while (keys.hasNext()) {
+				String key = keys.next();
+				if (isFirst) {
+					htmlCodeSb.append("\t<td class='tc" + (i == 0 ? " th_depth" : "") + "'>" + egovMap.get(key) + "</td>\r\n");
+				} else {
+					htmlCodeSb.append("\t<td class='tr" + (i == 0 ? " th_depth" : "") + "'>" + EgovNumberFormat.formatNumber((Number) egovMap.get(key)) + "</td>\r\n");
+				}
+				isFirst = false;
+			}
+			htmlCodeSb.append("</tr>\r\n");
+		}
+		model.addAttribute("colList", dtlCodeList);
+		model.addAttribute("htmlCode", htmlCodeSb.toString());
+		return "/prvntn/mrenvVioltCrimeStat/last5yearCauseStat";
+	}
+
+	/**
+	 * 위반대상별 위반사범 통계
+	 */
+//	@RequestMapping(value = "/ext/mrenvVioltCrimeStat/NtargetStat.do")
+	@RequestMapping(value = {"/prvntn/mrenvVioltCrimeStat/NtargetStat.do", "/ext/mrenvVioltCrimeStat/NtargetStat.do"})
+	public String selectNTargetStat(@ModelAttribute("mrenvVioltCrimeStatVO") MrenvVioltCrimeStatVO mrenvVioltCrimeStatVO, ModelMap model, HttpServletRequest request) throws Exception {
+		EgovMap stat = mrenvVioltCrimeStatService.selectNTargetStat(mrenvVioltCrimeStatVO);
+		
+		model.addAttribute("mrenvVioltCrimeStatVO",mrenvVioltCrimeStatVO);
+		model.addAttribute("colList", stat.get("colList"));
+		model.addAttribute("rowList_vslkndCode", cmmnCodeService.selectDtlCodeList("PM119"));
+		model.addAttribute("rowList_fcltyKndCode", cmmnCodeService.selectDtlCodeList("PM1"));
+		String searchYr = mrenvVioltCrimeStatVO.getSearchYr();
+		String searchMt = mrenvVioltCrimeStatVO.getSearchMt();
+		if(searchYr==null || searchMt==null){
+			mrenvVioltCrimeStatVO.setSearchYr(DateUtil.getToDay("yyyy"));
+			mrenvVioltCrimeStatVO.setSearchMt(DateUtil.getToDay("MM"));
+		}
+		model.addAttribute("list",stat.get("sql"));
+		
+		return "/prvntn/mrenvVioltCrimeStat/targetStat";
+	}
+	
+	/**
+	 * 위반유형별 위반사범 통계
+	 */
+//	@RequestMapping(value = "/ext/mrenvVioltCrimeStat/NtypeStat.do")
+	@RequestMapping(value = {"/prvntn/mrenvVioltCrimeStat/NtypeStat.do", "/ext/mrenvVioltCrimeStat/NtypeStat.do"})
+	public String selectNTypeStat(@ModelAttribute("mrenvVioltCrimeStatVO") MrenvVioltCrimeStatVO mrenvVioltCrimeStatVO, ModelMap model, HttpServletRequest request) throws Exception {
+		EgovMap stat = mrenvVioltCrimeStatService.selectNTypeStat(mrenvVioltCrimeStatVO);
+		
+		if(mrenvVioltCrimeStatVO.getSearchYr()==null){
+		mrenvVioltCrimeStatVO.setSearchYr(DateUtil.getToDay("yyyy"));
+		}
+		if(mrenvVioltCrimeStatVO.getSearchMt()==null){
+		mrenvVioltCrimeStatVO.setSearchMt(DateUtil.getToDay("MM"));
+		}
+		model.addAttribute("mrenvVioltCrimeStatVO",mrenvVioltCrimeStatVO);
+		model.addAttribute("colList", stat.get("colList"));
+		model.addAttribute("rowList_vslkndCode", stat.get("nmpaOfeNmList"));
+		model.addAttribute("rowList_fcltyKndCode", stat.get("nmpaOfeNmList"));
+		model.addAttribute("mrenvVioltCrimeStatVO",mrenvVioltCrimeStatVO);
+		model.addAttribute("list",stat.get("sql"));
+		
+		return "/prvntn/mrenvVioltCrimeStat/tyStat";
+	}
+	
+	/**
+	 * 위반원인별 위반사범 통계
+	 */
+//	@RequestMapping(value = "/ext/mrenvVioltCrimeStat/NcauseStat.do")
+	@RequestMapping(value = {"/prvntn/mrenvVioltCrimeStat/NcauseStat.do", "/ext/mrenvVioltCrimeStat/NcauseStat.do"})
+	public String selectNCauseStat(@ModelAttribute("mrenvVioltCrimeStatVO") MrenvVioltCrimeStatVO mrenvVioltCrimeStatVO, ModelMap model, HttpServletRequest request) throws Exception {
+		EgovMap stat = mrenvVioltCrimeStatService.selectNCauseStat(mrenvVioltCrimeStatVO);
+		
+		model.addAttribute("mrenvVioltCrimeStatVO",mrenvVioltCrimeStatVO);
+		model.addAttribute("colList", stat.get("colList"));
+		model.addAttribute("rowList_vslkndCode", stat.get("nmpaOfeNmList"));
+		
+		String searchYr = mrenvVioltCrimeStatVO.getSearchYr();
+		String searchMt = mrenvVioltCrimeStatVO.getSearchMt();
+		if(searchYr==null || searchMt==null){
+			mrenvVioltCrimeStatVO.setSearchYr(DateUtil.getToDay("yyyy"));
+			mrenvVioltCrimeStatVO.setSearchMt(DateUtil.getToDay("MM"));
+		}
+		model.addAttribute("mrenvVioltCrimeStatVO",mrenvVioltCrimeStatVO);
+		model.addAttribute("list",stat.get("sql"));
+		
+		return "/prvntn/mrenvVioltCrimeStat/causeStat";
+	}
+	
+	/**
+	 * 적발경위별 현황
+	 *
+	 * @param mrenvVioltCrimeStatVO
+	 * @param model
+	 * @param request
+	 * @return
+	 * @throws Exception
+	 */
+//	@RequestMapping(value = "/ext/mrenvVioltCrimeStat/disclCrcmstncsStat.do")
+	@RequestMapping(value = {"/prvntn/mrenvVioltCrimeStat/disclCrcmstncsStat.do", "/ext/mrenvVioltCrimeStat/disclCrcmstncsStat.do"})
+	public String disclCrcmstncsStat(@ModelAttribute("mrenvVioltCrimeStatVO") MrenvVioltCrimeStatVO mrenvVioltCrimeStatVO, ModelMap model, HttpServletRequest request) throws Exception {
+		model.addAttribute("colList", mrenvVioltCrimeStatService.selectDisclCrcmstncsList(mrenvVioltCrimeStatVO));
+		model.addAttribute("rowList_vslkndCode", cmmnCodeService.selectDtlCodeList("PM119"));
+		model.addAttribute("rowList_fcltyKndCode", cmmnCodeService.selectDtlCodeList("PM1"));
+		model.addAttribute("searchYrList", cntkprsAcmsltService.makeYearList());
+		model.addAttribute("searchMtList", acdntStatService.makeMtList());
+		String searchYr = mrenvVioltCrimeStatVO.getSearchYr();
+		String searchMt = mrenvVioltCrimeStatVO.getSearchMt();
+		if(searchYr==null || searchMt==null){
+			mrenvVioltCrimeStatVO.setSearchYr(DateUtil.getToDay("yyyy"));
+			mrenvVioltCrimeStatVO.setSearchMt(DateUtil.getToDay("MM"));
+		}
+		model.addAttribute("mrenvVioltCrimeStatVO",mrenvVioltCrimeStatVO);
+		
+		if (EgovStringUtil.isEmpty(searchYr) || EgovStringUtil.isEmpty(searchMt)) {
+			model.addAttribute("list", new ArrayList<EgovMap>());
+		} else {
+			model.addAttribute("list", mrenvVioltCrimeStatService.selectDisclCrcmstncsStat(mrenvVioltCrimeStatVO));
+		}
+		
+		return "/prvntn/mrenvVioltCrimeStat/disclCrcmstncsStat";
+	}
+
+	/**
+	 * 조치별 현황
+	 *
+	 * @param mrenvVioltCrimeStatVO
+	 * @param model
+	 * @param request
+	 * @return
+	 * @throws Exception
+	 */
+//	@RequestMapping(value = "/ext/mrenvVioltCrimeStat/managtStat.do")
+	@RequestMapping(value = {"/prvntn/mrenvVioltCrimeStat/managtStat.do", "/ext/mrenvVioltCrimeStat/managtStat.do"})
+	public String managtStat(@ModelAttribute("mrenvVioltCrimeStatVO") MrenvVioltCrimeStatVO mrenvVioltCrimeStatVO, ModelMap model, HttpServletRequest request) throws Exception {
+		EgovMap stat = mrenvVioltCrimeStatService.selectManagtStat(mrenvVioltCrimeStatVO);
+		
+		model.addAttribute("colList", cmmnCodeService.selectDtlCodeList("PM385"));
+		model.addAttribute("rowList",  stat.get("nmpaOfeNmList"));
+		model.addAttribute("searchYrList", cntkprsAcmsltService.makeYearList());
+		model.addAttribute("searchMtList", acdntStatService.makeMtList());
+		String searchYr = mrenvVioltCrimeStatVO.getSearchYr();
+		String searchMt = mrenvVioltCrimeStatVO.getSearchMt();
+		if(searchYr==null || searchMt==null){
+			mrenvVioltCrimeStatVO.setSearchYr(DateUtil.getToDay("yyyy"));
+			mrenvVioltCrimeStatVO.setSearchMt(DateUtil.getToDay("MM"));
+		}
+		model.addAttribute("mrenvVioltCrimeStatVO",mrenvVioltCrimeStatVO);
+		
+		if (EgovStringUtil.isEmpty(searchYr) || EgovStringUtil.isEmpty(searchMt)) {
+			model.addAttribute("list", new ArrayList<EgovMap>());
+		} else {
+			model.addAttribute("list", stat.get("sql"));
+		}
+		return "/prvntn/mrenvVioltCrimeStat/managtStat";
+	}
+
+	/**
+	 * 조건별 현황
+	 *
+	 * @param mrenvVioltCrimeStatVO
+	 * @param model
+	 * @param request
+	 * @return
+	 * @throws Exception
+	 */
+//	@RequestMapping(value = "/ext/mrenvVioltCrimeStat/cndStat.do")
+	@RequestMapping(value = {"/prvntn/mrenvVioltCrimeStat/cndStat.do", "/ext/mrenvVioltCrimeStat/cndStat.do"})
+	public String cndStat(@ModelAttribute("mrenvVioltCrimeStatVO") MrenvVioltCrimeStatVO mrenvVioltCrimeStatVO, ModelMap model, HttpServletRequest request) throws Exception {
+		model.addAttribute("colList_ship", cmmnCodeService.selectDtlCodeList("PM119"));
+		model.addAttribute("colList_fclty", cmmnCodeService.selectDtlCodeList("PM1"));
+		model.addAttribute("rowList", mrenvVioltCrimeStatService.selectLcltyGrcNmpaList(mrenvVioltCrimeStatVO));
+		model.addAttribute("searchYrList", cntkprsAcmsltService.makeYearList());
+		model.addAttribute("searchMtList", acdntStatService.makeMtList());
+		
+		if(mrenvVioltCrimeStatVO.getSearchYr()==null ||mrenvVioltCrimeStatVO.getSearchEndYr()==null ){
+			mrenvVioltCrimeStatVO.setSearchYr(DateUtil.getToDay("yyyy"));
+			mrenvVioltCrimeStatVO.setSearchEndYr(DateUtil.getToDay("yyyy"));
+		}
+		if(mrenvVioltCrimeStatVO.getSearchMt()==null ||mrenvVioltCrimeStatVO.getSearchEndMt()==null){
+			mrenvVioltCrimeStatVO.setSearchMt("01");
+			mrenvVioltCrimeStatVO.setSearchEndMt(DateUtil.getToDay("MM"));
+		}
+		
+		String searchYr = mrenvVioltCrimeStatVO.getSearchYr(); 
+		String searchMt = mrenvVioltCrimeStatVO.getSearchMt();
+		String searchEndYr = mrenvVioltCrimeStatVO.getSearchEndYr();
+		String searchEndMt = mrenvVioltCrimeStatVO.getSearchEndMt();
+		if (EgovStringUtil.isEmpty(searchYr) || EgovStringUtil.isEmpty(searchMt) || EgovStringUtil.isEmpty(searchEndYr) || EgovStringUtil.isEmpty(searchEndMt)) {
+			model.addAttribute("list", new ArrayList<EgovMap>());
+		} else {
+			model.addAttribute("list", mrenvVioltCrimeStatService.selectCndStat(mrenvVioltCrimeStatVO));
+		}
+		
+		return "/prvntn/mrenvVioltCrimeStat/cndStat";
+	}
+	
+	
+
+  /**
+   * 과태료징수현황통계
+   */
+  @SuppressWarnings("unchecked")
+  // @RequestMapping(value = "/ext/mrenvVioltCrimeStat/ffnlgValueStat.do")
+  @RequestMapping(value = {"/prvntn/mrenvVioltCrimeStat/ffnlgValueStat.do",
+      /*"/ext/mrenvVioltCrimeStat/ffnlgValueStat.do"*/})
+  public String selectFfnlgValueList(@ModelAttribute("ffnlgValueStatVO") FfnlgValueStatVO vo,
+      ModelMap model, HttpServletRequest request, HttpSession session) throws Exception {
+    
+    logger.debug("\n\n\n\nMrenvVioltCrimeStatController.selectFfnlgValueList >>>>>>");
+    //logger.debug("vo : {}", vo.toString());
+    
+    if( vo.getSearchYr() == null ) {
+      vo.setSearchYr(DateUtil.getToDay("yyyy"));
+    }
+    if( vo.getSearchMt() == null ) {
+      vo.setSearchMt(DateUtil.getToDay("MM"));
+    }
+    
+    logger.debug("yr : {}, mt : {}", vo.getSearchYr(), vo.getSearchMt());
+    
+    LoginVO loginVO = (LoginVO) session.getAttribute("insttVO");
+    List<Map<String,String>> listMap = loginVO.getUnderInsttCodes();
+    //logger.debug("{}", listMap.toString());
+    
+    String insttCodesStr = "";
+    for( Map<String, String> map : listMap) {
+      insttCodesStr += map.get("insttCode") + " ";
+      //logger.debug("insttCode : {}", map.get("insttCode") );
+    }
+    logger.debug("insttCodes : {}", insttCodesStr);
+    
+    EgovMap stat = mrenvVioltCrimeStatService.selectFfnlgValueStatList(vo);
+    
+    List<EgovMap> list = (List<EgovMap>) stat.get("list");
+    List<EgovMap> rowList = (List<EgovMap>) stat.get("rowList");
+    
+    
+    /*
+    logger.debug("instt size : {}, insttCodesStr : {}", rowList.size(), insttCodesStr);
+    for( Iterator<EgovMap> it = rowList.iterator(); it.hasNext(); ) {
+      EgovMap data = it.next();
+      String code = (String) data.get("code");
+      if( code != null && insttCodesStr.contains( code ) ) {
+        logger.debug("code : {}, upperCode : {}", code, (String) data.get("upperCode"));
+        logger.debug("row data : {}", data );
+        
+        //insttCodesStr += " " + (String) data.get("upperCode");
+      } else if ( code != null && !insttCodesStr.contains( code ) ) {
+        it.remove();
+      }
+    }
+    logger.debug("instt size : {}", rowList.size());
+    logger.debug("<<<< rowList.\n\n");
+    */
+    //  접속자 소속 서와 상위 청의 코드 찾기.
+    logger.debug("find instt data");
+    logger.debug("insttCodesStr : {}", insttCodesStr);
+    for( Iterator<EgovMap> it = rowList.iterator(); it.hasNext(); ) {
+      EgovMap data = it.next();
+      String code = (String) data.get("code");
+      String upperCode = (String) data.get("upperCode");
+      if( code != null && insttCodesStr.contains( code ) ) {
+        logger.debug("code : {}, upperCode : {}", code, (String) data.get("upperCode"));
+        logger.debug("row data : {}", data );
+        insttCodesStr += " " + upperCode;
+      }
+    }
+    logger.debug("remove other instt data");
+    logger.debug("instt size : {}, insttCodesStr : {}", rowList.size(), insttCodesStr);
+    for( Iterator<EgovMap> it = rowList.iterator(); it.hasNext(); ) {
+      EgovMap data = it.next();
+      String code = (String) data.get("code");
+      String upperCode = (String) data.get("upperCode");
+      if( insttCodesStr.contains( code ) || insttCodesStr.contains( upperCode ) ) {
+        logger.debug("row data : {}", data );
+      } else if ( code != null && !insttCodesStr.contains( code ) ) {
+        it.remove();
+      }
+    }
+    logger.debug("instt size : {}", rowList.size());
+    logger.debug("<<<< rowList.\n\n");
+    
+    
+    logger.debug("list.size : {}, insttCodesStr : {}", list.size(), insttCodesStr );
+    for( Iterator<EgovMap> it = list.iterator(); it.hasNext(); ) {
+      EgovMap data = it.next();
+      //String type = (String) data.get("dataType");
+      
+      String nmpaOfeCode = (String) data.get("nmpaOfeCode");
+      String upperNmpaOfeCode = (String) data.get("upperNmpaOfeCode");
+      if( nmpaOfeCode != null && insttCodesStr.contains( nmpaOfeCode ) ) {
+        logger.debug("nmpaOfeCode : {}", nmpaOfeCode);
+        logger.debug("row data : {}", data );
+      } else if ( upperNmpaOfeCode != null && insttCodesStr.contains( upperNmpaOfeCode ) ) {
+        //upperNmpaOfeCode
+        logger.debug("upperNmpaOfeCode : {}", upperNmpaOfeCode);
+        logger.debug("row data : {}", data );
+        insttCodesStr += " " + upperNmpaOfeCode;
+      } else if ( nmpaOfeCode != null && !insttCodesStr.contains( nmpaOfeCode ) ) {
+        it.remove();
+      }
+    }
+    logger.debug("list.size : {}", list.size());
+    logger.debug("<<<< dataList.\n\n");
+    
+    
+    
+    
+    model.addAttribute("ffnlgValueStatVO", vo);
+    model.addAttribute("stat", stat);
+    
+    logger.debug("\nMrenvVioltCrimeStatController.selectFfnlgValueList <<<<<< \n\n\n\n");
+
+    return "/prvntn/mrenvVioltCrimeStat/ffnlgValueStat";
+  }
+
+	
+	
+}

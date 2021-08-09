@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+
+<tiles-definitions>
+
+  <!-- (0) empty 레이아웃 20180530 hjh -->
+  <definition name="empty" template="/WEB-INF/jsp/layout/emptyLayout.jsp">
+    <put-attribute name="content" value="" />
+  </definition>
+
+  <!-- (0) Frame 레이아웃 20180531 hjh -->
+  <definition name="frame" template="/WEB-INF/jsp/layout/frameLayout.jsp">
+    <put-attribute name="title" value="" />
+    <put-attribute name="body" expression="" />
+  </definition>
+
+  <!-- (0) Popup 레이아웃 20180531 hjh -->
+  <definition name="popup" template="/WEB-INF/jsp/layout/popupLayout.jsp">
+    <put-attribute name="title" value="" />
+    <put-attribute name="body" expression="" />
+  </definition>
+
+  <definition name="/menu/*" extends="empty">
+    <put-attribute name="content" value="/WEB-INF/jsp/menu/{1}.jsp" />
+  </definition>
+
+  <!-- Error 화면 20180531 hjh -->
+  <definition name="/cmmn/error" extends="empty">
+    <put-attribute name="content" value="/common/error" />
+  </definition>
+
+  <definition name="/cmmn/fileExtError" extends="empty">
+    <put-attribute name="content" value="/common/fileExtError" />
+  </definition>
+
+  <!-- 밸리데이션 화면 20180531 hjh -->
+  <definition name="/cmmn/validator" extends="empty">
+    <put-attribute name="content" value="/WEB-INF/jsp/cmmn/validator.jsp" />
+  </definition>
+
+  <definition name="/cmmn/*" extends="empty">
+    <put-attribute name="content" value="/WEB-INF/jsp/cmmn/{1}.jsp" />
+  </definition>
+  <definition name="/cmmn/*/*" extends="empty">
+    <put-attribute name="content" value="/WEB-INF/jsp/cmmn/{1}/{2}.jsp" />
+  </definition>
+
+  <!-- Frame 화면 20180531 hjh -->
+  <definition name="*Frame" extends="frame">
+    <put-attribute name="content" value="/WEB-INF/jsp/{1}Frame.jsp" />
+  </definition>
+  <definition name="*/*Frame" extends="frame">
+    <put-attribute name="content" value="/WEB-INF/jsp/{1}/{2}Frame.jsp" />
+  </definition>
+  <definition name="*/*/*Frame" extends="frame">
+    <put-attribute name="content" value="/WEB-INF/jsp/{1}/{2}/{3}Frame.jsp" />
+  </definition>
+  <definition name="*/*/*/*Frame" extends="frame">
+    <put-attribute name="content" value="/WEB-INF/jsp/{1}/{2}/{3}/{4}Frame.jsp" />
+  </definition>
+
+  <!-- PopUp 화면 20180531 hjh -->
+  <definition name="*Popup" extends="popup">
+    <put-attribute name="body" value="/WEB-INF/jsp/{1}Popup.jsp" />
+  </definition>
+  <definition name="*/*Popup" extends="popup">
+    <put-attribute name="body" value="/WEB-INF/jsp/{1}/{2}Popup.jsp" />
+  </definition>
+  <definition name="*/*/*Popup" extends="popup">
+    <put-attribute name="body" value="/WEB-INF/jsp/{1}/{2}/{3}Popup.jsp" />
+  </definition>
+  <definition name="*/*/*/*Popup" extends="popup">
+    <put-attribute name="body" value="/WEB-INF/jsp/{1}/{2}/{3}/{4}Popup.jsp" />
+  </definition>
+
+  <!-- (1) 메인레이아웃 -->
+  <definition name="main" template="/WEB-INF/jsp/layout/mainLayout.jsp">
+    <put-attribute name="title" value="" />
+    <put-attribute name="header" value="/WEB-INF/jsp/layout/inc/ext/header.jsp" />
+    <put-attribute name="body" value="/WEB-INF/jsp/ext/main/main.jsp" />
+    <put-attribute name="footer" value="/WEB-INF/jsp/layout/inc/ext/footer.jsp" />
+  </definition>
+
+  <!-- (1,1) 간소화 메인 레이아웃 -->
+  <definition name="simpleMain" template="/WEB-INF/jsp/layout/simpleMainLayout.jsp">
+    <put-attribute name="title" value="" />
+    <put-attribute name="header" value="/WEB-INF/jsp/layout/inc/simple/header.jsp" />
+    <put-attribute name="body" expression="/WEB-INF/jsp/ext/main/simpleMain.jsp" />
+    <put-attribute name="footer" value="/WEB-INF/jsp/layout/inc/simple/footer.jsp" />
+  </definition>
+
+
+  <!-- 게시판 레이아웃 -->
+  <definition name="/board/*" template="/WEB-INF/jsp/layout/subLayout.jsp">
+    <put-attribute name="title" value="" />
+    <put-attribute name="header" value="/WEB-INF/jsp/layout/inc/board/header.jsp" />
+    <put-attribute name="left" value="/WEB-INF/jsp/layout/inc/board/left.jsp" />
+    <put-attribute name="body" expression="/WEB-INF/jsp/board/{1}.jsp" />
+    <put-attribute name="footer" value="/WEB-INF/jsp/layout/inc/board/footer.jsp" />
+  </definition>
+  
+  <definition name="/board/*/*" template="/WEB-INF/jsp/layout/subLayout.jsp">
+    <put-attribute name="title" value="" />
+    <put-attribute name="header" value="/WEB-INF/jsp/layout/inc/board/header.jsp" />
+    <put-attribute name="left" value="/WEB-INF/jsp/layout/inc/board/left.jsp" />
+    <put-attribute name="body" expression="/WEB-INF/jsp/board/{1}/{2}.jsp" />
+    <put-attribute name="footer" value="/WEB-INF/jsp/layout/inc/board/footer.jsp" />
+  </definition>
+  
+  <!-- (2) 서브 레이아웃 -->
+  <definition name="*/*" template="/WEB-INF/jsp/layout/subLayout.jsp">
+    <put-attribute name="title" value="" />
+    <put-attribute name="header" value="/WEB-INF/jsp/layout/inc/ext/header.jsp" />
+    <put-attribute name="left" value="/WEB-INF/jsp/layout/inc/ext/left.jsp" />
+    <put-attribute name="body" expression="/WEB-INF/jsp/ext/{1}/{2}.jsp" />
+    <put-attribute name="footer" value="/WEB-INF/jsp/layout/inc/ext/footer.jsp" />
+  </definition>
+
+  
+  <!-- (3) 서브 레이아웃 -->
+  <definition name="*/*/*" template="/WEB-INF/jsp/layout/subLayout.jsp">
+    <put-attribute name="title" value="" />
+    <put-attribute name="header" value="/WEB-INF/jsp/layout/inc/ext/header.jsp" />
+    <put-attribute name="left" value="/WEB-INF/jsp/layout/inc/ext/left.jsp" />
+    <put-attribute name="body" expression="/WEB-INF/jsp/ext/{1}/{2}/{3}.jsp" />
+    <put-attribute name="footer" value="/WEB-INF/jsp/layout/inc/ext/footer.jsp" />
+  </definition>
+
+  <!-- (4) 관리자 레이아웃 -->
+  <definition name="/mng/*/*" template="/WEB-INF/jsp/layout/mngLayout.jsp">
+    <put-attribute name="title" value="" />
+    <put-attribute name="header" value="/WEB-INF/jsp/layout/inc/mng/header.jsp" />
+    <put-attribute name="left" value="/WEB-INF/jsp/layout/inc/mng/left.jsp" />
+    <put-attribute name="body" expression="/WEB-INF/jsp/mng/{1}/{2}.jsp" />
+    <put-attribute name="footer" value="/WEB-INF/jsp/layout/inc/mng/footer.jsp" />
+  </definition>
+
+
+
+
+
+</tiles-definitions>

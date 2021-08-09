@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="RepositoryExplorer">
+	</section>
+	<section name="RepositoryManager">
+	</section>
+	<section name="org.eclipse.oomph.p2.internal.ui.SearchEclipseDialog$Repositories">
+		<item key="dialogWidth" value="700"/>
+		<item key="dialogHeight" value="500"/>
+	</section>
+</section>

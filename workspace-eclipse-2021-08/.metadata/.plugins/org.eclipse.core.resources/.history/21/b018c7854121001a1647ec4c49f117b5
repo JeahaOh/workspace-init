@@ -1,0 +1,6 @@
+package com.koem.vms.area.dto;
+
+public class Snippet {
+  Map<String, Object> getWaterDepthData( String polygon ) throws Exception
+}
+

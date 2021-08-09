@@ -1,0 +1,137 @@
+package kr.co.hanshinit.NeoCMS.cop.sns.fbApiKey.web;
+
+import java.util.ArrayList;
+import java.util.List;
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import kr.co.hanshinit.NeoCMS.cmm.service.ResponseJSON;
+import kr.co.hanshinit.NeoCMS.cmm.stereotype.Interceptor;
+import kr.co.hanshinit.NeoCMS.cmm.util.StringUtil;
+import kr.co.hanshinit.NeoCMS.cop.sns.fbApiKey.service.FbApiKey;
+import kr.co.hanshinit.NeoCMS.cop.sns.fbApiKey.service.FbApiKeyService;
+import kr.co.hanshinit.NeoCMS.cop.sns.service.SnsService;
+import kr.co.hanshinit.NeoCMS.cop.sns.service.SnsVO;
+import kr.co.hanshinit.NeoCMS.cop.sns.service.fb.FacebookVO;
+
+@Controller
+@Interceptor("staffAuthorInterceptor")
+public class FbApiKeyMngController {
+  
+  Logger logger = LoggerFactory.getLogger(this.getClass());
+  
+  @Resource(name="fbApiKeyService")
+  private FbApiKeyService fbApiKeyService;
+  
+//  @Resource(name = "crawlingService")
+//  private CrawlingService crawlingService;
+//  
+  @Resource(name = "snsService")
+  private SnsService snsService;
+  
+  /**
+   * FACEBOOK API KEY 관리 페이지
+   */
+  @Interceptor("templateBinding")
+  @RequestMapping({"/{siteId}/apiKeyMngPage.do"})
+  public String apiKeyMngPage(
+    HttpServletRequest request
+    , ModelMap model
+    , @PathVariable("siteId") String siteId
+    , @RequestParam("key") int key
+  ) throws Exception {
+    
+    ArrayList<FbApiKey> keyList = (ArrayList<FbApiKey>) fbApiKeyService.getApiKeyList();
+    model.addAttribute( "totCnt", keyList.size() );
+    model.addAttribute( "keyList", keyList );
+    
+    return "NeoCMS/cop/apiKeyMng/apiKeyMng";
+  }
+  
+
+  /**
+   * FACEBOOK API KEY 관리
+   */
+  @RequestMapping({"/{siteId}/editFbApiKey.do"})
+  public @ResponseBody ResponseJSON upsertApiKey(
+    HttpServletRequest request
+    , ModelMap model
+    , @PathVariable("siteId") String siteId
+    , @RequestParam("key") int key
+    , FbApiKey apiKey
+  ) throws Exception {
+    
+    if( "delete".equals( apiKey.getFlag() ) ) {
+      // 삭제 FLAG가 있다면 삭제.
+      return fbApiKeyService.deleteApiKey( apiKey );
+    } else {
+      // 없다면 INSERT OR UPDATE
+      return fbApiKeyService.upsertApiKey( request, apiKey );
+    }
+    
+  }
+  
+  
+  /**
+   * FACEBOOK 게시물 갱신
+   */
+  @RequestMapping({"/{siteId}/refreshFbData.do"})
+  public @ResponseBody ResponseJSON refreshFbData (
+    HttpServletRequest request
+    , ModelMap model
+    , @PathVariable("siteId") String siteId
+    , @RequestParam("key") int key
+    , FbApiKey apiKey
+  ) throws Exception {
+    logger.debug("apiKey : {}", apiKey);
+    
+    ResponseJSON resjson = new ResponseJSON();
+    int cnt = 0;
+    
+    if(
+      StringUtil.isEmpty( apiKey.getFbId() )
+      || StringUtil.isEmpty( apiKey.getFbAppId() )
+      || StringUtil.isEmpty( apiKey.getFbAppScrtCd() )
+      || StringUtil.isEmpty( apiKey.getFbLngTmToken() )
+    ) {
+      resjson.setResult(0);
+      return resjson;
+    }
+    
+    FacebookVO fbVO = crawlingService.getFaceBook(
+        apiKey.getFbId()
+      , apiKey.getFbAppId()
+      , apiKey.getFbAppScrtCd()
+      , apiKey.getFbLngTmToken()
+    );
+    
+    List<SnsDataVO> fbDataList =  fbVO.convertToSnsDataVO(null);
+    
+    for (SnsVO snsDataVO : fbDataList) {
+      try {
+        SnsVO forSearch = new SnsVO();
+        forSearch.setSnsUrl(snsDataVO.getSnsUrl());
+        
+        if (snsService.selectSnsDataCount(forSearch) == 0) {
+          snsService.insertSnsData(snsDataVO);
+          logger.debug("\n\t>> INSERT {}", snsDataVO.getSnsUrl());
+          cnt++;
+        }
+        
+      } catch (Exception ex) {
+        StringUtil.printException( ex );
+      }
+    }
+
+    resjson.setResult(cnt);
+
+    return resjson;
+  }
+}

@@ -1,0 +1,8 @@
+package com.koem.vms.waterdepth.dao;
+
+import org.springframework.stereotype.Repository;
+
+@Repository
+public class EnvDAOImpl implements WaterDepthDAO{
+  
+}

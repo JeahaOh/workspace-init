@@ -1,0 +1,1152 @@
+package kr.co.hanshinit.NeoCMS.site.web;
+/**
+ *  2021.04.22 운영이랑 일치하지 않음 주의.
+ */
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.List;
+
+import javax.annotation.Resource;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import kr.co.hanshinit.NeoCMS.cmm.api.ApiService;
+import kr.co.hanshinit.NeoCMS.cmm.service.CmmUseService;
+import kr.co.hanshinit.NeoCMS.cmm.service.FileMngUtil;
+import kr.co.hanshinit.NeoCMS.cmm.service.RepositoryUtil;
+import kr.co.hanshinit.NeoCMS.cmm.stereotype.Interceptor;
+import kr.co.hanshinit.NeoCMS.cmm.util.DateUtil;
+import kr.co.hanshinit.NeoCMS.cmm.util.StringUtil;
+import kr.co.hanshinit.NeoCMS.cop.bbs.bim.service.BbsInfoService;
+import kr.co.hanshinit.NeoCMS.cop.bbs.bim.service.BbsInfoVO;
+import kr.co.hanshinit.NeoCMS.cop.bbs.ntt.service.BbsAtchmnfl;
+import kr.co.hanshinit.NeoCMS.cop.bbs.ntt.service.BbsAtchmnflService;
+import kr.co.hanshinit.NeoCMS.cop.bbs.ntt.service.BbsNttService;
+import kr.co.hanshinit.NeoCMS.cop.bbs.ntt.service.BbsNttVO;
+import kr.co.hanshinit.NeoCMS.cop.bbs.ntt.service.impl.BbsNttDAO;
+import kr.co.hanshinit.NeoCMS.cop.bbs.service.BbsService;
+import kr.co.hanshinit.NeoCMS.cop.bbs.service.BbsVO;
+import kr.co.hanshinit.NeoCMS.cop.bzm.bzi.service.BannerZoneItemService;
+import kr.co.hanshinit.NeoCMS.cop.bzm.service.BannerZoneService;
+import kr.co.hanshinit.NeoCMS.cop.cnt.service.CrawlingService;
+import kr.co.hanshinit.NeoCMS.cop.cnt.service.SnsDataService;
+import kr.co.hanshinit.NeoCMS.cop.cnt.service.SnsDataVO;
+import kr.co.hanshinit.NeoCMS.cop.cnt.service.fb.FaceBookVO;
+import kr.co.hanshinit.NeoCMS.cop.lzm.lzi.service.LinkZoneItemService;
+import kr.co.hanshinit.NeoCMS.cop.lzm.lzi.service.LinkZoneItemVO;
+import kr.co.hanshinit.NeoCMS.cop.pzm.pzi.service.PopupZoneItemService;
+import kr.co.hanshinit.NeoCMS.cop.pzm.pzi.service.PopupZoneItemVO;
+import kr.co.hanshinit.NeoCMS.sym.cma.cdc.service.CmmnDetailCodeService;
+import kr.co.hanshinit.NeoCMS.sym.sit.mnu.service.Menu;
+import kr.co.hanshinit.NeoCMS.sym.sit.mnu.service.MenuService;
+import kr.co.hanshinit.NeoCop.cop.ernt.service.Ernt;
+import kr.co.hanshinit.NeoCop.cop.ernt.service.ErntService;
+import kr.co.hanshinit.NeoCop.cop.ernt.service.ErntVO;
+import kr.co.hanshinit.NeoCop.cop.etcResve.service.EtcResve;
+import kr.co.hanshinit.NeoCop.cop.etcResve.service.EtcResveService;
+import kr.co.hanshinit.NeoCop.cop.etcResve.service.EtcResveVO;
+import kr.co.hanshinit.NeoEdu.cop.cmm.service.EdcCmmCodeService;
+import kr.co.hanshinit.NeoEdu.cop.edcLctre.service.EdcLctreService;
+import kr.co.hanshinit.NeoEdu.cop.edcLctre.service.EdcLctreVO;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.context.support.WebApplicationContextUtils;
+import kr.co.hanshinit.NeoCMS.cmm.scheduler.Scheduler;
+
+import egovframework.rte.psl.dataaccess.util.EgovMap;
+
+@Interceptor("templateMainBinding")
+@Controller
+public class BwyfController {
+
+	/** bbsNttService **/
+	@Resource(name = "bbsNttService")
+	private BbsNttService bbsNttService;
+
+	/** popupZoneItemService **/
+	@Resource(name = "popupZoneItemService")
+	private PopupZoneItemService popupZoneItemService;
+
+	/** bannerZoneService **/
+	@Resource(name = "bannerZoneService")
+	private BannerZoneService bannerZoneService;
+
+	/** bannerZoneItemService **/
+	@Resource(name = "bannerZoneItemService")
+	private BannerZoneItemService bannerZoneItemService;
+
+	/** linkZoneItemService **/
+	@Resource(name = "linkZoneItemService")
+	private LinkZoneItemService linkZoneItemService;
+
+	@Resource(name = "cmmUseService")
+	private CmmUseService cmmUseService;
+
+	@Resource(name = "cmmnDetailCodeService")
+	private CmmnDetailCodeService cmmnDetailCodeService;
+
+	@Resource(name = "edcCmmCodeService")
+	private EdcCmmCodeService edcCmmCodeService;
+
+	@Resource(name = "edcLctreService")
+	private EdcLctreService edcLctreService;
+
+	@Resource(name = "erntService")
+	private ErntService erntService;
+
+	@Resource(name = "etcResveService")
+	private EtcResveService etcResveService;
+
+	@Resource(name = "snsDataService")
+	private SnsDataService snsDataService;
+
+	@Resource(name = "weatherDataService")
+	private ApiService weatherDataService;
+
+	@Resource(name = "airDataService")
+	private ApiService airDataService;
+
+	@Resource(name="crawlingService")
+	private CrawlingService crawlingService;
+
+	@RequestMapping(value = "/bwyf/index.do")
+	public String index(ModelMap model, HttpServletRequest request)
+			throws Exception {
+
+		List<BbsNttVO> bbsNttList01 = bbsNttService.selectBbsMiniList(8, 6);
+		model.addAttribute("bbsNttList01", bbsNttList01);
+
+		List<BbsNttVO> bbsNttList02 = bbsNttService.selectBbsMiniList(11, 6);
+		model.addAttribute("bbsNttList02", bbsNttList02);
+
+		List<BbsNttVO> bbsNttList03 = bbsNttService.selectBbsMiniList(7, 6);
+		model.addAttribute("bbsNttList03", bbsNttList03);
+
+		List<BbsNttVO> bbsNttList04 = bbsNttService.selectBbsMiniList(9, 6);
+		model.addAttribute("bbsNttList04", bbsNttList04);
+
+		List<BbsNttVO> bbsNttList05 = bbsNttService.selectBbsMiniList(14, 4);
+		model.addAttribute("bbsNttList05", bbsNttList05);
+
+		List<BbsNttVO> bbsNttList06 = bbsNttService.selectBbsMiniList(12, 2);
+		model.addAttribute("bbsNttList06", bbsNttList06);
+
+		List<PopupZoneItemVO> popupZoneItemList01 = popupZoneItemService
+				.selectPopupZoneItemList(9, "always");
+		model.addAttribute("popupZoneItemList01", popupZoneItemList01);
+
+		List<PopupZoneItemVO> popupZoneItemList02 = popupZoneItemService
+				.selectPopupZoneItemList(10, "always");
+		model.addAttribute("popupZoneItemList02", popupZoneItemList02);
+
+		List<LinkZoneItemVO> linkZoneItemList = linkZoneItemService
+				.selectLinkZoneItemList(2, "always", 0);
+		model.addAttribute("linkZoneItemList", linkZoneItemList);
+
+		/** 강좌 목록 조회 **/
+		EdcLctreVO edcLctreVO = new EdcLctreVO();
+		edcLctreVO.setSearchUseAt("Y");
+		edcLctreVO.setSearchRceptSttus("RP1");
+		edcLctreVO.setPageUnit(5);
+		int totCnt = edcLctreService.webLctreListTotCnt(request, edcLctreVO);
+		edcLctreVO.getNeoPaginationInfo(totCnt);
+		List<EdcLctreVO> edcLctreList = edcLctreService.webLctreSelectList(
+				request, edcLctreVO);
+		model.addAttribute("edcLctreList", edcLctreList);
+
+		ErntVO erntVO = new ErntVO();
+		erntVO.setErntUseAt("Y");
+		erntVO.setPageUnit(5);
+		int totCnt1 = erntService.selectErntTotCnt(erntVO);
+		erntVO.getNeoPaginationInfo(totCnt1);
+		List<Ernt> erntList = erntService.selectErntList(request, erntVO);
+		model.addAttribute("erntList", erntList);
+
+		EtcResveVO etcResveVO = new EtcResveVO();
+		etcResveVO.setEtcResveUseAt("Y");
+		int totCnt2 = etcResveService.selectEtcResveTotCnt(etcResveVO);
+		etcResveVO.getNeoPaginationInfo(totCnt2);
+		List<EtcResve> etcResveList = etcResveService.selectEtcResveList(
+				request, etcResveVO);
+		model.addAttribute("etcResveList", etcResveList);
+
+		SnsDataVO snsDataVO = new SnsDataVO();
+		snsDataVO.setSnsType("facebook_823180864790204");
+		snsDataVO.setFirstIndex(0);
+		snsDataVO.setLastIndex(20);
+		snsDataVO.setPageUnit(20);
+		List<SnsDataVO> facebookList = snsDataService.selectSnsData(snsDataVO);
+		model.addAttribute("facebookList", facebookList);
+
+		EgovMap weatherMap = weatherDataService.selectApiData();
+		model.addAttribute("weatherMap", weatherMap);
+
+		return "bwyf/main.jsp";
+
+	}
+
+
+
+	@RequestMapping(value = "/bwyf/facebook11.do")
+	public void facebook11(ModelMap model, HttpServletRequest request)
+			throws Exception {
+
+
+		FaceBookVO hpFacebookVO = crawlingService.getFaceBook("823180864790204", "1750579141878486", "b3e06babd7a561fcef4f0d55e1a169b1", "EAAY4JHfnItYBAMaZCBjgOJ5l7OZAgCBgcTEnMrIJz1WH2uyOiM1cb5KNPzUZCzC8QSl3MNZCRmd37qQLD1yHitMGVeWKcNx3ZA7NGthz23ZBh9v5fq43vINap1OrL5OEDLTAqtKK3Iyi6HGjWITzneI29gF3d5YCTlZCwGiXFRg8wZDZD");//군포시청
+		List<SnsDataVO> resultList =  hpFacebookVO.convertToSnsDataVO(null);
+		System.out.println("facebook insert..");
+		System.out.println(resultList.get(0).getSnsUrl());
+		insertSns(resultList);
+
+		FaceBookVO hpFacebookVO1 = crawlingService.getFaceBook("womanbcf", "1031488270536772", "46b761475798a0d882f2ed45d885cbdb", "EAAOqIhP0kEQBALLS5i95iXAfg214zt3E0rI2Yip34KQtzmw1VcAdG6BZAYI17ZBXoXtWCM0v0eP9yLrRDP4CznaoRXeH6JNwVrZAcgR4pSR8FbNbn8Q3NeiffBVJwm9aNKchlf1AjgZCccLI04dy2zLTzcdCMYVAiIxDugynQBqLrCGGB4UM");//군포시청
+		List<SnsDataVO> resultList1 =  hpFacebookVO1.convertToSnsDataVO(null);
+		System.out.println("facebook insert..");
+		insertSns(resultList1);
+
+		FaceBookVO hpFacebookVO2 = crawlingService.getFaceBook("vomul.or.kr", "548672912388741", "6ef7942b46e555c08d6a25ac7bf32ee4", "EAAHzA94KcoUBAEk7VK6r7tUVrLZCUKcPHda03WeuDFVzzlnYlK2ZB6pT145LYZBBfsWOVJsB85R1t2WWm5fczZBGGlmGTZCTnbGpl9RararZCL91Ovkfw17iVXDiCmYgewZAHGDzlZCxSRaJ6nXl29d2puZA3FgYwFBgLiqzbgD0exKU7NaBl6CtV");//군포시청
+		List<SnsDataVO> resultList2 =  hpFacebookVO2.convertToSnsDataVO(null);
+		System.out.println("facebook insert..");
+		insertSns(resultList2);
+
+		FaceBookVO hpFacebookVO3 = crawlingService.getFaceBook("456704854497451", "601649647073118", "1955fbe3f2fe3e00fa2585a7ddd83f2f", "EAAIjMnlZBN14BAE1ZCZCtQY0OO4jJyQsdwuM5NWeYqUFJHKRgKM6m5KpYjJY4M2PEItOdAauZA0QCggfZC6AvlvkDKtdPWkObEhZClOTfBTFzjqeAgw6zPLsLkPh5tr072DCA6a2VkRfqPAFjo0ZAHpRei4XZB6BrUDfaADMnYvADqxSlviOHKRs");//군포시청
+		List<SnsDataVO> resultList3 =  hpFacebookVO3.convertToSnsDataVO(null);
+		System.out.println("facebook insert..");
+		insertSns(resultList3);
+
+		FaceBookVO hpFacebookVO4 = crawlingService.getFaceBook("2847795801970979", "206386997209819", "013431e8516c30ee68854e9e62fff921", "EAAC7tTenqtsBACWEC4BIi8u6DWur5s3Qb2ksMvhqZCQaLYbJZBhbHsaQBw98kVBoVCD3wSZCZBnZAnkp4dRsvJCEIOnMUL5zHWRZCm6jhvLOhGZCWU0yicYhL1UHqpHhYPRf3oByZAC5WQQGnaPVTGCm5IYNR5U5GXyXjF8kZBLmzIsdCQsZC6gLSh");//산울림
+		List<SnsDataVO> resultList4 =  hpFacebookVO4.convertToSnsDataVO(null);
+		System.out.println("facebook insert..");
+		insertSns(resultList4);
+
+
+	}
+
+	public void insertSns(List<SnsDataVO> snsResult){
+		for (SnsDataVO snsDataVO : snsResult) {
+			try {
+				SnsDataVO forSearch = new SnsDataVO();
+				forSearch.setFirstIndex(0);
+				forSearch.setLastIndex(1000);
+				forSearch.setSnsUrl(snsDataVO.getSnsUrl());
+				if(snsDataService.selectSnsDataCount(forSearch) == 0) {
+//						if(snsDataVO.getSnsContents() != null){
+//							snsDataVO.setSnsContents(URLEncoder.encode(snsDataVO.getSnsContents()));
+//						}
+					snsDataService.insertSnsData(snsDataVO);
+				}else {
+					//snsDataService.updateSnsDataBySnsUrl(snsDataVO.getSnsUrl(), snsDataVO);
+					System.out.println(snsDataVO.getSnsUrl()+" 이미 존재합니다.");
+				}
+			}catch(Exception ex) {
+				ex.printStackTrace();
+			}
+		}
+	}
+
+
+/*
+	@RequestMapping({ "/bwyf/mysqldumpl1.do" })
+	public void test(ModelMap model) throws Exception {
+		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+				.getRequestAttributes()).getRequest();
+		HttpSession session = request.getSession();
+		ServletContext servletContext = session.getServletContext();
+		WebApplicationContext wac = WebApplicationContextUtils
+				.getRequiredWebApplicationContext(servletContext);
+
+		BbsInfoService bbsInfoService = (BbsInfoService) wac.getBean("bbsInfoService");
+		BbsNttService bbsNttService = (BbsNttService) wac.getBean("bbsNttService");
+		BbsService bbsService = (BbsService) wac.getBean("bbsService");
+		BbsNttDAO bbsNttDAO = (BbsNttDAO) wac.getBean("bbsNttDAO");
+		BbsAtchmnflService bbsAtchmnflService = (BbsAtchmnflService) wac.getBean("bbsAtchmnflService");
+
+		Connection connection = null;
+		Statement st = null;
+		Statement st1 = null;
+		ResultSet rs1 = null;
+		try {
+			Class.forName("com.mysql.jdbc.Driver");
+
+			connection = DriverManager.getConnection(
+					"jdbc:mysql://192.168.0.88:3306/echoyouth", "root",
+					"hanshin!23");
+			st = connection.createStatement();
+			st1 = connection.createStatement();
+
+			String sql = "select * from (  select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_010404' table_name from bwyf.g4_write_bbs_010404  union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_010701' table_name from bwyf.g4_write_bbs_010701 union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_010702' table_name from bwyf.g4_write_bbs_010702  union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_010703' table_name from bwyf.g4_write_bbs_010703   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_010704' table_name from bwyf.g4_write_bbs_010704   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_010705' table_name from bwyf.g4_write_bbs_010705   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_010706' table_name from bwyf.g4_write_bbs_010706   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_0301' table_name from bwyf.g4_write_bbs_0301   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_0302' table_name from bwyf.g4_write_bbs_0302   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_0303' table_name from bwyf.g4_write_bbs_0303   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_0304' table_name from bwyf.g4_write_bbs_0304   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_0305' table_name from bwyf.g4_write_bbs_0305   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_0306' table_name from bwyf.g4_write_bbs_0306   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_0401' table_name from bwyf.g4_write_bbs_0401   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_0402' table_name from bwyf.g4_write_bbs_0402   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_0404' table_name from bwyf.g4_write_bbs_0404   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_0405' table_name from bwyf.g4_write_bbs_0405   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_0406' table_name from bwyf.g4_write_bbs_0406   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_0407' table_name from bwyf.g4_write_bbs_0407   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_0000' table_name from ybcf.g4_write_bbs_0000   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_030102' table_name from ybcf.g4_write_bbs_030102  union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_060101' table_name from ybcf.g4_write_bbs_060101  union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_060102' table_name from ybcf.g4_write_bbs_060102   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_0901' table_name from ybcf.g4_write_bbs_0901   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_0902' table_name from ybcf.g4_write_bbs_0902   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_0903' table_name from ybcf.g4_write_bbs_0903   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_0904' table_name from ybcf.g4_write_bbs_0904    union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_0905' table_name from ybcf.g4_write_bbs_0905  union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_030201' table_name from echoyouth.g4_write_bbs_030201  union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_0503' table_name from echoyouth.g4_write_bbs_0503   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_0504' table_name from echoyouth.g4_write_bbs_0504   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_0601' table_name from echoyouth.g4_write_bbs_0601   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_0606' table_name from echoyouth.g4_write_bbs_0606   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_0607' table_name from echoyouth.g4_write_bbs_0607   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_bbs_0707' table_name from echoyouth.g4_write_bbs_0707   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_pht_010101' table_name from echoyouth.g4_write_pht_010101  union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_pht_010201' table_name from echoyouth.g4_write_pht_010201 union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_pht_010301' table_name from echoyouth.g4_write_pht_010301  union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_pht_010401' table_name from echoyouth.g4_write_pht_010401   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_pht_010501' table_name from echoyouth.g4_write_pht_010501   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_pht_020101' table_name from echoyouth.g4_write_pht_020101   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_pht_020201' table_name from echoyouth.g4_write_pht_020201   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_pht_030101' table_name from echoyouth.g4_write_pht_030101   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_pht_030202' table_name from echoyouth.g4_write_pht_030202   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_pht_030301' table_name from echoyouth.g4_write_pht_030301    union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_pht_030401' table_name from echoyouth.g4_write_pht_030401 union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_pht_030501' table_name from echoyouth.g4_write_pht_030501  union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_pht_030601' table_name from echoyouth.g4_write_pht_030601   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_pht_040101' table_name from echoyouth.g4_write_pht_040101   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_pht_040201' table_name from echoyouth.g4_write_pht_040201   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_pht_050101' table_name from echoyouth.g4_write_pht_050101   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_pht_0605' table_name from echoyouth.g4_write_pht_0605   union all select wr_is_comment, wr_reply, wr_id, wr_subject, wr_content, wr_datetime, wr_name, wr_ip, ca_name, wr_hit, wr_1, wr_2, wr_3, wr_4, wr_5, wr_6, wr_7, wr_8, wr_9, wr_10, 'g4_write_pht_070401' table_name from echoyouth.g4_write_pht_070401 ) T WHERE wr_is_comment = '0';";
+
+			ResultSet rs = st.executeQuery(sql);
+
+			BbsNttVO bbsNttVO = new BbsNttVO();
+
+			while (rs.next()) {
+
+				int nttNo = bbsNttDAO.selectBbsNttNoNextVal();
+
+				int wr_id = rs.getInt("wr_id");
+				String wr_subject = rs.getString("wr_subject");
+				String table_name = rs.getString("table_name");
+
+				String wr_content = rs.getString("wr_content");
+				String wr_datetime = rs.getString("wr_datetime");
+				String wr_name = rs.getString("wr_name");
+				String wr_ip = rs.getString("wr_ip");
+
+				String ca_name = rs.getString("ca_name");
+				String wr_reply = rs.getString("wr_reply");
+
+				int wr_hit = rs.getInt("wr_hit");
+
+				String wr_1 = rs.getString("wr_1");
+				String wr_2 = rs.getString("wr_2");
+				String wr_3 = rs.getString("wr_3");
+				String wr_4 = rs.getString("wr_4");
+				String wr_5 = rs.getString("wr_5");
+				String wr_6 = rs.getString("wr_6");
+				String wr_7 = rs.getString("wr_7");
+				String wr_8 = rs.getString("wr_8");
+				String wr_9 = rs.getString("wr_9");
+				String wr_10 = rs.getString("wr_10");
+
+				String database = "";
+
+				if (table_name.equals("g4_write_bbs_010404")) {
+					database = "bwyf";
+					bbsNttVO.setBbsNo(1);
+				} else if (table_name.equals("g4_write_bbs_010701")) {
+					database = "bwyf";
+					bbsNttVO.setBbsNo(2);
+				} else if (table_name.equals("g4_write_bbs_010702")) {
+					database = "bwyf";
+					bbsNttVO.setBbsNo(3);
+				} else if (table_name.equals("g4_write_bbs_010703")) {
+					database = "bwyf";
+					bbsNttVO.setBbsNo(4);
+				} else if (table_name.equals("g4_write_bbs_010704")) {
+					database = "bwyf";
+					bbsNttVO.setBbsNo(5);
+				} else if (table_name.equals("g4_write_bbs_010705")) {
+					database = "bwyf";
+					bbsNttVO.setBbsNo(6);
+				} else if (table_name.equals("g4_write_bbs_010706")) {
+					database = "bwyf";
+					bbsNttVO.setBbsNo(7);
+				} else if (table_name.equals("g4_write_bbs_0301")) {
+					database = "bwyf";
+					bbsNttVO.setBbsNo(8);
+				} else if (table_name.equals("g4_write_bbs_0302")) {
+					database = "bwyf";
+					bbsNttVO.setBbsNo(9);
+				} else if (table_name.equals("g4_write_bbs_0303")) {
+					database = "bwyf";
+					bbsNttVO.setBbsNo(10);
+				} else if (table_name.equals("g4_write_bbs_0304")) {
+					database = "bwyf";
+					bbsNttVO.setBbsNo(11);
+				} else if (table_name.equals("g4_write_bbs_0305")) {
+					database = "bwyf";
+					bbsNttVO.setBbsNo(12);
+				} else if (table_name.equals("g4_write_bbs_0306")) {
+					database = "bwyf";
+					bbsNttVO.setBbsNo(13);
+				} else if (table_name.equals("g4_write_bbs_0401")) {
+					database = "bwyf";
+					bbsNttVO.setBbsNo(14);
+				} else if (table_name.equals("g4_write_bbs_0402")) {
+					database = "bwyf";
+					bbsNttVO.setBbsNo(15);
+				} else if (table_name.equals("g4_write_bbs_0404")) {
+					database = "bwyf";
+					bbsNttVO.setBbsNo(16);
+				} else if (table_name.equals("g4_write_bbs_0405")) {
+					database = "bwyf";
+					bbsNttVO.setBbsNo(17);
+				} else if (table_name.equals("g4_write_bbs_0406")) {
+					database = "bwyf";
+					bbsNttVO.setBbsNo(18);
+				} else if (table_name.equals("g4_write_bbs_0407")) {
+					database = "bwyf";
+					bbsNttVO.setBbsNo(19);
+				} else if (table_name.equals("g4_write_bbs_0000")) {
+					database = "ybcf";
+					bbsNttVO.setBbsNo(20);
+				} else if (table_name.equals("g4_write_bbs_030102")) {
+					database = "ybcf";
+					bbsNttVO.setBbsNo(21);
+				} else if (table_name.equals("g4_write_bbs_060101")) {
+					database = "ybcf";
+					bbsNttVO.setBbsNo(22);
+				} else if (table_name.equals("g4_write_bbs_060102")) {
+					database = "ybcf";
+					bbsNttVO.setBbsNo(23);
+				} else if (table_name.equals("g4_write_bbs_0901")) {
+					database = "ybcf";
+					bbsNttVO.setBbsNo(24);
+				} else if (table_name.equals("g4_write_bbs_0902")) {
+					database = "ybcf";
+					bbsNttVO.setBbsNo(25);
+				} else if (table_name.equals("g4_write_bbs_0903")) {
+					database = "ybcf";
+					bbsNttVO.setBbsNo(26);
+				} else if (table_name.equals("g4_write_bbs_0904")) {
+					database = "ybcf";
+					bbsNttVO.setBbsNo(27);
+				} else if (table_name.equals("g4_write_bbs_0905")) {
+					database = "ybcf";
+					bbsNttVO.setBbsNo(28);
+				} else if (table_name.equals("g4_write_bbs_030201")) {
+					database = "echoyouth";
+					bbsNttVO.setBbsNo(29);
+				} else if (table_name.equals("g4_write_bbs_0503")) {
+					database = "echoyouth";
+					bbsNttVO.setBbsNo(30);
+				} else if (table_name.equals("g4_write_bbs_0601")) {
+					database = "echoyouth";
+					bbsNttVO.setBbsNo(31);
+				} else if (table_name.equals("g4_write_bbs_0607")) {
+					database = "echoyouth";
+					bbsNttVO.setBbsNo(33);
+				} else if (table_name.equals("g4_write_bbs_0707")) {
+					database = "echoyouth";
+					bbsNttVO.setBbsNo(34);
+				} else if (table_name.equals("g4_write_pht_010101")) {
+					database = "echoyouth";
+					bbsNttVO.setBbsNo(35);
+				} else if (table_name.equals("g4_write_pht_010201")) {
+					database = "echoyouth";
+					bbsNttVO.setBbsNo(36);
+				} else if (table_name.equals("g4_write_pht_010301")) {
+					database = "echoyouth";
+					bbsNttVO.setBbsNo(37);
+				} else if (table_name.equals("g4_write_pht_010401")) {
+					database = "echoyouth";
+					bbsNttVO.setBbsNo(38);
+				} else if (table_name.equals("g4_write_pht_010501")) {
+					database = "echoyouth";
+					bbsNttVO.setBbsNo(39);
+				} else if (table_name.equals("g4_write_pht_020101")) {
+					database = "echoyouth";
+					bbsNttVO.setBbsNo(40);
+				} else if (table_name.equals("g4_write_pht_020201")) {
+					database = "echoyouth";
+					bbsNttVO.setBbsNo(41);
+				} else if (table_name.equals("g4_write_pht_030101")) {
+					database = "echoyouth";
+					bbsNttVO.setBbsNo(42);
+				} else if (table_name.equals("g4_write_pht_030202")) {
+					database = "echoyouth";
+					bbsNttVO.setBbsNo(43);
+				} else if (table_name.equals("g4_write_pht_030301")) {
+					database = "echoyouth";
+					bbsNttVO.setBbsNo(44);
+				} else if (table_name.equals("g4_write_pht_030401")) {
+					database = "echoyouth";
+					bbsNttVO.setBbsNo(45);
+				} else if (table_name.equals("g4_write_pht_030501")) {
+					database = "echoyouth";
+					bbsNttVO.setBbsNo(46);
+				} else if (table_name.equals("g4_write_pht_030601")) {
+					database = "echoyouth";
+					bbsNttVO.setBbsNo(47);
+				} else if (table_name.equals("g4_write_pht_040101")) {
+					database = "echoyouth";
+					bbsNttVO.setBbsNo(48);
+				} else if (table_name.equals("g4_write_pht_040201")) {
+					database = "echoyouth";
+					bbsNttVO.setBbsNo(49);
+				} else if (table_name.equals("g4_write_pht_050101")) {
+					database = "echoyouth";
+					bbsNttVO.setBbsNo(50);
+				} else if (table_name.equals("g4_write_pht_0605")) {
+					database = "echoyouth";
+					bbsNttVO.setBbsNo(51);
+				} else if (table_name.equals("g4_write_pht_070401")) {
+					database = "echoyouth";
+					bbsNttVO.setBbsNo(52);
+				}
+
+				BbsInfoVO bbsInfoVO = bbsInfoService.selectBbsInfo(bbsNttVO
+						.getBbsNo());
+				BbsVO bbsVO = bbsService.selectBbs(bbsNttVO.getBbsNo());
+
+				String frstRegisterPnttm = DateUtil.toDateFormat(wr_datetime,
+						"yyyy-MM-dd HH:mm:ss", "yyyyMMddHHmmss");
+
+				String frstRegisterId = "neo";
+				bbsNttVO.setCtgryNm(ca_name);
+
+				bbsNttVO.setNttNo(nttNo);
+				bbsNttVO.setNttSj(wr_subject);
+				bbsNttVO.setNttCn(wr_content);
+
+				bbsNttVO.setWriterNm(wr_name);
+				bbsNttVO.setNoticeAt("N");
+				bbsNttVO.setWriterDplctCode("neo");
+				bbsNttVO.setUpperNttNo(0);
+				bbsNttVO.setNttLevel(0);
+				bbsNttVO.setNttOrdr(-1);
+				bbsNttVO.setDeleteAt("N");
+				bbsNttVO.setRdcnt(wr_hit);
+				bbsNttVO.setWriterIp(wr_ip);
+				bbsNttVO.setFrstRegisterPnttm(frstRegisterPnttm);
+				bbsNttVO.setFrstRegisterId(frstRegisterId);
+				bbsNttVO.setHtmlUseAt("Y");
+				if (StringUtil.isEmpty(bbsNttVO.getOthbcAt()))
+					bbsNttVO.setOthbcAt("Y");
+
+				bbsNttVO.setAditfield1(wr_1);
+				bbsNttVO.setAditfield2(wr_2);
+				bbsNttVO.setAditfield3(wr_3);
+				bbsNttVO.setAditfield4(wr_4);
+				bbsNttVO.setAditfield5(wr_5);
+				bbsNttVO.setAditfield6(wr_6);
+				bbsNttVO.setAditfield7(wr_7);
+				bbsNttVO.setAditfield8(wr_8);
+				bbsNttVO.setAditfield9(wr_9);
+				bbsNttVO.setAditfield10(wr_10);
+				if (!table_name.equals("g4_write_bbs_0607") && !table_name.equals("g4_write_bbs_0606")) {
+					bbsNttDAO.insertBbsNtt(bbsNttVO);
+					bbsNttDAO.updateNttOrdrPlus(bbsNttVO.getBbsNo());
+
+					String sql1 = "select * from " + database
+							+ ".g4_board_file WHERE bo_table = '"
+							+ table_name.replaceAll("g4_write_", "")
+							+ "' and wr_id = '" + wr_id + "' ";
+
+					rs1 = st1.executeQuery(sql1);
+					while (rs1.next()) {
+						String bo_table = rs1.getString("bo_table");
+						String bf_source = rs1.getString("bf_source");
+						String bf_file = rs1.getString("bf_file");
+						String bf_datetime = rs1.getString("bf_datetime");
+
+						String frstRegisterPnttm1 = DateUtil.toDateFormat(
+								bf_datetime, "yyyy-MM-dd HH:mm:ss",
+								"yyyyMMddHHmmss");
+
+						String fileName = bf_source;
+
+						int pos = fileName.lastIndexOf(".");
+						String ext = fileName.substring(pos + 1);
+
+						BbsAtchmnfl bbsAtchmnfl = new BbsAtchmnfl();
+						bbsAtchmnfl.setBbsNo(bbsNttVO.getBbsNo());
+						bbsAtchmnfl.setNttNo(nttNo);
+						bbsAtchmnfl.setStorePath("/DATA/bbs/" + bbsNttVO.getBbsNo()
+								+ "/");
+						bbsAtchmnfl.setFileNm(fileName);
+						bbsAtchmnfl.setStoreFileNm(bf_file);
+						bbsAtchmnfl.setReplcText("");
+						bbsAtchmnfl.setFrstRegisterPnttm(frstRegisterPnttm1);
+						bbsAtchmnfl.setFrstRegisterId("neo");
+						bbsAtchmnfl.setFileExtsn(ext);
+						bbsAtchmnfl.setBdtInsrtAt("N");
+						bbsAtchmnflService.insertBbsAtchmnfl(bbsAtchmnfl);
+					}
+				}
+			}
+
+			rs.close();
+			rs1.close();
+			st.close();
+			st1.close();
+			connection.close();
+		} catch (SQLException se1) {
+			se1.printStackTrace();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		} finally {
+			try {
+				if (st != null)
+					st.close();
+			} catch (SQLException sQLException) {
+			}
+
+			try {
+				if (st1 != null)
+					st1.close();
+			} catch (SQLException sQLException) {
+			}
+
+			try {
+				if (connection != null)
+					connection.close();
+			} catch (SQLException se) {
+				se.printStackTrace();
+			}
+		}
+	}
+
+	@RequestMapping({ "/bwyf/mysqldumpl2.do" })
+	public void test1(ModelMap model) throws Exception {
+		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+				.getRequestAttributes()).getRequest();
+		HttpSession session = request.getSession();
+		ServletContext servletContext = session.getServletContext();
+		WebApplicationContext wac = WebApplicationContextUtils
+				.getRequiredWebApplicationContext(servletContext);
+
+		BbsInfoService bbsInfoService = (BbsInfoService) wac
+				.getBean("bbsInfoService");
+		BbsNttService bbsNttService = (BbsNttService) wac
+				.getBean("bbsNttService");
+		BbsService bbsService = (BbsService) wac.getBean("bbsService");
+		BbsNttDAO bbsNttDAO = (BbsNttDAO) wac.getBean("bbsNttDAO");
+		BbsAtchmnflService bbsAtchmnflService = (BbsAtchmnflService) wac
+				.getBean("bbsAtchmnflService");
+
+		Connection connection = null;
+		Statement st = null;
+		Statement st1 = null;
+
+		ResultSet rs1 = null;
+		try {
+			Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+			connection = DriverManager
+					.getConnection("jdbc:sqlserver://175.212.21.82:1433;database=womanweb;user=sa;password=hanshin!23;");
+			st = connection.createStatement();
+			st1 = connection.createStatement();
+
+			String sql = " SELECT 'notice' as table_name, no, '' as c_name, subject, writer, Passwd, Content, ip, BLink, '' as p_photo, ReadNum, RegDate FROM womanweb.Bic_Womanv_Notice WHERE OrgCode = 'womanbcf' UNION ALL Select 'movie' as table_name,  no, '' as c_name, subject, writer, Passwd, Content, ip, '' as Blink, '' as p_photo, ReadNum, RegDate From womanweb.Bic_Womanv_Movie Where OrgCode = 'womanbcf' UNION all select 'photo' as table_name, idx as no, c_name, p_title as subject , '여성회관' as writer, '' as Passwd,  p_cont as Content, '' as ip, '' as Blink,  p_photo, count_read as ReadNum, date_act as RegDate from womanweb.jcv_photo_list ";
+
+			ResultSet rs = st.executeQuery(sql);
+
+			BbsNttVO bbsNttVO = new BbsNttVO();
+
+			while (rs.next()) {
+				int nttNo = bbsNttDAO.selectBbsNttNoNextVal();
+				int no = rs.getInt("no");
+				String subject = rs.getString("subject");
+				String table_name = rs.getString("table_name");
+				String Passwd = rs.getString("Passwd");
+				String Blink = rs.getString("Blink");
+
+				String Content = rs.getString("Content");
+				String RegDate = rs.getString("RegDate");
+				String writer = rs.getString("writer");
+				String ip = rs.getString("ip");
+
+				String c_name = rs.getString("c_name");
+
+				int ReadNum = rs.getInt("ReadNum");
+				String p_photo = rs.getString("p_photo");
+
+				if (table_name.equals("notice")) {
+					bbsNttVO.setBbsNo(53);
+				} else if (table_name.equals("photo")) {
+					bbsNttVO.setBbsNo(54);
+				} else if (table_name.equals("movie")) {
+					bbsNttVO.setBbsNo(55);
+				}
+
+				BbsInfoVO bbsInfoVO = bbsInfoService.selectBbsInfo(bbsNttVO
+						.getBbsNo());
+
+				BbsVO bbsVO = bbsService.selectBbs(bbsNttVO.getBbsNo());
+
+				String frstRegisterPnttm = DateUtil.toDateFormat(RegDate,
+						"yyyy-MM-dd HH:mm:ss", "yyyyMMddHHmmss");
+
+				String frstRegisterId = "neo";
+				bbsNttVO.setCtgryNm(c_name);
+
+				bbsNttVO.setNttNo(nttNo);
+				bbsNttVO.setNttSj(subject);
+				bbsNttVO.setNttCn(Content);
+				bbsNttVO.setPasswd(Passwd);
+
+				bbsNttVO.setWriterNm(writer);
+				bbsNttVO.setNoticeAt("N");
+				bbsNttVO.setWriterDplctCode("neo");
+				bbsNttVO.setUpperNttNo(0);
+				bbsNttVO.setNttLevel(0);
+				bbsNttVO.setNttOrdr(-1);
+				bbsNttVO.setDeleteAt("N");
+				bbsNttVO.setRdcnt(ReadNum);
+				bbsNttVO.setWriterIp(ip);
+				bbsNttVO.setFrstRegisterPnttm(frstRegisterPnttm);
+				bbsNttVO.setFrstRegisterId(frstRegisterId);
+				bbsNttVO.setHtmlUseAt("Y");
+				if (StringUtil.isEmpty(bbsNttVO.getOthbcAt()))
+					bbsNttVO.setOthbcAt("Y");
+
+				bbsNttVO.setAditfield1(Blink);
+
+				bbsNttDAO.insertBbsNtt(bbsNttVO);
+
+				bbsNttDAO.updateNttOrdrPlus(bbsNttVO.getBbsNo());
+				String BOARID = "";
+				if (table_name.equals("notice")) {
+					BOARID = "999";
+				} else if (table_name.equals("movie")) {
+					BOARID = "444";
+				} else if (table_name.equals("photo")) {
+					BOARID = "";
+					if (!"".equals(p_photo)) {
+						String FILENAME = p_photo;
+
+						String frstRegisterPnttm1 = "20190101000000";
+
+						int pos = FILENAME.lastIndexOf(".");
+						String ext = FILENAME.substring(pos + 1);
+
+						BbsAtchmnfl bbsAtchmnfl = new BbsAtchmnfl();
+						bbsAtchmnfl.setBbsNo(bbsNttVO.getBbsNo());
+						bbsAtchmnfl.setNttNo(nttNo);
+						bbsAtchmnfl.setStorePath("/DATA/bbs/"
+								+ bbsNttVO.getBbsNo() + "/");
+						bbsAtchmnfl.setFileNm(FILENAME);
+						bbsAtchmnfl.setStoreFileNm(FILENAME);
+						bbsAtchmnfl.setReplcText("");
+						bbsAtchmnfl.setFrstRegisterPnttm(frstRegisterPnttm1);
+						bbsAtchmnfl.setFrstRegisterId("neo");
+						bbsAtchmnfl.setFileExtsn(ext);
+						bbsAtchmnfl.setBdtInsrtAt("N");
+						bbsAtchmnflService.insertBbsAtchmnfl(bbsAtchmnfl);
+					}
+				}
+
+				String sql1 = "select * from womanweb.BOARDATTACHEDFILE_NOTICE WHERE BOARDID = '"
+						+ BOARID + "' AND BOARDITEMID = '" + no + "' ";
+
+				rs1 = st1.executeQuery(sql1);
+
+				while (rs1.next()) {
+					String FILENAME = rs1.getString("FILENAME");
+
+					String frstRegisterPnttm1 = "20190101000000";
+
+					int pos = FILENAME.lastIndexOf(".");
+					String ext = FILENAME.substring(pos + 1);
+
+					BbsAtchmnfl bbsAtchmnfl = new BbsAtchmnfl();
+					bbsAtchmnfl.setBbsNo(bbsNttVO.getBbsNo());
+					bbsAtchmnfl.setNttNo(nttNo);
+					bbsAtchmnfl.setStorePath("/DATA/bbs/" + bbsNttVO.getBbsNo()
+							+ "/");
+					bbsAtchmnfl.setFileNm(FILENAME);
+					bbsAtchmnfl.setStoreFileNm(FILENAME);
+					bbsAtchmnfl.setReplcText("");
+					bbsAtchmnfl.setFrstRegisterPnttm(frstRegisterPnttm1);
+					bbsAtchmnfl.setFrstRegisterId("neo");
+					bbsAtchmnfl.setFileExtsn(ext);
+					bbsAtchmnfl.setBdtInsrtAt("N");
+					bbsAtchmnflService.insertBbsAtchmnfl(bbsAtchmnfl);
+				}
+			}
+
+			rs.close();
+			rs1.close();
+			st.close();
+			st1.close();
+			connection.close();
+		} catch (SQLException se1) {
+			se1.printStackTrace();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		} finally {
+			try {
+				if (st != null)
+					st.close();
+			} catch (SQLException sQLException) {
+			}
+
+			try {
+				if (st1 != null)
+					st1.close();
+			} catch (SQLException sQLException) {
+			}
+
+			try {
+				if (connection != null)
+					connection.close();
+			} catch (SQLException se) {
+				se.printStackTrace();
+			}
+		}
+	}
+
+	@RequestMapping({ "/bwyf/mysqldumpl3.do" })
+	public void test2(ModelMap model) throws Exception {
+		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+				.getRequestAttributes()).getRequest();
+		HttpSession session = request.getSession();
+		ServletContext servletContext = session.getServletContext();
+		WebApplicationContext wac = WebApplicationContextUtils
+				.getRequiredWebApplicationContext(servletContext);
+
+		BbsInfoService bbsInfoService = (BbsInfoService) wac
+				.getBean("bbsInfoService");
+		BbsNttService bbsNttService = (BbsNttService) wac
+				.getBean("bbsNttService");
+		BbsService bbsService = (BbsService) wac.getBean("bbsService");
+		BbsNttDAO bbsNttDAO = (BbsNttDAO) wac.getBean("bbsNttDAO");
+		BbsAtchmnflService bbsAtchmnflService = (BbsAtchmnflService) wac
+				.getBean("bbsAtchmnflService");
+
+		Connection connection = null;
+		Statement st = null;
+		Statement st1 = null;
+
+		ResultSet rs1 = null;
+		try {
+			Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+			connection = DriverManager
+					.getConnection("jdbc:sqlserver://175.212.21.82:1433;database=womanweb;user=sa;password=hanshin!23;");
+			st = connection.createStatement();
+			st1 = connection.createStatement();
+
+			String sql = " EXEC womanweb.CbBCF_GetBoardItemListwContent ";
+
+			ResultSet rs = st.executeQuery(sql);
+
+			BbsNttVO bbsNttVO = new BbsNttVO();
+
+			while (rs.next()) {
+				int nttNo = bbsNttDAO.selectBbsNttNoNextVal();
+				int ItemId = rs.getInt("ItemId");
+				String Subject = rs.getString("Subject");
+				String BoardId = rs.getString("BoardId");
+				String Content = rs.getString("Content");
+				String AuthoredOn = rs.getString("AuthoredOn");
+				String AuthorName = rs.getString("AuthorName");
+				int Hits = rs.getInt("Hits");
+
+				bbsNttVO.setBbsNo(56);
+
+				BbsInfoVO bbsInfoVO = bbsInfoService.selectBbsInfo(bbsNttVO
+						.getBbsNo());
+
+				BbsVO bbsVO = bbsService.selectBbs(bbsNttVO.getBbsNo());
+
+				String frstRegisterPnttm = DateUtil.toDateFormat(AuthoredOn,
+						"yyyy-MM-dd HH:mm:ss", "yyyyMMddHHmmss");
+
+				String frstRegisterId = "neo";
+
+				bbsNttVO.setNttNo(nttNo);
+				bbsNttVO.setNttSj(Subject);
+				bbsNttVO.setNttCn(Content);
+
+				bbsNttVO.setWriterNm(AuthorName);
+				bbsNttVO.setNoticeAt("N");
+				bbsNttVO.setWriterDplctCode("neo");
+				bbsNttVO.setUpperNttNo(0);
+				bbsNttVO.setNttLevel(0);
+				bbsNttVO.setNttOrdr(-1);
+				bbsNttVO.setDeleteAt("N");
+				bbsNttVO.setRdcnt(Hits);
+				bbsNttVO.setWriterIp("");
+				bbsNttVO.setFrstRegisterPnttm(frstRegisterPnttm);
+				bbsNttVO.setFrstRegisterId(frstRegisterId);
+				bbsNttVO.setHtmlUseAt("Y");
+				if (StringUtil.isEmpty(bbsNttVO.getOthbcAt()))
+					bbsNttVO.setOthbcAt("Y");
+
+				bbsNttDAO.insertBbsNtt(bbsNttVO);
+
+				bbsNttDAO.updateNttOrdrPlus(bbsNttVO.getBbsNo());
+
+				String sql1 = "select * from womanweb.BOARDATTACHEDFILE WHERE BOARDID = '"
+						+ BoardId + "' AND BOARDITEMID = '" + ItemId + "' ";
+
+				rs1 = st1.executeQuery(sql1);
+
+				System.out.println(sql1);
+				while (rs1.next()) {
+					String FILENAME = rs1.getString("FILENAME");
+					String frstRegisterPnttm1 = "20190101000000";
+
+					int pos = FILENAME.lastIndexOf(".");
+					String ext = FILENAME.substring(pos + 1);
+
+					BbsAtchmnfl bbsAtchmnfl = new BbsAtchmnfl();
+					bbsAtchmnfl.setBbsNo(bbsNttVO.getBbsNo());
+					bbsAtchmnfl.setNttNo(nttNo);
+					bbsAtchmnfl.setStorePath("/DATA/bbs/" + bbsNttVO.getBbsNo()
+							+ "/");
+					bbsAtchmnfl.setFileNm(FILENAME);
+					bbsAtchmnfl.setStoreFileNm(FILENAME);
+					bbsAtchmnfl.setReplcText("");
+					bbsAtchmnfl.setFrstRegisterPnttm(frstRegisterPnttm1);
+					bbsAtchmnfl.setFrstRegisterId("neo");
+					bbsAtchmnfl.setFileExtsn(ext);
+					bbsAtchmnfl.setBdtInsrtAt("N");
+					bbsAtchmnflService.insertBbsAtchmnfl(bbsAtchmnfl);
+				}
+			}
+
+			rs.close();
+			rs1.close();
+			st.close();
+			st1.close();
+			connection.close();
+		} catch (SQLException se1) {
+			se1.printStackTrace();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		} finally {
+			try {
+				if (st != null)
+					st.close();
+			} catch (SQLException sQLException) {
+			}
+
+			try {
+				if (st1 != null)
+					st1.close();
+			} catch (SQLException sQLException) {
+			}
+
+			try {
+				if (connection != null)
+					connection.close();
+			} catch (SQLException se) {
+				se.printStackTrace();
+			}
+		}
+	}
+
+	@RequestMapping({ "/bwyf/mysqldumpl4.do" })
+	public void test3(ModelMap model) throws Exception {
+		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+				.getRequestAttributes()).getRequest();
+		HttpSession session = request.getSession();
+		ServletContext servletContext = session.getServletContext();
+		WebApplicationContext wac = WebApplicationContextUtils
+				.getRequiredWebApplicationContext(servletContext);
+
+		BbsInfoService bbsInfoService = (BbsInfoService) wac
+				.getBean("bbsInfoService");
+		BbsNttService bbsNttService = (BbsNttService) wac
+				.getBean("bbsNttService");
+		BbsService bbsService = (BbsService) wac.getBean("bbsService");
+		BbsNttDAO bbsNttDAO = (BbsNttDAO) wac.getBean("bbsNttDAO");
+		BbsAtchmnflService bbsAtchmnflService = (BbsAtchmnflService) wac
+				.getBean("bbsAtchmnflService");
+
+		Connection connection = null;
+		Statement st = null;
+		Statement st1 = null;
+		ResultSet rs1 = null;
+		try {
+			Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+			connection = DriverManager
+					.getConnection("jdbc:sqlserver://175.212.21.82:1433;database=vomulweb2;user=sa;password=hanshin!23;");
+			st = connection.createStatement();
+			st1 = connection.createStatement();
+
+			String sql = " select 'RainbowQna' as table_name, Num, Name, Pwd, Title, Content, ReadCnt, RegDate, Ip, File1, FileName1, '' as Ho, '' as Kind from vomulweb2.RainbowQna UNION ALL select 'FreeBoard' as table_name, Num, Name, Pwd, Title, Content, ReadCnt, RegDate, Ip, File1, FileName1, '' as Ho, '' as Kind from vomulweb2.FreeBoard UNION ALL select 'TownCulture' as table_name, Num, Name, Pwd, Title, Content, ReadCnt, RegDate, Ip, File1, FileName1, '' as Ho, '' as Kind from vomulweb2.TownCulture UNION ALL select 'YouthHucafe' as table_name, Num, Name, Pwd, Title, Content, ReadCnt, RegDate, Ip, File1, FileName1, '' as Ho, '' as Kind from vomulweb2.YouthHucafe UNION ALL select 'GongJiBoard' as table_name, Num, Name, '' as Pwd, Title, Content, ReadCnt, RegDate, Ip, File1, FileName1, '' as Ho, '' as Kind from vomulweb2.GongJiBoard UNION ALL select 'PdsBoard' as table_name, Num, Name, '' as Pwd, Title, Content, ReadCnt, RegDate, Ip, File1, FileName1, '' as Ho, '' as Kind from vomulweb2.PdsBoard UNION ALL select 'WebZine' as table_name, Num, Name, '' as Pwd, Title, Content, '0' as ReadCnt, RegDate, Ip, File1, FileName1, Ho, Kind from vomulweb2.WebZine WHERE Kind != 'people' ";
+
+			ResultSet rs = st.executeQuery(sql);
+
+			BbsNttVO bbsNttVO = new BbsNttVO();
+
+			while (rs.next()) {
+				int nttNo = bbsNttDAO.selectBbsNttNoNextVal();
+				String Title = rs.getString("Title");
+				String table_name = rs.getString("table_name");
+				String Content = rs.getString("Content");
+				String RegDate = rs.getString("RegDate");
+				String Name = rs.getString("Name");
+				String Pwd = rs.getString("Pwd");
+				String Ip = rs.getString("Ip");
+				String File1 = rs.getString("File1");
+				String FileName1 = rs.getString("FileName1");
+				String Ho = rs.getString("Ho");
+				String Kind = rs.getString("Kind");
+				int ReadCnt = rs.getInt("ReadCnt");
+
+				if (table_name.equals("RainbowQna")) {
+					bbsNttVO.setBbsNo(57);
+				} else if (table_name.equals("FreeBoard")) {
+					bbsNttVO.setBbsNo(58);
+				} else if (table_name.equals("TownCulture")) {
+					bbsNttVO.setBbsNo(59);
+				} else if (table_name.equals("YouthHucafe")) {
+					bbsNttVO.setBbsNo(60);
+				} else if (table_name.equals("GongJiBoard")) {
+					bbsNttVO.setBbsNo(61);
+				} else if (table_name.equals("PdsBoard")) {
+					bbsNttVO.setBbsNo(63);
+				} else if (table_name.equals("WebZine")) {
+					if (Kind.equals("photo")) {
+						bbsNttVO.setBbsNo(64);
+					} else if (Kind.equals("ucc")) {
+						bbsNttVO.setBbsNo(65);
+					} else if (Kind.equals("information")) {
+						bbsNttVO.setBbsNo(66);
+					} else if (Kind.equals("tidings")) {
+						bbsNttVO.setBbsNo(67);
+					}
+				}
+
+				BbsInfoVO bbsInfoVO = bbsInfoService.selectBbsInfo(bbsNttVO
+						.getBbsNo());
+
+				BbsVO bbsVO = bbsService.selectBbs(bbsNttVO.getBbsNo());
+
+				String frstRegisterPnttm = "";
+				if ("".equals(RegDate) || RegDate == null) {
+					frstRegisterPnttm = DateUtil
+							.getNowDateTime("yyyyMMddHHmmss");
+				} else {
+					frstRegisterPnttm = DateUtil.toDateFormat(RegDate,
+							"yyyy-MM-dd HH:mm:ss", "yyyyMMddHHmmss");
+				}
+
+				String frstRegisterId = "neo";
+
+				bbsNttVO.setNttNo(nttNo);
+				bbsNttVO.setNttSj(Title);
+				bbsNttVO.setNttCn(Content);
+
+				bbsNttVO.setPasswd(Pwd);
+
+				bbsNttVO.setWriterNm(Name);
+				bbsNttVO.setNoticeAt("N");
+				bbsNttVO.setWriterDplctCode("neo");
+				bbsNttVO.setUpperNttNo(0);
+				bbsNttVO.setNttLevel(0);
+				bbsNttVO.setNttOrdr(-1);
+				bbsNttVO.setDeleteAt("N");
+				bbsNttVO.setRdcnt(ReadCnt);
+				bbsNttVO.setWriterIp(Ip);
+				bbsNttVO.setFrstRegisterPnttm(frstRegisterPnttm);
+				bbsNttVO.setFrstRegisterId(frstRegisterId);
+				bbsNttVO.setHtmlUseAt("Y");
+				if (StringUtil.isEmpty(bbsNttVO.getOthbcAt()))
+					bbsNttVO.setOthbcAt("Y");
+
+				bbsNttVO.setAditfield1(Ho);
+
+				bbsNttDAO.insertBbsNtt(bbsNttVO);
+
+				bbsNttDAO.updateNttOrdrPlus(bbsNttVO.getBbsNo());
+
+				if (!"".equals(File1)) {
+					String FILENAME = FileName1;
+					String storeFileName = File1;
+
+					String frstRegisterPnttm1 = "20190101000000";
+
+					int pos = FILENAME.lastIndexOf(".");
+					String ext = FILENAME.substring(pos + 1);
+
+					BbsAtchmnfl bbsAtchmnfl = new BbsAtchmnfl();
+					bbsAtchmnfl.setBbsNo(bbsNttVO.getBbsNo());
+					bbsAtchmnfl.setNttNo(nttNo);
+					bbsAtchmnfl.setStorePath("/DATA/bbs/" + bbsNttVO.getBbsNo()
+							+ "/");
+					bbsAtchmnfl.setFileNm(FILENAME);
+					bbsAtchmnfl.setStoreFileNm(storeFileName);
+					bbsAtchmnfl.setReplcText("");
+					bbsAtchmnfl.setFrstRegisterPnttm(frstRegisterPnttm1);
+					bbsAtchmnfl.setFrstRegisterId("neo");
+					bbsAtchmnfl.setFileExtsn(ext);
+					bbsAtchmnfl.setBdtInsrtAt("N");
+					bbsAtchmnflService.insertBbsAtchmnfl(bbsAtchmnfl);
+				}
+			}
+
+			rs.close();
+			st.close();
+			st1.close();
+			connection.close();
+		} catch (SQLException se1) {
+			se1.printStackTrace();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		} finally {
+			try {
+				if (st != null)
+					st.close();
+			} catch (SQLException sQLException) {
+			}
+
+			try {
+				if (st1 != null)
+					st1.close();
+			} catch (SQLException sQLException) {
+			}
+
+			try {
+				if (connection != null)
+					connection.close();
+			} catch (SQLException se) {
+				se.printStackTrace();
+			}
+		}
+	}
+
+	@RequestMapping({ "/bwyf/menuFileCreate.do" })
+	public void test4(ModelMap model) throws Exception {
+		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+				.getRequestAttributes()).getRequest();
+		HttpSession session = request.getSession();
+		ServletContext servletContext = session.getServletContext();
+		WebApplicationContext wac = WebApplicationContextUtils
+				.getRequiredWebApplicationContext(servletContext);
+
+		MenuService menuService = (MenuService) wac.getBean("menuService");
+		RepositoryUtil repositoryUtil = (RepositoryUtil) wac
+				.getBean("repositoryUtil");
+		FileMngUtil fileMngUtil = (FileMngUtil) wac.getBean("FileMngUtil");
+
+		String[] siteId = { "bwyf", "woman", "bucheonyouth", "bwycenter",
+				"echoyouth", "sosayouth" };
+
+		for (int k = 0; k < siteId.length; k++) {
+			Menu menu = new Menu();
+			menu.setSiteId(siteId[k]);
+
+			List<Menu> menulist = menuService.selectMenuList(menu);
+
+			for (int i = 0; i < menulist.size(); i++) {
+				repositoryUtil.setRepository(request, menu.getSiteId());
+				String contentsFilePath = fileMngUtil.realPath(
+						request,
+						repositoryUtil.getContentsFilePath().replaceAll(
+								"[*]",
+								String.valueOf(((Menu) menulist.get(i))
+										.getMenuNo())));
+
+				fileMngUtil
+						.saveFile(
+								"<div style=\"padding:50px 0;text-align:center;\">\n<img src=\"/common/images/wait.jpg\" alt=\"컨텐츠를 준비중 입니다.\" style=\"max-width:100%;\" />\n</div>",
+								contentsFilePath);
+			}
+		}
+	}
+
+	public static Document fileRead(String path) {
+		StringBuffer sb = new StringBuffer();
+		Document doc = null;
+
+		try {
+			File file = new File(path);
+
+			doc = Jsoup.parse(file, "EUC-KR");
+		} catch (FileNotFoundException fileNotFoundException) {
+
+		} catch (IOException e) {
+			System.out.println(e);
+		}
+		return doc;
+	}
+	*/
+}

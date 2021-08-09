@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename resource &apos;WebVMS_Test/src/main/webapp/js/map/Measure.js&apos; to &apos;measure.js&apos;" description="Rename resource &apos;Measure.js&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="src/main/webapp/js/map/Measure.js" name="measure.js" stamp="1572835650825" updateReferences="true"/>
+</session>

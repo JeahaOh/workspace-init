@@ -1,0 +1,415 @@
+<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<c:choose>
+	<c:when test="${NETWORK eq 'TEST'}">
+    <script>
+      console.group("header info");
+      console.info('BODY FILE NAME : ' + window.debugFileName);
+      console.info('NETWORK STATUS : ${NETWORK}');
+      console.info('accessAuth.rollRead : <c:out value="${accessAuth.rollRead}" />');
+      console.info('accessAuth.rollCreate : <c:out value="${accessAuth.rollCreate}" />');
+      console.info('accessAuth.rollUpdate : <c:out value="${accessAuth.rollUpdate}" />');
+      console.info('accessAuth.rollDelete : <c:out value="${accessAuth.rollDelete}" />');
+      console.info('loginVO.authorGroupCode : <c:out value="${loginVO.authorGroupCode}" />');
+      console.info('pathname : ' + location.pathname );
+      console.info('querystring : ' + location.search );
+      console.groupEnd("header info");
+      const isTest = "${NETWORK eq 'TEST'}";
+    </script>
+	</c:when>
+	<c:otherwise>
+		<script>
+			const isTest = false;
+		</script>
+	</c:otherwise>
+</c:choose>
+<!-- header jsp start -->
+<!-- ChartJS PieChart Outside Label Library by PSH-->
+<script type="text/javascript" src='${pageContext.request.contextPath}/js/cmmn/automaticLogout.js'></script>
+<script type="text/javascript" src='${pageContext.request.contextPath}/js/chart/chartjs-plugin-labels.js'></script>
+
+<script type="text/javascript" src='${pageContext.request.contextPath}/js/printThis.js'></script>
+
+
+<c:set var="pageName" value="${pageScope['javax.servlet.jsp.jspPage']}" />
+<script type="text/javascript">
+  // let pageName = '${pageName}'.replace('org.apache.jsp.WEB_002dINF', '').replace(/([/.])/gi,'/');
+  // window.debugFileName = pageName.substring(0, pageName.indexOf('@'));
+  // isTest && console.log( window.debugFileName );
+  
+  // jusoOpener관련 오류가 발생하는 경우 아래 주석을 해지하고, 사용자의 도메인정보를 입력합니다. ("jusoPopup.jsp"도 동일하게 적용시켜야 합니다.)
+  // document.domain = "127.0.0.1";  //예)로컬 - 127.0.0.1:포트번호,  운영 - www.abc.co.kr
+  console.info('menu/redesign header');
+  
+  
+  function fn_certPopup() {
+    $("#certPopup").toggle();
+  }
+
+  function fn_certPopup2() {
+    $('#re_password1').val('');
+    $('#re_password2').val('');
+    $("#certPopup2").toggle();
+  }
+
+  function fn_cert_close() {
+    $("#certPopup").hide();
+  }
+
+  function fn_cert_close2() {
+    $("#certPopup2").hide();
+  }
+
+  function fn_hides() {
+    $("dl").hide();
+    $(".bg_header").hide();
+  };
+
+
+  function gisButton() {
+    //   console.log("gis클릭함");
+    var form = document.createElement("form");
+    window.open("about:blank", "MPCGIS",
+      "location=no, toolbar=no, menubar=no, scrollbars=no, resizable=yes, copyhistory=no, centerscreen=yes, personalbar=no, status=no fullscreen=yes"
+      );
+    form.name = "webGisServiceVO";
+    form.method = "post";
+    form.action = "/MPC_GIS/gisBasicMap.do";
+    form.target = "MPCGIS";
+    form = addHidden(form, "userId", '${loginVO.userId}');
+    form = addHidden(form, "gisKey", '${loginVO.gisKey}');
+    document.body.insertBefore(form, null);
+    form.submit();
+  }
+
+  function addHidden(frm, name, value) {
+    var i = document.createElement("input");
+    i.type = "hidden";
+    i.name = name;
+    i.value = value;
+    frm.insertBefore(i, null);
+    return frm;
+  }
+
+  function logout(holdPage) {
+    $.ajax({
+      url: "/cmmn/logout.do",
+      type: 'POST',
+      async: false,
+      success: function (result) {
+        if (result == "ok") {
+          setTimeout( function(){
+            location.href = '/';
+          }, 1500);
+        }
+      }
+    });
+  }
+</script>
+
+<header id="header">
+  <h1 onClick="location.href='${rootPage}'"><a href="<c:out value="${rootPage}"/>">해양오염통합방제시스템</a></h1>
+  <div class="gnbwrap">
+    <!-- 대메뉴 시작 -->
+    <ul id="gnblev1" style="width:900px">
+      <c:forEach var="data" items="${gnbMenu}" varStatus="status">
+          <c:if test="${data.lvl eq '1' && data.menuNm ne '관리자'}">
+            <li data-index="${status.index}">
+              <c:set var="menuCodeData" value="${data.menuCode}" />
+              <c:choose>
+                <c:when test="${not empty data.menuCodeSub}">
+                  <c:set var="menuCodeData" value="${data.menuCodeSub}" />
+                </c:when>
+                <c:otherwise>
+                  <c:set var="menuCodeData" value="${data.menuCode}" />
+                </c:otherwise>
+              </c:choose>
+
+              <c:set var="menuUrl">${data.menuUrl}<c:if test="${data.menuUrl ne '#' && data.newWindowAt eq 'N'}"><c:choose><c:when test="${fn:indexOf(data.menuUrl, '?') > -1}">&</c:when><c:otherwise>?</c:otherwise></c:choose>menuCode=${menuCodeData}</c:if></c:set>
+    
+              <!-- 추가 수정부분 GIS-->
+              <c:choose>
+                <c:when test="${data.menuNm eq 'GIS'}">
+                  <a href="javascript:gisButton();" id="gisButton" lang="1">GIS</a>
+                </c:when>
+                <c:when test="${data.menuNm eq '관리자'}">
+
+                </c:when>
+                <c:otherwise>
+                  <a href="<c:out value="${menuUrl}"/>"<c:if test="${data.newWindowAt eq 'Y'}"> target="_blank" title="새창열림"</c:if> lang="1">${data.menuNm}</a>
+                </c:otherwise>
+              </c:choose>
+            </li>
+          </c:if>
+      </c:forEach>
+    </ul>
+    <!-- 대메뉴 끝 -->
+<%----%>
+    <!-- 서브메뉴 시작 -->
+    <ul id="gnblev2">
+      <c:forEach var="data" items="${gnbMenu}" varStatus="status">
+        <c:if test="${data.lvl eq '1' && data.menuNm ne '관리자'}">
+          <c:set var="menuCodeData" value="${data.menuCode}" />
+          <c:choose>
+            <c:when test="${not empty data.menuCodeSub}">
+              <c:set var="menuCodeData" value="${data.menuCodeSub}" />
+            </c:when>
+            <c:otherwise>
+              <c:set var="menuCodeData" value="${data.menuCode}" />
+            </c:otherwise>
+          </c:choose>
+          <c:set var="menuUrl">${data.menuUrl}<c:if test="${data.menuUrl ne '#' && data.newWindowAt eq 'N'}"><c:choose><c:when test="${fn:indexOf(data.menuUrl, '?') > -1}">&</c:when><c:otherwise>?</c:otherwise></c:choose>menuCode=${menuCodeData}</c:if></c:set>
+          
+
+          <li>
+            <a href="#" class="gnblev2tit">${data.menuNm}<br/>
+            	<b>
+                  <c:choose>
+                    <c:when test="${data.menuNm eq '오염예방'}">Pollution Prevention</c:when>
+                    <c:when test="${data.menuNm eq '오염방제'}">Pollution Control</c:when>
+                    <c:when test="${data.menuNm eq '사고통계'}">Statistics of Accident</c:when>
+                    <c:when test="${data.menuNm eq 'GIS'}">Geographic Information System</c:when>
+                    <c:when test="${data.menuNm eq '자료실'}">Notice</c:when>
+                    <c:when test="${data.menuNm eq '방제행정'}">Control Administration</c:when>
+                  </c:choose>
+            	</b>
+            </a>
+            <ul class="leftdepth2">
+            
+            <c:forEach var="data2" items="${gnbMenu}">
+              <c:if test="${data2.lvl eq '2' && data.menuCode eq data2.upperMenuCode}">
+                <c:set var="menuCodeData" value="${data2.menuCode}" /><c:choose><c:when test="${not empty data2.menuCodeSub}"><c:set var="menuCodeData" value="${data2.menuCodeSub}" /></c:when><c:otherwise><c:set var="menuCodeData" value="${data2.menuCode}" /></c:otherwise></c:choose>
+                <c:set var="menuUrl">${data2.menuUrl}<c:if test="${data2.menuUrl ne '#' && data2.newWindowAt eq 'N'}"><c:choose><c:when test="${fn:indexOf(data2.menuUrl, '?') > -1}">&</c:when><c:otherwise>?</c:otherwise></c:choose>menuCode=${menuCodeData}</c:if></c:set>
+                  <li>
+                    <a class="depth2_tit" href="<c:out value="${menuUrl}"/>"
+                    <c:if test="${data3.newWindowAt eq 'Y'}"> target="_blank" title="새창열림"</c:if>
+                    <c:if test="${data3.menuCode eq 'MNU00302'}"> onblur="$('.bg_header').hide();$('#theme5').hide();"</c:if>
+                    >${data2.menuNm}</a>
+                    <ul class="depth3">
+                      <c:forEach var="data3" items="${gnbMenu}">
+                        <c:if test="${data3.lvl eq '3' && data2.menuCode eq data3.upperMenuCode}">
+
+                          <c:set var="menuCodeData" value="${data3.menuCode}" />
+
+                          <c:choose>
+                            <c:when test="${not empty data2.menuCodeSub}">
+                              <c:set var="menuCodeData" value="${data3.menuCodeSub}" />
+                            </c:when>
+                            <c:otherwise>
+                              <c:set var="menuCodeData" value="${data3.menuCode}" />
+                            </c:otherwise>
+                          </c:choose>
+                          <c:set var="menuUrl">${data3.menuUrl}<c:if test="${data3.menuUrl ne '#' && data3.newWindowAt eq 'N'}"><c:choose><c:when test="${fn:indexOf(data3.menuUrl, '?') > -1}">&</c:when><c:otherwise>?</c:otherwise></c:choose>menuCode=${menuCodeData}</c:if></c:set>
+
+                          <li>
+                            <a href="<c:out value="${menuUrl}"/>"
+                            <c:if test="${data3.newWindowAt eq 'Y'}"> target="_blank" title="새창열림"</c:if>
+                            <c:if test="${data3.menuCode eq 'MNU00302'}"> onblur="$('.bg_header').hide();$('#theme5').hide();"</c:if>
+                            >${data3.menuNm}</a>
+                          </li>
+
+                        </c:if>
+                      </c:forEach>
+
+                    </ul>
+
+                  </li>
+              </c:if>
+            </c:forEach>
+            </ul>
+          </li>
+        </c:if>
+      </c:forEach>
+    </ul>
+    <!-- 서브메뉴 끝 -->
+  </div>
+  <!--GNB End-->
+  
+
+
+
+  <!--utilmenu start-->
+  <div class="utilmenu">
+    <div class="topsrch_fold">
+      <a href="#" id="topsrch">검색창열기</a>
+    </div>
+    <div class="topsrch_open" id="topsrch_open">
+      <form name="searchFrm" action="<c:url value='/ext/search/search.do?menuCode=MNU00325'/>" method="post">
+        <fieldset>
+          <legend>검색</legend>
+          <input type="search" title="검색창" placeholder="검색어를 입력하세요." size="10" id="utilsrch" name="topSearchKeyword" value="${topSearchKeyword}">
+          <a href="#" class="btnclosesrch" id="btnclosesrch" onclick="document.searchFrm.submit(); return false;">검색창닫기</a>
+        </fieldset>
+      </form>
+    </div>
+
+
+
+    <div class="account">
+      <c:choose>
+        <c:when test="${empty loginVO}">
+          <ul>
+            <li class="logout"><a href="/cmmn/login.do">로그인</a></li>
+          </ul>
+        </c:when>
+        <c:otherwise>
+          <span><img src="${pageContext.request.contextPath}/images/basicprofile.gif" alt="계정"></span>
+          <strong>${loginVO.userNm}님</strong>
+          <ul>
+            <li class="logout"><a href="javascript:logout();">로그아웃</a></li>
+            <li><a href="/cmmn/changePwd.do">패스워드관리</a></li>
+            <c:if test="${fn:indexOf(loginVO.authorGroupCode,'AG01') > -1}">
+              <li class="status"><a href="/mng/user/userList.do?menuCode=ADM00004">설정</a></li>
+            </c:if>
+            
+          </ul>
+        </c:otherwise>
+      </c:choose>
+    </div>
+
+
+  </div>
+  <!--utilmenu end-->
+</header>
+<%-- 로딩 모달 START --%>
+<section id="loadingwrap" class="modal">
+  <div class="modal-content" style="width:450px;">
+    <div class="modalbody tc" id="loadingbody">
+      <img src="${pageContext.request.contextPath}/images/character.gif" alt="">
+    </div>
+  </div>
+</section>
+<%-- 로딩 모달 END --%>
+<%-- BUG REPORT START --%>
+<div id="errorwrap" class="modal">
+  <div class="modal-content" style="width:1060px;">
+    <h1 class="poptit">
+      <span>BUG REPORT</span>
+      <a href="#none" class="modalclose" onClick="$('#errorwrap').hide();">닫기</a>
+    </h1>
+    <div class="modalbody">
+      <form class="form" id="bugReport">
+        <input type="hidden" name="bug_url" id="bug_url" />
+        <input type="hidden" name="bug_pathname" id="bug_pathname" />
+        <input type="hidden" name="bug_query" id="bug_query" />
+        <input type="hidden" name="bug_prv_page" id="bug_prv_page" />
+        <input type="hidden" name="bug_file" id="bug_file" />
+        <input type="hidden" name="bug_msg" id="bug_msg" />
+        <input type="hidden" name="bug_at" id="bug_at" />
+        <textarea name="bug_stack" id="bug_stack" cols="30" rows="10" style="display:none; width:100%; resize:none;" readonly></textarea>
+        <input type="hidden" name="bug_page_base64" id="bug_page_base64" />
+        <fieldset class="form-filter">
+          <div class="fieldset-body">
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="bug_browser" class="form-label">브라우져</label>
+                <input type="text" name="bug_browser" id="bug_browser" class="form-control" readonly />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="bug_date" class="form-label">일시</label>
+                <input type="text" name="bug_date" id="bug_date" class="form-control" readonly />
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="bug_loc_nav" class="form-label">메뉴</label>
+                <input type="text" name="bug_loc_nav" id="bug_loc_nav" class="form-control" readonly />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="bug_cmmnt" class="form-label">버그사항</label>
+                  <textarea name="bug_cmmnt" id="bug_cmmnt" class="form-control"
+                    style="width:100%; resize:none;"
+                    placeholder="전후 사정을 포함하여 문제 사항을 자세하게 서술해 주세요."
+                    >
+                  </textarea>
+              </div>
+            </div>
+
+          </div>
+        </fieldset>
+      </form>
+
+      <div class="page-button mt30">
+        <div class="btn-group">
+          <a href="#" class="btn btn-black" onClick="javascript:reportBug(); return false;">저장</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<%-- BUG REPORT END --%>
+
+<%-- LOGOUT MODAL START --%>
+<section id="session_blocker" class="modal">
+  <div class="modal-content" style="width:650px;">
+    <h1 class="poptit">
+      <span>계정 보호</span>
+      <a href="#none" id="cancelSessionBlock" class="modalclose" onClick="cancelSeesionBlock();">닫기</a>
+    </h1>
+    <div class="modalbody">
+      <p id="sessiobn_block_msg" style="height: 10rem;">장시간 이용하지 않아,<br />
+        <b id="session_timeout_sec">60</b>초 후 로그아웃 됩니다.
+      </p>
+      <div class="page-button">
+        <div id="session_block_btn" class="btn-group">
+          <a href="#" class="btn btn-black" data-status="hover" onClick="logout(); return false;">로그아웃</a>
+          <a href="#" class="btn btn-deepblue" data-status="hover" onClick="cancelSeesionBlock(); return false;">닫기</a>
+        </div>
+        <div id="session_login_btn" class="btn-group" style="display:none;">
+          <a href="/cmmn/login.do" class="btn btn-deepblue">로그인</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<%-- LOGOUT MODAL END --%>
+
+<script type="text/javascript">
+/*   var setCookie = function(name, value, exp) {
+    var date = new Date();
+    date.setTime(date.getTime() + exp*24*60*60*1000);
+    document.cookie = name + '=' + value + ';expires=' + date.toUTCString() + ';path=/';
+  }; */
+  
+  
+  var getCookie = function(name) {
+	  let matches = document.cookie.match(new RegExp(
+			    "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+			  ));
+			  return matches ? decodeURIComponent(matches[1]) : undefined;
+			}
+  var deleteCookie = function(name) {
+    document.cookie = name + '=; expires=Thu, 01 Jan 1999 00:00:10 GMT;path=/';
+  };
+
+  (function(){
+    var closePopup;
+    try {
+      closePopup = getCookie('closePopup') == 'true';
+    } catch( e ) {
+      closePopup = false;
+    }
+    //console.log( closePopup );
+    if( location.hostname == 'mprs.kcg.go.kr' && !closePopup ) {
+      $('#divpop').show();
+    }
+  })();
+  
+  function closeWin(){
+    var date = new Date();
+    date.setTime(date.getTime() + 1*24*60*60*1000);
+    document.cookie = 'closePopup' + '=' + true + ';expires=' + date.toUTCString() + ';path=/';
+    $("#divpop").hide();
+  }
+</script>
+<%-- 로그아웃 모달 --%>
+

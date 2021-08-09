@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename local variable &apos;caller&apos; in &apos;kr.co.hanshinit.NeoCMS.cmm.util.StringUtil.mktrace(...)&apos; to &apos;trace&apos;&#x0D;&#x0A;- Original project: &apos;HANAM&apos;&#x0D;&#x0A;- Original element: &apos;kr.co.hanshinit.NeoCMS.cmm.util.StringUtil.mktrace(String, int, int, String).caller&apos;&#x0D;&#x0A;- Renamed element: &apos;caller&apos;&#x0D;&#x0A;- Update references to refactored element" description="Rename local variable &apos;caller&apos;" id="org.eclipse.jdt.ui.rename.local.variable" input="/src\/main\/java=/optional=/true=/=/maven.pomderived=/true=/&lt;kr.co.hanshinit.NeoCMS.cmm.util{StringUtil.java[StringUtil~mktrace~QString;~I~I~QString;@caller!47896!47938!47910!47915!QStringBuilder;!0!false" name="trace" references="true" stamp="1625449002112" version="1.0"/>
+</session>

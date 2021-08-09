@@ -1,0 +1,51 @@
+package com.koem.vms.waterdepth.controller;
+
+import java.util.List;
+import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
+import com.koem.vms.waterdepth.dto.WaterDepthDTO;
+import com.koem.vms.waterdepth.service.WaterDepthService;
+
+@RestController
+public class WaterDepthController {
+
+	@Autowired
+	private WaterDepthService service;
+	
+	@RequestMapping( value = "/reqWaterDepth.do", method = RequestMethod.POST, produces = "application/json; charset=UTF-8" )
+	
+//  public String reqWaterDepth(
+//	public JSONObject reqWaterDepth(
+	public @ResponseBody Map<String, List<WaterDepthDTO>> reqWaterDepth(
+	    HttpServletRequest req, HttpServletResponse res,
+	    @RequestParam Map<String, String> area
+//	    @RequestBody Map<String, String> area
+	) throws Exception {
+	  System.out.println("\n\tREQ Water Depth . do");
+	  System.out.println(area);
+	  System.out.println(area.toString());
+	  System.out.println(area.get("area"));
+//	  JSONObject result;
+//    result = service.getWaterDepthInRange(area.get("area"));
+	  
+	  Map<String, List<WaterDepthDTO>> result;
+	  result = service.getWaterDepthInRange(area.get("area"));
+  
+    System.out.println("\n\t :: Controller END ::\n");
+    
+    System.out.println(result.toString());
+    
+	  return result;
+	}
+
+
+
+}

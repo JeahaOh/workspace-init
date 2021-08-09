@@ -1,0 +1,136 @@
+package kr.co.hanshinit.NeoCMS.cop.sms.service.impl;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import egovframework.rte.fdl.cmmn.EgovAbstractServiceImpl;
+import kr.co.hanshinit.NeoCMS.cop.sms.service.MmsVO;
+import kr.co.hanshinit.NeoCMS.cop.sms.service.MsgDataService;
+import kr.co.hanshinit.NeoCMS.cop.sms.service.MsgDataVO;
+
+@Service("msgDataService")
+public class MsgDataServiceImpl extends EgovAbstractServiceImpl implements MsgDataService {
+
+	@Resource(name="msgDataDAO")
+	private MsgDataDAO msgDataDAO;
+
+	@Override
+	public List<MsgDataVO> selectMsgDataList(MsgDataVO msgDataVO)
+			throws Exception {
+		List<MsgDataVO> list = msgDataDAO.selectMsgDataList( msgDataVO );
+		return list;
+	}
+
+	@Override
+	public int selectMsgDataTotCnt(MsgDataVO msgDataVO) throws Exception {
+		return (Integer) msgDataDAO.selectMsgDataTotCnt( msgDataVO );
+	}
+
+	@Override
+	public MsgDataVO selectMsgDataData(MsgDataVO msgDataVO) throws Exception {
+		MsgDataVO data = (MsgDataVO) msgDataDAO.selectMsgDataData( msgDataVO );
+
+		return data;
+	}
+
+
+	@Override
+	public void insertMmsData(MmsVO mmsVO) throws Exception {
+		msgDataDAO.insertMmsData(mmsVO);
+	}
+
+	@Override
+	public void insertMsgData(List<MsgDataVO> msgDataList) throws Exception {
+
+//		String key="aes256-hanam-sms-key!!";
+//		URLCodec codec = new URLCodec();
+//
+//		AES256Util aes256 = new AES256Util(key);
+//
+//		//복호화(AES256Util)
+//		String decPhone = aes256.decrypt(codec.decode(msgDataVO.getCallTo()));
+//
+//		msgDataVO.setCallTo(decPhone);
+		msgDataDAO.insertMsgData(msgDataList);
+	}
+
+
+	@Override
+	public void updateMsgData(MsgDataVO msgDataVO) throws Exception {
+		msgDataDAO.updateMsgData(msgDataVO);
+	}
+
+	@Override
+	public void deleteMsgData(MsgDataVO msgDataVO) throws Exception {
+		msgDataDAO.deleteMsgData(msgDataVO);
+	}
+
+	@Override
+	public int selectMmsContSeq(MmsVO mmsVO) throws Exception {
+		return (Integer) msgDataDAO.selectMmsContSeq( mmsVO );
+	}
+
+
+
+	@Override
+	public void updateMmsData(MmsVO mmsVO) throws Exception {
+		msgDataDAO.updateMmsData(mmsVO);
+	}
+
+	@Override
+	public void deleteMmsData(MmsVO mmsVO) throws Exception {
+		msgDataDAO.deleteMmsData(mmsVO);
+	}
+
+	@Override
+	public void mmsSendComp(MmsVO mmsVO) throws Exception {
+		msgDataDAO.mmsSendComp(mmsVO);
+	}
+
+/*	@Override
+	public List<MsgDataVO> selectMsgCountList(MsgDataVO msgDataVO)
+			throws Exception {
+		List<MsgDataVO> list = msgDataDAO.selectMsgCountList( msgDataVO );
+		return list;
+	}*/
+
+
+	@Override
+	public void insertMsgDataStaff(List<MsgDataVO> msgDataList) throws Exception {
+
+		msgDataDAO.insertMsgDataStaff(msgDataList);
+	}
+
+	@Override
+	public MsgDataVO selectSmsSentRsltInfo(MsgDataVO msgDataVO) throws Exception {
+		MsgDataVO data = (MsgDataVO) msgDataDAO.selectSmsSentRsltInfo( msgDataVO );
+
+		return data;
+	}
+
+	@Override
+	public List<MsgDataVO> selectSmsSentFailList(MsgDataVO msgDataVO)
+			throws Exception {
+		List<MsgDataVO> list = msgDataDAO.selectSmsSentFailList( msgDataVO );
+		return list;
+	}
+
+	@Override
+	public void insertMsgDataResve(List<MsgDataVO> msgDataList) throws Exception
+	{
+		msgDataDAO.insertMsgDataResve(msgDataList);
+	}
+
+
+	public int deleteMsgDataAll(MsgDataVO msgDataVO) throws Exception
+	{
+		return msgDataDAO.deleteMsgDataAll(msgDataVO);
+	}
+
+
+
+}
+

@@ -1,0 +1,391 @@
+package com.gmtc.management;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.annotation.Resource;
+import javax.transaction.Transactional;
+import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.support.SessionStatus;
+import org.springmodules.validation.commons.DefaultBeanValidator;
+import egovframework.com.cmm.ComDefaultCodeVO;
+import egovframework.com.cmm.LoginVO;
+import egovframework.com.cmm.service.EgovCmmUseService;
+import egovframework.let.cop.bbs.service.BoardMaster;
+import egovframework.let.cop.bbs.service.BoardMasterVO;
+import egovframework.let.cop.bbs.service.EgovBBSAttributeManageService;
+import egovframework.let.sym.mnu.mpm.service.EgovMenuManageService;
+import egovframework.let.sym.mnu.mpm.service.MenuManageVO;
+import egovframework.rte.fdl.property.EgovPropertyService;
+import egovframework.rte.fdl.security.userdetails.util.EgovUserDetailsHelper;
+
+@Controller
+public class MenuController {
+
+  /** EgovMenuManageService */
+  @Resource(name = "meunManageService")
+  private EgovMenuManageService menuManageService;
+  @Resource(name = "EgovCmmUseService")
+  private EgovCmmUseService cmmUseService;
+  
+  //  얘네 왜 있는 걸 까?
+  @Autowired
+  private DefaultBeanValidator beanValidator;
+  @Resource(name = "propertiesService")
+  protected EgovPropertyService propertyService;
+  @Resource(name = "EgovBBSAttributeManageService")
+  private EgovBBSAttributeManageService bbsAttrbService;
+
+  @RequestMapping("/menuList.do")
+  public String menuList(@RequestParam(value = "siteId", required = false) String siteId,
+      ModelMap model) throws Exception {
+    System.out.println("\n\t:: Enterance menu List ::");
+    ComDefaultCodeVO vo = new ComDefaultCodeVO();
+    
+    vo.setCodeId("COM004");
+    List<?> codeResult = cmmUseService.selectCmmCodeDetail(vo);
+    model.addAttribute("typeList", codeResult);
+
+    vo.setCodeId("COM009");
+    codeResult = cmmUseService.selectCmmCodeDetail(vo);
+    model.addAttribute("attrbList", codeResult);
+    
+    //  -> include Form 필요한건지 모르겠음.
+    BoardMaster boardMaster = new BoardMaster();
+    model.addAttribute("boardMaster", boardMaster);
+    //  <- include Form 필요한건지 모르겠음.
+    
+    return "management/menuManagement";
+  }
+
+  @RequestMapping("/selectHighMenuList.do")
+  @ResponseBody
+  @SuppressWarnings("unchecked")
+  public String selectHighMenuList(@RequestParam(value = "siteId", required = false) String siteId)
+      throws Exception {
+    System.out.println("\n\t:: High Menu List START ::");
+    System.out.printf("\tSite ID : %s\n", siteId);
+
+    LoginVO user = EgovUserDetailsHelper.isAuthenticated()
+        ? (LoginVO) EgovUserDetailsHelper.getAuthenticatedUser() : null;
+    JSONObject result = new JSONObject();
+    
+    MenuManageVO menuManageVO = new MenuManageVO();
+    menuManageVO.setTmp_Id(user.getId());
+    menuManageVO.setTmp_Password(user.getPassword());
+    menuManageVO.setTmp_UserSe(user.getUserSe());
+    menuManageVO.setTmp_Name(user.getName());
+    menuManageVO.setTmp_Email(user.getEmail());
+    menuManageVO.setTmp_OrgnztId(user.getOrgnztId());
+    menuManageVO.setTmp_UniqId(user.getUniqId());
+    menuManageVO.setSiteId(siteId);
+
+    List<?> highMenuList = menuManageService.selectMainMenuHead(menuManageVO);
+    result.put("highList", highMenuList);
+    
+    System.out.println("\n\t:: High Menu List END ::");
+    System.out.printf("RETURN :\n%s\n", highMenuList.toString());
+    return result.toString();
+  }
+
+  @RequestMapping("/selectMidList.do")
+  @ResponseBody
+  @SuppressWarnings("unchecked")
+  public String selectMidList(@RequestParam(value = "siteId", required = false) String siteId,
+      @RequestParam(value = "menuNo", required = false) int menuNo) throws Exception {
+    System.out.println("\n\t:: Mid List START ::");
+    System.out.printf("\tSite ID : %s\n\tMenu No : %d\n", siteId, menuNo );
+    
+    LoginVO user = EgovUserDetailsHelper.isAuthenticated()
+        ? (LoginVO) EgovUserDetailsHelper.getAuthenticatedUser() : null;
+    JSONObject result = new JSONObject();
+
+    MenuManageVO menuManageVO = new MenuManageVO();
+    menuManageVO.setTmp_Id(user.getId());
+    menuManageVO.setTmp_Password(user.getPassword());
+    menuManageVO.setTmp_UserSe(user.getUserSe());
+    menuManageVO.setTmp_Name(user.getName());
+    menuManageVO.setTmp_Email(user.getEmail());
+    menuManageVO.setTmp_OrgnztId(user.getOrgnztId());
+    menuManageVO.setTmp_UniqId(user.getUniqId());
+    menuManageVO.setSiteId(siteId);
+    menuManageVO.setMenuNo(menuNo);
+
+    List<?> midList = menuManageService.selectMidList(menuManageVO);
+    result.put("midList", midList);
+    
+    System.out.println("\n\t:: Mid List End ::");
+    System.out.printf("\tRETURN :\n%s\n", midList.toString());
+    return result.toString();
+  }
+
+  @RequestMapping("/selectLowList.do")
+  @ResponseBody
+  @SuppressWarnings("unchecked")
+  public String selectLowList(@RequestParam(value = "siteId", required = false) String siteId,
+      @RequestParam(value = "menuNo", required = false) int menuNo) throws Exception {
+    System.out.println("\n\t:: Low List START ::");
+    System.out.printf("\tSit ID : %s\n\tMenu No : %d\n", siteId, menuNo);
+    
+    LoginVO user = EgovUserDetailsHelper.isAuthenticated()
+        ? (LoginVO) EgovUserDetailsHelper.getAuthenticatedUser() : null;
+    JSONObject result = new JSONObject();
+
+    MenuManageVO menuManageVO = new MenuManageVO();
+    menuManageVO.setTmp_Id(user.getId());
+    menuManageVO.setTmp_Password(user.getPassword());
+    menuManageVO.setTmp_UserSe(user.getUserSe());
+    menuManageVO.setTmp_Name(user.getName());
+    menuManageVO.setTmp_Email(user.getEmail());
+    menuManageVO.setTmp_OrgnztId(user.getOrgnztId());
+    menuManageVO.setTmp_UniqId(user.getUniqId());
+    menuManageVO.setSiteId(siteId);
+    menuManageVO.setMenuNo(menuNo);
+
+    List<?> lowList = menuManageService.selectMidList(menuManageVO);
+    result.put("lowList", lowList);
+    
+    System.out.println("\n\t:: Low List END ::");
+    System.out.printf("\tRETURN : \n%s\n", lowList.toString());
+    return result.toString();
+  }
+
+  @RequestMapping("/insertMenu.do")
+  @ResponseBody
+  @SuppressWarnings("unchecked")
+  public String insertMenu(MenuManageVO vo) throws Exception {
+    System.out.println("\n\t:: Insert Menu ::");
+    System.out.println("MenuManageVO :\n" + vo.toString());
+    
+    JSONObject result = new JSONObject();
+    String resultMsg = menuManageService.insertMenu(vo);
+
+    if (resultMsg == null) {
+      result.put("결과", "성공");
+    } else {
+      result.put("결과", "실패");
+    }
+    
+    System.out.println("\t:: Insert Menu RESULT ::");
+    System.out.printf("\tResult : %s\n\tMSG :%s\n", resultMsg, result.toString());
+    return result.toString();
+  }
+
+  @RequestMapping("/updateMenu.do")
+  @ResponseBody
+  public String updateMenu(MenuManageVO vo) throws Exception {
+    System.out.println("\n\t:: Insert Menu ::");
+    System.out.println("MenuManageVO :\n" + vo.toString());
+    
+    String resultMsg = menuManageService.updateMenu(vo);
+    
+    
+    System.out.println("\t:: Insert Menu RESULT ::");
+    System.out.printf("\tResult : %s\n", resultMsg);
+    return resultMsg;
+  }
+
+  @SuppressWarnings("unchecked")
+  @RequestMapping("/insertBBSMasterInf.do")
+  @ResponseBody
+  @Transactional
+  public String insertBBSMasterInf(
+      @ModelAttribute("searchVO") BoardMasterVO boardMasterVO,
+      @ModelAttribute("boardMaster") BoardMaster boardMaster,
+      @RequestParam(value="upperMenuId", required=true) int upperMenuId,
+      @RequestParam(value="siteId", required=true) String siteId,
+      @RequestParam(value="level", required=true) String level,
+      BindingResult bindingResult,
+      SessionStatus status, ModelMap model) throws Exception {
+    System.out.println("\n\n------>:: /cop/bbs/insertBBSMasterInf.do ::");
+    LoginVO user = (LoginVO) EgovUserDetailsHelper.getAuthenticatedUser();
+    Boolean isAuthenticated = EgovUserDetailsHelper.isAuthenticated();
+    JSONObject result = new JSONObject();
+    
+    //  --> 권한 확인
+    if (!isAuthenticated) {
+      //  권한이 없다면 리턴.
+      result.put("isAuthenticated", isAuthenticated);
+      System.out.println("\n\n------>:: /cop/bbs/insertBBSMasterInf.do With Authenticated ERR ::\n\t" + result.toString());
+      return result.toString();
+    }
+    //  <-- 권한 확인
+
+    //  --> 데이터에 문제가 있는제 확인
+    beanValidator.validate(boardMaster, bindingResult);
+    System.out.println("bindingResult?\n" + bindingResult.toString());
+    System.out.println(boardMaster.toString());
+    
+    //  데이터에 문제가 있다면 리턴.
+    if (bindingResult.hasErrors()) {
+      List<?> errList = bindingResult.getAllErrors();
+      result.put("err", errList);
+      result.put("RESULT", "FAIL");
+      System.out.println("\n\n------>:: /cop/bbs/insertBBSMasterInf.do With Binding ERR ::\n\t" + result.toString());
+      return result.toString();
+    }
+    //  <-- 데이터에 문제가 있는지 확인
+
+    
+    //  LETTNMENUINFO에 넣는다.
+    //  menuManageService.insertMenu 메소드를 사용하기 위해 boardMaster를 MenuManageVo로 변환한다.
+    MenuManageVO vo = new MenuManageVO();
+    vo.setMenuNm(boardMaster.getBbsNm());
+    vo.setProgrmFileNm(boardMaster.getBbsIntrcn());
+    vo.setSiteId(siteId);
+    vo.setMenuNo(upperMenuId);
+    vo.setUpperMenuId(upperMenuId);
+    vo.setMenuDc(boardMaster.getBbsIntrcn());
+    vo.setMenuFlag(level);
+    //  LETTNMENUINFO에 메뉴 정보를 넣은뒤 성공하면
+    //  LETTNMENUCREATDTLS 메뉴의 볼수 있는 권한을 넣고 결과를 가져온다.
+    Boolean r = true;
+    try {
+      menuManageService.insertMenu(vo);
+    } catch (Exception e) {
+      System.out.println(e.getMessage());
+      r = false;
+    }
+    result.put("BBSINFO_RESULT", r);
+    
+    //  LETTNMENUINFO에 Insert 실패시 리턴.
+    if( !r ) {
+      System.out.println("\n\n------>:: /cop/bbs/insertBBSMasterInf.do insert LETTNMENUINFO FAIL ::\n\t" + result.toString());
+      return result.toString();
+    }
+    
+    // --> LETTNBBSMASTER에 Insert후 ID 값을 가져온다.
+    String boardId = "";
+    boardMaster.setFrstRegisterId(user.getUniqId());
+    boardMaster.setUseAt("Y");
+    boardMaster.setTrgetId("SYSTEMDEFAULT_REGIST");
+    boardMaster.setPosblAtchFileSize(propertyService.getString("posblAtchFileSize"));
+
+    boardId = bbsAttrbService.insertBBSMastetInf(boardMaster);
+    if (boardId == null) {
+      result.put("BBSMASTER_RESULT", "FAIL : NULL");
+      System.out.println("\n\n------>:: /cop/bbs/insertBBSMasterInf.do With Insert BBSMASTER ERR ::\n\t" + result.toString());
+      return result.toString();
+    }
+    result.put("BBSMASTER_RESULT", "SUCCESS");
+    result.put("BBS_ID", boardId);
+    // <-- LETTNBBSMASTER에 Insert후 ID 값을 가져온다.
+    
+
+    String pathname = "";
+    /* 게시판유형 코드명
+     * bbsTyCodeNm
+     * 공지사항 BBST03 일반 게시판BBST01
+     */
+    switch( boardMaster.getBbsTyCode() ) {
+      case "BBST03" :
+        pathname = "/cop/bbs/selectENUWinfo.do?cttDiv=" + boardId;
+        break;
+      case "BBST01" :
+        /* 일반 게시판 이라면 게시판속성 코드명
+         * bbsAttrbCodeNm
+         * 갤러리 BBSA02 일반게시판 BBSA03
+         */
+        switch( boardMaster.getBbsAttrbCode() ) {
+          case "BBSA03" :
+            pathname = "/cop/bbs/selectBoardList.do?bbsId=" + boardId;
+            break;
+          case "BBSA02" :
+            
+          default:
+        }
+        
+        break;
+      default :
+    }
+
+    
+    //  BBS ID tmp_Id에 보관 후 LETTNPROGMLIST 테이블에 인써트.
+    vo.setTempValue(pathname);
+    int finalResult = menuManageService.insertURL(vo);
+    
+    if( finalResult == 0 ){
+      result.put("FINAL_RESULT", finalResult );
+    } else {
+      result.put("FINAL_RESULT", finalResult );
+    }
+    
+    //  공지사항 게시판이라면 LETTNENUWMASTER 테이블에 값을 넣어줘야 한다.
+    if(boardMaster.getBbsTyCode().equals("BBST03")) {
+      vo.setTempValue(boardId);
+      String noticeResult = menuManageService.insertNoticeBoard(vo);
+      result.put("Notice", noticeResult);
+    }
+    
+    System.out.println("\n\n------>:: /cop/bbs/insertBBSMasterInf.do WITHOUT Binding ERR ::\n\t" + result.toString());
+    return result.toString();
+    
+  }
+
+  //메뉴 삭제
+  @RequestMapping("/deleteMenu.do")
+  @ResponseBody
+  @SuppressWarnings("unchecked")
+  public String deleteMenu(
+		  	@RequestParam(value = "type", required = false) String type
+		  	,@RequestParam(value = "siteId", required = false) String siteId
+		  	,@RequestParam(value = "menuNo", required = false) String menuNo
+		  	) throws Exception {
+
+    JSONObject result = new JSONObject();
+    String resultMsg = "";
+    Map<String,Object> param = new HashMap<String,Object>();
+    int rv = 0;
+
+    param.put("site_id", siteId);
+    param.put("type", type);
+    param.put("menu_no", menuNo);
+    
+    rv = menuManageService.deleteMenu(param); 
+    
+    if (rv > 0) {
+      result.put("message", "성공");
+    } else {
+      result.put("결과", "실패");
+    }
+    System.out.println("\t:: Insert Menu RESULT ::");
+    System.out.printf("\tResult : %s\n\tMSG :%s\n", resultMsg, result.toString());
+    return result.toString();
+  }
+  
+  @SuppressWarnings("unchecked")
+  @RequestMapping(value="/isMidGroupCheck.do", method={RequestMethod.POST})
+  @ResponseBody
+  public String isMidGroupCheck(
+      @RequestParam(value = "siteId", required = true) String siteId
+      ,@RequestParam(value = "upperMenuNo", required = false) int upperMenuNo
+      ,@RequestParam(value = "menuNo", required = false) int menuNo
+      ) throws Exception {
+    System.out.println("\n\t:: Is Mid Menu Group Check START ::");
+    System.out.println("siteId" + siteId);
+    System.out.println("menuNo" + menuNo);
+    System.out.println("upperMenuNo" + upperMenuNo);
+    MenuManageVO vo = new MenuManageVO();
+    vo.setSiteId(siteId);
+    vo.setUpperMenuId(upperMenuNo);
+    vo.setMenuNo(menuNo);
+    JSONObject result = new JSONObject();
+    
+    result.put("isGroup", (Boolean) menuManageService.isMidGroupCheck(vo));
+    
+    System.out.println("\t:: Is Mid Menu Group Check END ::");
+    System.out.printf("\tResult : %s\n", result.toString());
+    return result.toString();
+  }
+
+}
+//

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="cmmnDetailCode">
+
+	<typeAlias alias="cmmnDetailCode" type="kr.co.hanshinit.NeoCMS.sym.cma.cdc.service.CmmnDetailCode" />
+	<typeAlias alias="cmmnDetailCodeVO" type="kr.co.hanshinit.NeoCMS.sym.cma.cdc.service.CmmnDetailCodeVO" />
+
+    <resultMap id="cmmnDetailCodeMap" class="kr.co.hanshinit.NeoCMS.sym.cma.cdc.service.CmmnDetailCodeVO">
+	    <result property="codeId" column="CODE_ID" columnIndex="1"/>
+	    <result property="code" column="CODE" columnIndex="2"/>
+	    <result property="codeNm" column="CODE_NM" columnIndex="3"/>
+	    <result property="codeDc" column="CODE_DC" columnIndex="4"/>
+    	<result property="frstRegisterPnttm" column="FRST_REGISTER_PNTTM" columnIndex="5"/>
+    	<result property="frstRegisterId" column="FRST_REGISTER_ID" columnIndex="6"/>
+    	<result property="lastUpdusrPnttm" column="LAST_UPDUSR_PNTTM" columnIndex="7"/>
+    	<result property="lastUpdusrId" column="LAST_UPDUSR_ID" columnIndex="8"/>
+    </resultMap>
+
+	<select id="cmmnDetailCodeDAO.selectCmmnDetailCodeList" parameterClass="cmmnDetailCodeVO" resultMap="cmmnDetailCodeMap">
+		SELECT * FROM (		
+  		SELECT ROWNUM RNUM, T.* FROM (
+			SELECT * FROM TC_CMMN_DETAIL_CODE
+			<dynamic prepend="WHERE">
+				<isNotEmpty prepend="AND" property="codeId">
+					CODE_ID = #codeId#
+				</isNotEmpty>
+				<isEqual prepend="AND" property="searchCnd" compareValue="all">
+					( CODE LIKE '%$searchKrwd$%' OR CODE_NM LIKE '%$searchKrwd$%' )
+				</isEqual>
+				<isEqual prepend="AND" property="searchCnd" compareValue="clCode">
+					CODE LIKE '%$searchKrwd$%'
+				</isEqual>
+				<isEqual prepend="AND" property="searchCnd" compareValue="clCodeNm">
+					CODE_NM LIKE '%$searchKrwd$%'
+				</isEqual>
+			</dynamic>
+			ORDER BY CODE_ID ASC
+		) T WHERE ROWNUM <![CDATA[ <= ]]> #lastIndex#
+		) WHERE RNUM <![CDATA[ > ]]> #firstIndex#
+	</select>
+	
+	<select id="cmmnDetailCodeDAO.selectCmmnDetailCodeTotCnt" parameterClass="cmmnDetailCodeVO" resultClass="Integer">
+		SELECT COUNT(*) FROM TC_CMMN_DETAIL_CODE
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="codeId">
+				CODE_ID = #codeId#
+			</isNotEmpty>
+			<isEqual prepend="AND" property="searchCnd" compareValue="all">
+				( CODE LIKE '%$searchKrwd$%' OR CODE_NM LIKE '%$searchKrwd$%' )
+			</isEqual>
+			<isEqual prepend="AND" property="searchCnd" compareValue="clCode">
+				CODE LIKE '%$searchKrwd$%'
+			</isEqual>
+			<isEqual prepend="AND" property="searchCnd" compareValue="clCodeNm">
+				CODE_NM LIKE '%$searchKrwd$%'
+			</isEqual>
+		</dynamic>
+	</select>
+	
+	<select id="cmmnDetailCodeDAO.selectCmmnDetailCode" parameterClass="cmmnDetailCode" resultMap="cmmnDetailCodeMap">
+		SELECT * FROM TC_CMMN_DETAIL_CODE WHERE CODE_ID = #codeId# AND CODE = #code#
+	</select>
+	
+	<insert id="cmmnDetailCodeDAO.insertCmmnDetailCode" parameterClass="cmmnDetailCodeVO">
+		INSERT INTO TC_CMMN_DETAIL_CODE (
+			CODE_ID, CODE, CODE_NM, CODE_DC, FRST_REGISTER_PNTTM, FRST_REGISTER_ID
+		) VALUES (
+			#codeId#, #code#, #codeNm#, #codeDc#, #frstRegisterPnttm#, #frstRegisterId#
+		)
+	</insert>
+	
+	<update id="cmmnDetailCodeDAO.updateCmmnDetailCode" parameterClass="cmmnDetailCodeVO">
+		UPDATE TC_CMMN_DETAIL_CODE
+		SET 
+			CODE_NM = #codeNm#,
+			CODE_DC = #codeDc#,
+			LAST_UPDUSR_PNTTM = #lastUpdusrPnttm#,
+			LAST_UPDUSR_ID = #lastUpdusrId#
+		WHERE CODE = #code# 
+	</update>
+	
+	<delete id="cmmnDetailCodeDAO.deleteCmmnDetailCode" parameterClass="cmmnDetailCodeVO">
+		DELETE FROM TC_CMMN_DETAIL_CODE WHERE CODE_ID = #codeId# AND CODE = #code#
+	</delete>
+	
+	<select id="cmmnDetailCodeDAO.selectCmmnDetailCodeByCodeCnt" parameterClass="cmmnDetailCodeVO" resultClass="Integer">
+		SELECT COUNT(*) CNT FROM TC_CMMN_DETAIL_CODE WHERE CODE_ID = #codeId# AND CODE = #code#
+	</select>
+	
+	<select id="cmmnDetailCodeDAO.selectCmmnDetailCodeLIstByCodeId" parameterClass="string" resultMap="cmmnDetailCodeMap">
+		SELECT * FROM TC_CMMN_DETAIL_CODE WHERE CODE_ID = #codeId# ORDER BY CODE ASC
+	</select>
+	
+</sqlMap>

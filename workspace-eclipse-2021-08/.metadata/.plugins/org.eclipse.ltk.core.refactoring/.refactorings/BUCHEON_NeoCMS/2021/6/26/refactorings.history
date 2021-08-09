@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">&#x0A;<refactoring comment="Rename resource &apos;BUCHEON_NeoCMS/전달사항/접속정보.txt&apos; to &apos;BWYF-인수인계사항.txt&apos;" description="Rename resource &apos;접속정보.txt&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="전달사항/접속정보.txt" name="BWYF-인수인계사항.txt" stamp="1624496269282" updateReferences="true"/>&#x0A;<refactoring comment="Rename resource &apos;BUCHEON_NeoCMS/전달사항/BWYF-인수인계사항.txt&apos; to &apos;BWYF-인수인계사항.md&apos;" description="Rename resource &apos;BWYF-인수인계사항.txt&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="전달사항/BWYF-인수인계사항.txt" name="BWYF-인수인계사항.md" stamp="1624496278595" updateReferences="true"/>
+</session>

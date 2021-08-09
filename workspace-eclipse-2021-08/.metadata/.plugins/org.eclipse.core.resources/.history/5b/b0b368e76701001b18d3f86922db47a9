@@ -1,0 +1,16 @@
+package egovframework.board.bug.vo;
+
+import egovframework.com.cmmn.CmmnAbstractVO;
+
+public class Bug extends CmmnAbstractVO {
+  String bug_date;
+  String bug_browser;
+  String bug_url;
+  String bug_pathname;
+  String bug_query;
+  String bug_prv_page;
+  String bug_loc_nav;
+  String bug_file;
+  String bug_form_cont;
+  String reporter;
+}

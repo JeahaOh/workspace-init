@@ -1,0 +1,1838 @@
+package kr.co.hanshinit.NeoCMS.cmm.util;
+
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Field;
+import java.math.BigInteger;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.sql.Timestamp;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import javax.net.ssl.HttpsURLConnection;
+import javax.servlet.http.HttpServletRequest;
+import javax.xml.bind.DatatypeConverter;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import net.sf.json.JSONObject;
+import sun.misc.BASE64Decoder;
+import sun.misc.BASE64Encoder;
+
+/**
+ * 문자열관련 기능을 모은 클래스
+ * @author (주)한신정보기술 연구개발팀 최관형
+ * @since 2014.03.11
+ * @version 1.0
+ * @see
+ *
+ * <pre>
+ * << 개정이력(Modification Information) >>
+ *
+ *  수정일      수정자    수정내용
+ *  ---------- -------- ---------------------------
+ *  2014.03.11 최관형    최초 생성
+ *  2014.06.05 최관형    배열에 key값이 존재 여부 확인 추가, html을 text로 변환 추가
+ *  2014.06.07 최관형    cutOffUTF8String, availibleByteNum 메소드 추가
+ *  2014.06.09 최관형    removeTag 메소드 추가
+ *  2014.06.19 최관형    htmlSpecialChars 메소드 추가
+ *  2015.04.21 최관형    nvlNum(String str), nvlNum(Object str) 메소드 추가
+ *  2017.01.03 최관형    isNumber 메소드 추가
+ *  2017.01.12 최관형    autoLink 메소드 추가
+ *
+ * </pre>
+ */
+
+public class StringUtil {
+
+  private static Logger logger = LoggerFactory.getLogger(StringUtil.class);
+
+    /**
+     * XSS 방지 처리
+     * @param String
+     * @return  String
+     * @exception
+     */
+    public static String unscript(String data) {
+
+        if (data == null || data.trim().equals("")) {
+            return "";
+        }
+
+        String ret = data;
+
+        ret = ret.replaceAll("<(S|s)(C|c)(R|r)(I|i)(P|p)(T|t)", "&lt;script");
+        ret = ret.replaceAll("</(S|s)(C|c)(R|r)(I|i)(P|p)(T|t)", "&lt;/script");
+
+        ret = ret.replaceAll("<(O|o)(B|b)(J|j)(E|e)(C|c)(T|t)", "&lt;object");
+        ret = ret.replaceAll("</(O|o)(B|b)(J|j)(E|e)(C|c)(T|t)", "&lt;/object");
+
+        ret = ret.replaceAll("<(A|a)(P|p)(P|p)(L|l)(E|e)(T|t)", "&lt;applet");
+        ret = ret.replaceAll("</(A|a)(P|p)(P|p)(L|l)(E|e)(T|t)", "&lt;/applet");
+
+        ret = ret.replaceAll("<(E|e)(M|m)(B|b)(E|e)(D|d)", "&lt;embed");
+        ret = ret.replaceAll("</(E|e)(M|m)(B|b)(E|e)(D|d)", "&lt;embed");
+
+        ret = ret.replaceAll("<(F|f)(O|o)(R|r)(M|m)", "&lt;form");
+        ret = ret.replaceAll("</(F|f)(O|o)(R|r)(M|m)", "&lt;form");
+
+        return ret;
+
+    }
+
+    /**
+     * 리턴문자를 br태그로 치환하여 돌려줌.
+     * @param String
+     * @return  String
+     * @exception
+     */
+	public static String nl2br(String str) {
+		if( str == null ) return "";
+
+		str = str.replaceAll("\\\\r\\\\n", "<br/>");
+		str = str.replaceAll("\\\r\\\n", "<br/>");
+		str = str.replaceAll("\\r\\n", "<br/>");
+		str = str.replaceAll("\r\n", "<br/>");
+
+		str = str.replaceAll("\\\\n", "<br/>");
+		str = str.replaceAll("\\\\r", "<br/>");
+		str = str.replaceAll("\\\n", "<br/>");
+		str = str.replaceAll("\\\r", "<br/>");
+		str = str.replaceAll("\\n", "<br/>");
+		str = str.replaceAll("\\r", "<br/>");
+		str = str.replaceAll("\n", "<br/>");
+		str = str.replaceAll("\r", "<br/>");
+
+		str = str.replaceAll(System.getProperty("line.separator") + System.getProperty("line.separator"), "<br/>");
+		str = str.replaceAll(System.getProperty("line.separator"), "<br/>");
+
+		return str;
+	}
+
+    /**
+     * XSS 방지와 리턴문자 br 치환
+     * @param String
+     * @return  String
+     * @exception
+     */
+	public static String xssbr(String str) {
+
+		str = unscript(str);
+		str = nl2br(str);
+
+		return str;
+
+	}
+
+    /**
+     * 데이터가 비어있는지 유무를 판단하여 돌려줌
+     * - isZeroCheck ( true : 0일때 return true )
+     * @param Integer, boolean
+     * @return  boolean
+     * @exception
+     */
+	public static boolean isEmpty(Integer num, boolean isZeroCheck) {
+		if( isZeroCheck ) {
+			if( num == null ) {
+				return true;
+			} else {
+				return num == 0 ? true : isEmpty(num);
+			}
+		} else {
+			return isEmpty(num);
+		}
+	}
+
+    /**
+     * 데이터가 비어있는지 유무를 판단하여 돌려줌
+     * @param Integer
+     * @return  boolean
+     * @exception
+     */
+	public static boolean isEmpty(Integer num) {
+		return isEmpty(String.valueOf(num));
+	}
+
+    /**
+     * 데이터가 비어있는지 유무를 판단하여 돌려줌
+     * @param String
+     * @return  boolean
+     * @exception
+     */
+	public static boolean isEmpty(String str) {
+		if( str == null ) return true;
+		return str.trim().length() > 0 ? false : true;
+	}
+
+    /**
+     * fill문자를 len의 길이만큼 앞에 붙여 돌려줌
+     * @param int, int, String
+     * @return  String
+     * @exception
+     */
+	public static String zerofill(int num, int len, String fill) {
+		return zerofill(String.valueOf(num), len, fill);
+	}
+
+    /**
+     * fill문자를 len의 길이만큼 앞에 붙여 돌려줌
+     * @param String, int, String
+     * @return  String
+     * @exception
+     */
+	public static String zerofill(String str, int len, String fill) {
+		int strLen = str.length();
+		StringBuffer tmp = new StringBuffer();
+		for( int LoopI=0; LoopI<len-strLen; LoopI++ ) {
+			tmp.append(fill);
+		}
+		tmp.append(str);
+		return tmp.toString();
+	}
+
+    /**
+     * 응용어플리케이션에서 고유값을 사용하기 위해 시스템에서17자리의TIMESTAMP값을 구하는 기능
+     *
+     * @param
+     * @return Timestamp 값
+     * @exception MyException
+     * @see
+     */
+    public static String getTimeStamp() {
+		String rtnStr = null;
+		// 문자열로 변환하기 위한 패턴 설정(년도-월-일 시:분:초:초(자정이후 초))
+		String pattern = "yyyyMMddhhmmssSSS";
+		try {
+		    SimpleDateFormat sdfCurrent = new SimpleDateFormat(pattern, Locale.KOREA);
+		    Timestamp ts = new Timestamp(System.currentTimeMillis());
+		    rtnStr = sdfCurrent.format(ts.getTime());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return rtnStr;
+    }
+
+
+    /**
+     * 스트링이 비어있으면 ""  있으면 입력 str 리턴
+     * @param str
+     * @return "" or  str
+     */
+    public static String nvl(String str){
+    	if(isEmpty(str)){
+    		return "";
+    	}else{
+    		return str;
+    	}
+    }
+
+    /**
+     * 스트링이 비어있다면 0을 리턴
+     * 스트링 값이 있다면 Integer형으로 변환해서 리턴
+     * Integer로 변환중 NumberFormatException이 발생되면 0을 리턴
+     * @param str
+     * @return 0 or Integer str
+     */
+    public static int nvlNum(String str){
+    	if(isEmpty(str)){
+    		return 0;
+    	}else{
+    		try {
+    			return Integer.parseInt(str);
+    		} catch(NumberFormatException e) {
+    			e.printStackTrace();
+    			return 0;
+    		}
+    	}
+    }
+
+    /**
+     * 스트링이 비어있다면 0을 리턴
+     * 스트링 값이 있다면 Integer형으로 변환해서 리턴
+     * Integer로 변환중 NumberFormatException이 발생되면 0을 리턴
+     * @param obj
+     * @return 0 or Integer str
+     */
+    public static int nvlNum(Object obj){
+    	if(isEmpty(String.valueOf(obj))){
+    		return 0;
+    	}else{
+    		try {
+    			return Integer.parseInt(String.valueOf(obj));
+    		} catch(NumberFormatException e) {
+    			e.printStackTrace();
+    			return 0;
+    		}
+    	}
+    }
+
+    /**
+     * 배열에 key값이 존재 여부 확인
+     * @param key
+     * @param array
+     * @return
+     */
+    public static boolean isExistArray(String key, String[] array) {
+
+    	boolean result = false;
+
+    	if( array == null ) return result;
+
+    	int arrayCnt = array.length;
+
+    	for( int i=0; i<arrayCnt; i++ ) {
+    		if( key.equals(array[i]) ) {
+    			result = true;
+    			break;
+    		}
+    	}
+
+    	return result;
+
+    }
+
+    /**
+     * 배열에 key값이 존재 여부 확인
+     * @param key
+     * @param array
+     * @return
+     */
+    public static String isExistArray(int key, String[] array) {
+
+    	return isExistArray(String.valueOf(key), array) ? "1" : "0";
+
+    }
+
+	/**
+	 * html 을 text로 변환
+	 * @param str
+	 * @return
+	 */
+	public static String html2text(String str) {
+
+		if( isEmpty(str) ) {
+			return str;
+		} else {
+			//HTML = HTML.replaceAll("&", "&amp;");
+			str = str.replaceAll("<", "&lt;");
+			str = str.replaceAll(">", "&gt;");
+			//HTML = HTML.replaceAll("\"", "&quot;");
+			//HTML = HTML.replaceAll("'", "&#39;");
+
+			str = str.replaceAll("\\\\n\\\\n", "<br/>");
+			str = str.replaceAll("\\\n\\\n", "<br/>");
+			str = str.replaceAll("\\n\\n", "<br/>");
+			str = str.replaceAll("\n\n", "<br/>");
+
+			str = str.replaceAll("\\\\r\\\\n", "<br/>");
+			str = str.replaceAll("\\\r\\\n", "<br/>");
+			str = str.replaceAll("\\r\\n", "<br/>");
+			str = str.replaceAll("\r\n", "<br/>");
+
+			str = str.replaceAll("\\\\n", "<br/>");
+			str = str.replaceAll("\\\\r", "<br/>");
+			str = str.replaceAll("\\\n", "<br/>");
+			str = str.replaceAll("\\\r", "<br/>");
+			str = str.replaceAll("\\n", "<br/>");
+			str = str.replaceAll("\\r", "<br/>");
+			str = str.replaceAll("\n", "<br/>");
+			str = str.replaceAll("\r", "<br/>");
+
+			str = str.replaceAll(System.getProperty("line.separator") + System.getProperty("line.separator"), "<br/>");
+			str = str.replaceAll(System.getProperty("line.separator"), "<br/>");
+
+
+
+			//HTML = HTML.replaceAll(" ", "&nbsp;");
+			return str;
+		}
+
+	}
+
+	public static String htmlSpecialChars( String s ) {
+
+		if(StringUtils.isNotEmpty(s)){
+			s = s.replaceAll( "&nbsp;", " " );
+			s = s.replaceAll( "&quot;", "\"" );
+			s = s.replaceAll( "&#039;", "'" );
+			s = s.replaceAll( "&lt;", "<" );
+			s = s.replaceAll( "&gt;", ">" );
+			s = s.replaceAll( "&amp;", "&" );
+			s = s.replaceAll( "&", "&amp;" );
+			s = s.replaceAll( "'", "&#039;" );
+			s = s.replaceAll( "\"", "&quot;" );
+			s = s.replaceAll( "<", "&lt;" );
+			s = s.replaceAll( ">", "&gt;" );
+			s = s.replaceAll( " ", "&nbsp;" );
+
+			return s;
+		}else{
+			return new String();
+		}
+
+	}
+
+	/**
+	 * 문자열을 특정 byteSize에 맞게 자르고 뒤에 문자열(trail)을 붙여줌
+	 * @param str
+	 * @param maxByteSize
+	 * @param trail
+	 * @return
+	 */
+	public static String cutOffUTF8String(String str, int maxByteSize, String trail) {
+
+		try {
+
+			// 널일 경우에는 그냥 리턴
+			if (str == null) return null;
+			if (str.length() == 0) return str;
+
+			byte strByte[] = str.getBytes("UTF-8");
+
+			if (strByte.length <= maxByteSize) return str;
+
+			// 마지막 줄임말
+			int trailByteSize = 0;
+
+			// 줄임말의 바이트 수 계산
+			if (trail != null) trailByteSize = trail.getBytes("UTF-8").length;
+
+			// 실질적으로 포함되는 최대 바이트 수는 trailByte를 뺀 것이다.
+			maxByteSize = maxByteSize - trailByteSize;
+
+			int endPos = 0; // 마지막 바이트 위치
+			int currByte = 0; // 현재까지 조사한 바이트 수
+
+			for (int i = 0; i < str.length(); i++) {
+				// 순차적으로 문자들을 가져옴.
+				char ch = str.charAt(i);
+
+				// 이 문자가 몇 바이트로 구성된 UTF-8 코드인지를 검사하여 currByte에 누적 시킨다.
+				currByte = currByte + availibleByteNum(ch);
+
+				// 현재까지 조사된 바이트가 maxSize를 넘는다면 이전 단계 까지 누적된 바이트 까지를 유효한 바이트로 간주한다.
+				if (currByte > maxByteSize) {
+					endPos = currByte - availibleByteNum(ch);
+					break;
+				}
+			}
+
+			// 원래 문자열을 바이트로 가져와서 유효한 바이트 까지 배열 복사를 한다.
+			byte newStrByte[] = new byte[endPos];
+
+			System.arraycopy(strByte, 0, newStrByte, 0, endPos);
+
+			String newStr = new String(newStrByte, "UTF-8");
+
+			newStr += trail;
+
+			return newStr;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "";
+		}
+
+	}
+
+	/**
+	 * 바이트 검사
+	 * @param c
+	 * @return
+	 */
+	public static int availibleByteNum(char c) {
+
+		// UTF-8은 최대 4바이트를 사용하고 ASCII는 1바이트 그외의 문자들은 2~3바이트 까지 조합하여 사용한다.
+		// 즉, 어느 나라 문자이냐에 따라서 몇 바이트를 사용하는지 모르기 때문에 하나의 charater가 몇 바이트 대역에
+		// 있는지 조사하여 한문자의 바이트를 조사... 이를 더해 나가면 문자 단위로 몇 바이트를 차지 하는지 정확하게 조사할 수 있다.
+		int ONE_BYTE_MIN = 0x0000;
+		int ONE_BYTE_MAX = 0x007F;
+
+		int TWO_BYTE_MIN = 0x0800;
+		int TWO_BYTE_MAX = 0x07FF;
+
+		int THREE_BYTE_MIN = 0x0800;
+		int THREE_BYTE_MAX = 0xFFFF;
+
+		int SURROGATE_MIN = 0x10000;
+		int SURROGATE_MAX = 0x10FFFF;
+
+		int digit = (int) c;
+
+		if(ONE_BYTE_MIN <= digit && digit <= ONE_BYTE_MAX) return 1;
+		else if(TWO_BYTE_MIN <= digit && digit <= TWO_BYTE_MAX) return 2;
+		else if(THREE_BYTE_MIN <= digit && digit <= THREE_BYTE_MAX) return 3;
+		else if(SURROGATE_MIN <= digit && digit <= SURROGATE_MAX) return 4;
+
+		return -1;
+
+	}
+
+	/**
+	 * 태그를 제거한다
+	 * @param str
+	 * @return
+	 */
+	public static String removeTag(String str){
+
+		if( isEmpty(str) ) return "";
+
+		int lt = str.indexOf("<");
+
+		if ( lt != -1 ) {
+			int gt = str.indexOf(">", lt);
+			if ( (gt != -1) ) {
+				str = str.substring( 0, lt ) + str.substring( gt + 1 );
+				str = removeTag(str);
+			}
+		}
+
+		return str;
+
+	}
+
+	public static String randomStr(int Len) {
+
+		Random rnd = new Random();
+
+		String RandomStr = "";
+
+		String[] arrStr = { "0","1","2","3","4","6","7","8","9",
+				"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z",
+				"a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z" };
+
+		for( int LoopI=0; LoopI<Len; LoopI++ ) {
+			RandomStr+= arrStr[rnd.nextInt(61)];
+		}
+
+		return RandomStr;
+
+	}
+
+	public static String randomStrLow(int Len) {
+
+		Random rnd = new Random();
+
+		String RandomStr = "";
+
+		String[] arrStr = { "0","1","2","3","4","6","7","8","9",
+				"a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z" };
+
+		for( int LoopI=0; LoopI<Len; LoopI++ ) {
+			RandomStr+= arrStr[rnd.nextInt(35)];
+		}
+
+		return RandomStr;
+
+	}
+
+	public static String randomStrNumber(int Len) {
+
+		Random rnd = new Random();
+
+		String RandomStr = "";
+
+		String[] arrStr = { "0","1","2","3","4","6","7","8","9" };
+
+		for( int LoopI=0; LoopI<Len; LoopI++ ) {
+			RandomStr+= arrStr[rnd.nextInt(9)];
+		}
+
+		return RandomStr;
+
+	}
+
+	public static boolean regexMatches(String str, String regex) {
+
+		return str.matches(regex);
+
+	}
+
+	/**
+	 * 문자열이 숫자인지 아닌지 결과를 반환함
+	 * true : 숫자, false : 숫자아님
+	 * @param str
+	 * @return boolean
+	 */
+	public static boolean isNumber(String str) {
+		try {
+			Double.parseDouble(str);
+			return true;
+		} catch(Exception e) {
+			return false;
+		}
+	}
+
+	/**
+	 * 문자열에서 http:// | https:// 로 시작되는 문자열은 자동으로 a태그를 삽입해줌
+	 * 한글은 안됨
+	 * @param str
+	 * @return
+	 */
+	public static String autoLink(String str) {
+
+		if( isEmpty(str) ) return "";
+
+		String regex = "(http://|https://){1}[\\w\\.\\-/:?&%#=]+";
+
+		str = str.replaceAll(regex, "<a href=\"$0\" target=\"_blank\" title=\"새창\">$0</a>");
+
+		return str;
+
+	}
+
+	public static String getAgeGrade(String birthday) {
+
+		if( StringUtil.isEmpty(birthday) ) {
+			return null;
+		}
+
+		String userAgrde = null;
+
+		try {
+
+			int birthYear = Integer.parseInt(birthday.substring(0, 4));
+			int year = Integer.parseInt(DateUtil.getNowDateTime("yyyy"));
+
+			int age = year - birthYear;
+
+			if( 10 > age ) {
+				userAgrde = "10대 이하";
+			} else if( 70 <= age ) {
+				userAgrde = "70대 이상";
+			} else {
+				userAgrde = String.valueOf(age).substring(0,1) + "0대";
+			}
+
+		} catch(Exception e) {
+			return null;
+		}
+
+		return userAgrde;
+
+	}
+
+	public static String blindString(String str, int len) {
+
+		if( StringUtil.isEmpty(str) ) {
+			return "";
+		} else {
+			int strLen = str.length();
+			if( strLen <= len ) {
+				return str;
+			} else {
+				String temp = str.substring(0,len);
+				for( int i=0; i<strLen-len; i++ ) {
+					temp+="○";
+				}
+				return temp;
+			}
+		}
+
+	}
+
+	/**
+	 * md5으로 암호화 한다
+	 * @param str
+	 * @return
+	 * @throws NoSuchAlgorithmException
+	 * @throws InvalidKeyException
+	 * @throws BadPaddingException
+	 * @throws IllegalBlockSizeException
+	 */
+	public static String toMd5(String str) throws NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+
+		MessageDigest di = MessageDigest.getInstance("MD5");
+		di.update(new String(str).getBytes());
+		byte[] md5Code = di.digest();
+		StringBuffer sb = new StringBuffer();
+		for (int i=0;i<md5Code.length;i++) {
+			String md5Char = String.format("%02x", 0xff&(char)md5Code[i]);
+			sb.append(md5Char);
+		}
+
+		return sb.toString();
+
+	}
+
+	/**
+	 * 날짜비교
+	 * @param beginDate
+	 * @param endDate
+	 * @return
+	 */
+	public static String compareDate(String beginDate, String endDate) {
+		String result = "";
+
+		Long date = Long.parseLong(DateUtil.getNowDateTime("yyyyMMddHHmmss"));
+
+		Long beginDate1 = Long.parseLong(beginDate.replaceAll("-",""));
+		Long endDate1 = Long.parseLong(endDate.replaceAll("-",""));
+
+		if(beginDate1 > date)  {
+			result = "prearnge";		// 예정
+		} else if((beginDate1 <= date) && (endDate1 >= date))  {
+			result = "progrs";			// 진행
+		} else if(endDate1 < date)  {
+			result = "clos";			// 마감
+		}
+
+		return result;
+	}
+
+    public static String unXPath(String str) {
+
+    	if( null == str ) return str;
+
+    	str = str.replaceAll("\\(","");
+    	str = str.replaceAll("\\)","");
+    	str = str.replaceAll("=","");
+    	str = str.replaceAll("\"","");
+    	str = str.replaceAll("\\[","");
+    	str = str.replaceAll("\\]","");
+    	str = str.replaceAll(":","");
+    	str = str.replaceAll("\\*","");
+    	str = str.replaceAll("/","");
+    	str = str.replaceAll("@","");
+
+        return str;
+
+    }
+
+    public static String replacePhoneNum(String phoneNumber) {
+   	   String regEx = "(\\d{3})(\\d{3,4})(\\d{4})";
+   	   if(!Pattern.matches(regEx, phoneNumber)) return phoneNumber;
+   	   return phoneNumber.replaceAll(regEx, "$1-$2-$3");
+      }
+
+
+	public static int digitCheck(String passwd) {
+
+		int varDigit = 0;
+		int varAlpha = 0;
+		int varHex = 0;
+		int varSum = 0;
+		for (int i = 0; i < passwd.length(); i++) {
+			char index = passwd.charAt(i);
+
+			if (index >= '0' && index <= '9') {
+				varDigit = 1;
+			} else if ( (index >= 'a' && index <= 'z') || (index >= 'A' && index <= 'Z') ) {
+				varAlpha = 1;
+			} else if (index == '!' || index == '@' || index == '$'
+					|| index == '%' || index == '^' || index == '&'
+					|| index == '*') {
+				varHex = 1;
+			}
+		}
+
+		varSum = varDigit + varAlpha + varHex;
+
+		return varSum;
+	}
+
+
+	public static String fileSizeUnit(String bytes) {
+		String result = "";
+		try {
+			long lBytes = Long.valueOf(bytes);
+			result = fileSizeUnit(lBytes);
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+
+		return result;
+	}
+
+	public static String fileSizeUnit(Long bytes) {
+
+		String result = "";
+
+		try {
+			double lengthbyUnit = (double)bytes;
+			int Unit=0;
+			while(lengthbyUnit > 1024 && Unit < 5) {
+				// 단위 숫자로 나누고 한번 나눌 때마다 Unit 증가
+				lengthbyUnit = lengthbyUnit / 1024;
+				Unit++;
+			}
+
+
+			DecimalFormat df = new DecimalFormat("#,##0.00");
+
+			result = df.format(lengthbyUnit);
+
+			switch(Unit) {
+				case 0:
+					result += "Bytes";
+					break;
+				case 1:
+					result += "KB";
+					break;
+				case 2:
+					result += "MB";
+					break;
+				case 3:
+					result += "GB";
+					break;
+				case 4:
+					result += "TB";
+			}
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+
+		return result;
+
+	}
+
+	public static String urlEncode(String str, String enc) {
+		String rt = str;
+		if(str != null && enc != null) {
+			try { rt = java.net.URLEncoder.encode(str, enc); } catch(Exception e) {e.printStackTrace();}
+		}
+		return rt;
+	}
+
+	public static String urlEncode(String str) {
+		String enc = PropResource.getString("site.charset");
+		return urlEncode(str, enc);
+	}
+
+
+	public static String urlDecode(String str) {
+		String enc = PropResource.getString("site.charset");
+		return urlDecode(str, enc);
+	}
+
+
+	public static String urlDecode(String str, String enc) {
+		if( isEmpty(str) ) return "";
+		String rt = str;
+		try { rt = URLDecoder.decode(str, enc); } catch(Exception e) {e.printStackTrace();}
+		return rt;
+	}
+
+	/**
+	 * UrlEncoding
+	 * @param str
+	 * @return
+	 */
+	@SuppressWarnings("deprecation")
+	public static String UrlEncoding(String str) {
+		if( isEmpty(str) ) return "";
+		return URLEncoder.encode(str);
+	}
+
+	/**
+	 * UrlEncoding
+	 * @param str
+	 * @param enc
+	 * @return
+	 */
+	public static String UrlEncoding(String str, String enc) {
+		if( isEmpty(str) ) return "";
+		String result = "";
+		try {
+			result = URLEncoder.encode(str, enc);
+		} catch (UnsupportedEncodingException e) {
+			result = "";
+		}
+		return result;
+	}
+
+	public static String replaceUrls(String initialText) {
+
+	      StringBuffer result = new StringBuffer(initialText.length());
+	      Pattern p = Pattern.compile("(@)?(href=')?(HREF=')?(HREF=\")?(href=\")?(http://)?[a-zA-Z_0-9\\-]+(\\.\\w[a-zA-Z_0-9\\-]+)+(/[#&\\n\\-=?\\+\\%/\\.\\w]+)?");
+
+	      Matcher m = p.matcher(initialText);
+	      while (m.find()) {
+	          String href = m.group();
+	          if (href.startsWith("@")){
+	              continue;
+	          }
+
+	          // ignore links that are already hyperlinks
+	          if (href.startsWith("href")){
+	              continue;
+	          }
+
+          if (!href.startsWith("http://")&&!href.startsWith("HTTP://")) {
+               // add on the http:// if necessary
+              m.appendReplacement(result, "<a href=\"" + "http://" +href + "\" rel=\"nofollow\" target=\"_blank\">" + href + "</a>");
+          } else {
+              m.appendReplacement(result, "<a href=\"" + href + "\" rel=\"nofollow\" target=\"_blank\">" + href + "</a>");
+          }
+	      }
+	      m.appendTail(result);
+	      return result.toString();
+	  }
+
+	/**
+     * 문자열에 공백 제거
+     * @param val
+     * @return
+     */
+    public static String strTrim(String val){
+    	String value = "";
+
+    	val = StringUtil.isNull(val);
+
+    	if(val != null && !"null".equals(val)){
+    		value = val.trim();
+    	}else{
+    		value = "";
+    	}
+
+    	return value;
+    }
+
+	 /**
+     * 문자열 공백 확인 후 Replace
+     * @param val
+     * @return
+     */
+    public static String strReplaceALL(String val, String val2, String val3){
+    	String value = "";
+
+    	try{
+	    	value = StringUtil.strTrim(val);
+	    	if(!"".equals(value)){
+	    		value = value.replaceAll(val2, val3);
+	    	}
+    	}catch (Exception e) {
+    		value = val;
+		}
+
+    	return value;
+    }
+
+    /**
+     * 문자열이 널일 경우 공백으로 처리
+     * @param val
+     * @return
+     */
+    public static String isNull(String val){
+
+		String value = val;
+
+		if(value == null){
+			return "";
+		}
+
+		return value;
+	}
+
+    /**
+     * Integer 형 널 체크 하여 널일때 0 반환
+     * @param val
+     * @return
+     */
+    public static int intNullCheck(Integer val){
+    	if(val == null){
+    		return 0;
+    	}else{
+    		return val;
+    	}
+    }
+
+
+    /**
+   	 * 천단위 콤마찍어주는 포맷
+   	 * @param val
+   	 * @return
+   	 */
+   	@SuppressWarnings("finally")
+   	public static String getFormatData(String val){
+
+   		if("".equals(StringUtil.strTrim(val))){
+   			return "0";
+   		}
+
+   		String formatVal = "";
+   		try {
+   			DecimalFormat df = new DecimalFormat("###,###");
+   			formatVal = df.format(Double.parseDouble(val));
+   		} catch (Exception e) {
+   			formatVal = val;
+   		} finally {
+   			return formatVal;
+   		}
+   	}
+
+
+	/**
+	 * 천단위 콤마찍어주는 포맷
+	 * @param val (int 형)
+	 * @return String
+	 */
+	public static String getFormatComma(int val){
+		String formatVal = "";
+		String rtn = "";
+
+		try {
+			rtn = intToStr(val);
+
+			DecimalFormat df = new DecimalFormat("###,###");
+			formatVal = df.format(Double.parseDouble(rtn));
+
+			return formatVal;
+		} catch (Exception e) {
+			return "0";
+		}
+	}
+
+	public static String getFormatCommaIngeger(Integer val){
+		String formatVal = "";
+		String rtn = "";
+
+		try {
+			rtn = intToStr(val);
+
+			DecimalFormat df = new DecimalFormat("###,###");
+			formatVal = df.format(Double.parseDouble(rtn));
+
+			return formatVal;
+		} catch (Exception e) {
+			return "0";
+		}
+	}
+
+	/**
+	 * Int 형을 String 형으로 형변환
+	 * @param cnt
+	 * @return
+	 */
+	public static String intToStr(int cnt){
+		String rtn = "";
+
+		try{
+			rtn = Integer.toString(cnt);
+		}catch(Exception e){
+			return "";
+		}
+
+		return rtn;
+	}
+
+
+	/**
+	 * 전화번호 자리수에 따른 포맷팅
+	 * @param str ("xxx-xxx-xxxx or xxx-xxxx-xxxx")
+	 * @return
+	 */
+	public static String getTelNoMask(String StringNum){
+
+		String sumStr = "";
+		String resultNum = StringUtil.strTrim(StringNum);
+		resultNum = StringUtil.strReplaceALL(resultNum, "-", "");
+		resultNum = StringUtil.strReplaceALL(resultNum, "\\.", "");
+
+		try{
+			if(resultNum.length() == 9) {
+				sumStr = resultNum.substring(0,2) + "-" + resultNum.substring(2,5) + "-" +  resultNum.substring(5,9);
+			} else if(resultNum.length() == 10) {
+				sumStr = resultNum.substring(0,3) + "-" + resultNum.substring(3,6) + "-" +  resultNum.substring(6,10);
+			} else if (resultNum.length() == 11) {
+				sumStr = resultNum.substring(0,3) + "-" + resultNum.substring(3,7) + "-" +  resultNum.substring(7,11);
+			} else {
+				sumStr = StringNum;
+			}
+		}catch(Exception e){
+			sumStr = StringNum;
+		}
+
+		return sumStr;
+	}
+
+
+	/**
+	  * 모바일 유무 체크
+	  * @param request
+	  * @return
+	  */
+	 public static int mobileCheck(HttpServletRequest request){
+		String userAgent = request.getHeader("user-agent");
+		String[] mobileos = {"iPhone", "iPod", "Android", "BlackBerry", "Windows CE", "Nokia", "Webos", "Opera Mini", "Opera Mobi", "IEMobile"};
+		String mobileNm = "AN";
+
+		int mobileChk = -1;
+
+		if( userAgent != null && !"".equals(userAgent) ) {
+				for(int i=0;i<mobileos.length;i++) {
+					mobileChk = userAgent.indexOf(mobileos[i]);
+					if( mobileChk > -1 ) {
+						if( "iPhone".equals(mobileos[i]) || "iPod".equals(mobileos[i]) ) mobileNm = "IOS";
+						break;
+					}
+				}
+		}
+
+		return mobileChk;
+	 }
+
+	 /**
+	  * 모바일 체크
+	  * @param request
+	  * @return
+	  */
+	 public static boolean isMobile(HttpServletRequest request) {
+	        String userAgent = request.getHeader("user-agent");
+	        boolean mobile1 = userAgent.matches(".*(iPhone|iPod|Android|Windows CE|BlackBerry|Symbian|Windows Phone|webOS|Opera Mini|Opera Mobi|POLARIS|IEMobile|lgtelecom|nokia|SonyEricsson).*");
+	        boolean mobile2 = userAgent.matches(".*(LG|SAMSUNG|Samsung).*");
+	        if(mobile1 || mobile2) {
+	            return true;
+	        }
+	        return false;
+	}
+
+
+	 /**
+	  * Client IP 확인
+	  * @param request
+	  * @return
+	  */
+	 public static String getClientIpAddr(HttpServletRequest request) {
+		    String ip = request.getHeader("X-Forwarded-For");
+
+		    if(ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+		        ip = request.getHeader("Proxy-Client-IP");
+		    }
+		    if(ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+		        ip = request.getHeader("WL-Proxy-Client-IP");
+		    }
+		    if(ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+		        ip = request.getHeader("HTTP_CLIENT_IP");
+		    }
+		    if(ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+		        ip = request.getHeader("HTTP_X_FORWARDED_FOR");
+		    }
+		    if(ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+		        ip = request.getRemoteAddr();
+		    }
+
+		    return ip;
+	}
+
+	 /**
+		 * 문자열을 숫자로 파싱
+		 * @param cnt
+		 * @return
+		 */
+	public static int strToInt(String cnt){
+			try{
+				if(!"".equals(StringUtil.strTrim(cnt))){
+					return Integer.parseInt(cnt);
+				}else{
+					return 0;
+				}
+
+			}catch(Exception e){
+				return 0;
+			}
+	}
+
+	/**
+	 * 문자열 더블로 파싱
+	 * @param cnt
+	 * @return
+	 */
+	public static double strToDouble(String cnt){
+		try{
+			if(!"".equals(StringUtil.strTrim(cnt))){
+				return Double.parseDouble(cnt);
+			}else{
+				return 0;
+			}
+
+		}catch(Exception e){
+			return 0;
+		}
+}
+
+
+	/**
+	 * 문자열 자르기
+	 * 			널일 경우 공백 리턴
+	 * @param val
+	 * @param startLength
+	 * @param endLength
+	 * @return
+	 */
+	public static String strSubString(String val, int startLength, int endLength){
+    	String rtn = "";
+
+    	try{
+	    	val = StringUtil.isNull(val);
+	    	if(!"".equals(StringUtil.strTrim(val))){
+	    		int valLen = val.length();
+
+	    		if(valLen >= endLength){
+	    		  	rtn = val.substring(startLength, endLength);
+	    		}else{
+	    			rtn = val;
+	    		}
+	    	}else{
+	    		rtn = "";
+	    	}
+    	}catch (Exception e) {
+    		rtn = "";
+		}
+
+    	return rtn;
+    }
+
+	/**
+	 * TextArea 에 입력한 데로 화면 보이기
+	 * @param str
+	 * @return
+	 */
+	public static String newLineReplace(String str){
+		String rtn = "";
+
+		try{
+			if(!"".equals(StringUtil.strTrim(str))){
+				rtn = str.replaceAll("\n", "<br/>").replaceAll("\u0020", "&nbsp;");
+			}else{
+				rtn = str;
+			}
+		}catch (Exception e) {
+			rtn = str;
+		}
+
+		return rtn;
+	}
+
+    public static boolean similarArrays(String[] array1, String[] array2) {
+        boolean b = false;
+          for (int i = 0; i < array1.length; i++) {
+        	  for(int j = 0; j < array2.length; j++) {
+	        	  if (array2[j].equals(array1[i])) {
+	                  b = true;
+	              }
+        	  }
+        }
+          return b;
+    }
+
+	public static String convertHangul(String money){
+		String[] han1 = {"","일","이","삼","사","오","육","칠","팔","구"};
+		String[] han2 = {"","십","백","천"};
+		String[] han3 = {"","만","억","조","경"};
+
+		StringBuffer result = new StringBuffer();
+		int len = money.length();
+		for(int i=len-1; i>=0; i--){
+			result.append(han1[Integer.parseInt(money.substring(len-i-1, len-i))]);
+			if(Integer.parseInt(money.substring(len-i-1, len-i)) > 0)
+				result.append(han2[i%4]);
+			if(i%4 == 0)
+				result.append(han3[i/4]);
+		}
+
+		return result.toString();
+	}
+
+	/**
+	 * List<?> jsonList 형태로 변환
+	 * @param List<?> resultList
+	 * @return List<JSONObject>
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static List<JSONObject> jsonParserList(List<?> resultList) {
+
+        JSONObject tmpJson;
+        List<JSONObject> jsonList = new ArrayList();
+
+	    try{
+	        for (Object obj : resultList) {
+	        	tmpJson = new JSONObject();
+		        for (Field field : obj.getClass().getDeclaredFields()){
+		            field.setAccessible(true);
+	            	tmpJson.put(field.getName(), field.get(obj));
+		        }
+		        jsonList.add(tmpJson);
+			}
+	    }catch (Exception e){
+	        e.printStackTrace();
+	    }
+
+	    return jsonList;
+	}
+
+	public static String removeSpecialCharacter(String str){
+		String match = "[^\uAC00-\uD7A3xfe0-9a-zA-Z\\s]"; str =str.replaceAll(match, "");
+		return str;
+	}
+
+
+	/**
+	 * String Byte 체크
+	 * @param str
+	 * @return
+	 */
+	public static int getStringByte(String str){
+		int rtnInt = 0;
+
+		try{
+			if(!"".equals(StringUtil.strTrim(str))){
+				rtnInt = str.getBytes("euc-kr").length;
+			}else{
+				rtnInt = -99;
+			}
+		}catch(Exception e){
+			rtnInt = -99;
+		}
+
+		return rtnInt;
+	}
+
+	/**
+	 * 나이 계산 프로그램
+	 * @param birthYear
+	 * @param birthMonth
+	 * @param birthDay
+	 * @param gubun  (1:만 나이, 2: 나이)
+	 * @return
+	 */
+	public static int getAge(int birthYear, int birthMonth, int birthDay, String gubun){
+	        Calendar current = Calendar.getInstance();
+	        int currentYear  = current.get(Calendar.YEAR);
+	        int currentMonth = current.get(Calendar.MONTH) + 1;
+	        int currentDay   = current.get(Calendar.DAY_OF_MONTH);
+
+	        int age = currentYear - birthYear;
+	        // 생일 안 지난 경우 -1
+	        if("1".equals(gubun)){
+	        	if (birthMonth * 100 + birthDay > currentMonth * 100 + currentDay)
+	        		age--;
+	        }
+
+	        return age;
+	}
+
+	/**
+	 * 생일로 나이구하기
+	 * @param day
+	 * @param gubun (1:만나이, 2:나이)
+	 * @return
+	 */
+	public static int getAge(String day, String gubun){
+		int age = 0;
+
+		day = StringUtil.strReplaceALL(day, "-", "");
+		day = StringUtil.strReplaceALL(day, "\\.", "");
+
+		String birthYearStr = StringUtil.strSubString(day, 0, 4);
+		String birthMonthStr = StringUtil.strSubString(day, 4, 6);
+		String birthDayStr = StringUtil.strSubString(day, 6, 8);
+
+		int birthYear = StringUtil.strToInt(birthYearStr);
+		int birthMonth = StringUtil.strToInt(birthMonthStr);
+		int birthDay = StringUtil.strToInt(birthDayStr);
+
+		Calendar current = Calendar.getInstance();
+        int currentYear  = current.get(Calendar.YEAR);
+        int currentMonth = current.get(Calendar.MONTH) + 1;
+        int currentDay   = current.get(Calendar.DAY_OF_MONTH);
+
+        age = currentYear - birthYear;
+
+        // 생일 안 지난 경우 -1
+        if("1".equals(gubun)){
+        	if (birthMonth * 100 + birthDay > currentMonth * 100 + currentDay)
+        		age--;
+        }
+
+        return age;
+	}
+
+  /**
+   * 나이로 학년 구하기
+   * 테스트는 해 봤니? 예외처리 모르니?
+   * @param day
+   * @param gubun
+   * @return
+   */
+  public static int getSchoolYear(String day, String gubun) {
+    int age = StringUtil.getAge(day, gubun);
+
+  //  if (age == 8) {
+  //    age = 1; // 초등학교 1학년
+  //  } else if (age == 9) {
+  //    age = 2; // 초등학교 2학년
+  //  } else if (age == 10) {
+  //    age = 3; // 초등학교 3학년
+  //  } else if (age == 11) {
+  //    age = 4; // 초등학교 4학년
+  //  } else if (age == 12) {
+  //    age = 5; // 초등학교 5학년
+  //  } else if (age == 13) {
+  //    age = 6; // 초등학교 6학년
+  //  } else if (age == 14) {
+  //    age = 7; // 중학교 1학년
+  //  } else if (age == 15) {
+  //    age = 8; // 중학교 2학년
+  //  } else if (age == 16) {
+  //    age = 9; // 중학교 3학년
+  //  } else if (age == 17) {
+  //    age = 10; // 고등학교 1학년
+  //  } else if (age == 18) {
+  //    age = 11; // 고등학교 2학년
+  //  } else if (age == 19) {
+  //    age = 12; // 고등학교 3학년
+  //  }
+		switch( age ) {
+			case 8 :
+				age = 1; // 초등학교 1학년
+				break;
+			case 9 :
+				age = 2; // 초등학교 2학년
+				break;
+			case 10 :
+				age = 3; // 초등학교 3학년
+				break;
+			case 11 :
+				age = 4; // 초등학교 4학년
+				break;
+			case 12 :
+				age = 5; // 초등학교 5학년
+				break;
+			case 13 :
+				age = 6; // 초등학교 6학년
+				break;
+			case 14 :
+				age = 7; // 중학교 1학년
+				break;
+			case 15 :
+				age = 8; // 중학교 2학년
+				break;
+			case 16 :
+				age = 9; // 중학교 3학년
+				break;
+			case 17 :
+				age = 10; // 고등학교 1학년
+				break;
+			case 18 :
+				age = 11; // 고등학교 2학년
+				break;
+			case 19 :
+				age = 12; // 고등학교 3학년
+				break;
+		}
+	}
+    
+
+    return age;
+  }
+
+
+	public static String[] toArrayString(String str) {
+
+		String[] arrStr = new String[str.length()];
+
+		if( StringUtil.isEmpty(str) ) return arrStr;
+
+		for( int i=0; i<str.length(); i++ ) {
+			arrStr[i] = str.substring(i, i+1);
+		}
+
+		return arrStr;
+
+	}
+
+	/**
+	  * 문자 암호화
+	  * @param val
+	  * @return
+	  */
+	 public static String encryptCEV(String val){
+		 String rtn = "";
+		 val = StringUtil.strTrim(val);
+
+		 try{
+			 if(!"".equals(val)){
+				 	// 암호화 함수 사용시 대비용
+				 	//System.out.println("암호화===>" + val);
+				 	//rtn = SDBCrypto.encryptCEV("dbsec","api_key","aria256",val);
+			 }
+		 }catch(Exception e){
+			 //e.printStackTrace();
+			 rtn = val;
+		 }
+		 return rtn;
+	 }
+
+	 /**
+	  * 문자 복호화
+	  * @param val
+	  * @return
+	  */
+	 public static String decryptCEV(String val){
+		 String rtn = "";
+		 val = StringUtil.strTrim(val);
+
+		 try{
+			 if(!"".equals(val)){
+				 // 복호화 함수 사용시 대비용
+				 // rtn = SDBCrypto.decryptCEV("dbsec","api_key","aria256",val);
+			 }
+		 }catch(Exception e){
+			 rtn = val;
+		 }
+
+		 return rtn;
+	 }
+
+	 /**
+	  * 결제 방법 한글명
+	  * @param str
+	  * @return
+	  */
+	 public static String payMethodNm(String str){
+		 String rtn="";
+
+		 if("100000000000".equals(str)){
+			 rtn="카드결제";
+		}else if("010000000000".equals(str)){
+			rtn="계좌이체";
+		}else if("001000000000".equals(str)){
+			rtn="가상계좌";
+		}else if("NO".equals(str)){
+			rtn="무통장입금";
+		}else if("REFUND".equals(str)){
+			rtn="환불요청";
+		}else if("BANK".equals(str)){
+			rtn="계좌이체";
+		}else if("CARD".equals(str)){
+			rtn="카드";
+		}else if("CASH".equals(str)){
+			rtn="현금입금";
+		}else if("ZERO".equals(str)){
+			rtn="제로페이";
+		}else if("VBANK".equals(str)){
+			rtn="가상계좌";
+		}else if("REALCARD".equals(str)){
+			rtn="현장카드";
+		}
+		 return rtn;
+	 }
+
+	 /**
+	  * 엔터 리플레이스
+	  * @param str
+	  * @return
+	  */
+	 public static String enterReplace(String str){
+		 String rtn = "";
+
+		 try{
+			 if(!"".equals(StringUtil.strTrim(str))){
+				 rtn = StringUtil.strReplaceALL(str, System.getProperty("line.separator"), "");
+				 rtn = StringUtil.strReplaceALL(str, "\n", "");
+				 rtn = StringUtil.strReplaceALL(str, "\r\n", "");
+			 }
+		 }catch(Exception e){
+			 rtn = str;
+		 }
+
+		 return rtn;
+	 }
+
+	 /**
+	  * html 태그 변환 치환 (&quot; &amp; &lt; &gt; &nbsp; 등)
+
+	  * @param str
+	  * @return
+	  */
+	 public static String unescapeHtml3(String str){
+		 String rtn = "";
+
+		 try{
+			 if(!"".equals(StringUtil.strTrim(str))){
+				 rtn = StringEscapeUtils.unescapeHtml3(str);
+			 }
+		 }catch(Exception e){
+			 rtn = str;
+		 }
+
+		 return rtn;
+	 }
+
+	 /**
+	  * 복호화 함수
+	  * @param text
+	  * @param key
+	  * @return
+	  * @throws Exception
+	  */
+	 public static String Decrypt(String text, String key) throws Exception{
+           Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+           byte[] keyBytes= new byte[16];
+           byte[] b= key.getBytes("UTF-8");
+           int len= b.length;
+
+           if (len > keyBytes.length) len = keyBytes.length;
+
+           System.arraycopy(b, 0, keyBytes, 0, len);
+           SecretKeySpec keySpec = new SecretKeySpec(keyBytes, "AES");
+           IvParameterSpec ivSpec = new IvParameterSpec(keyBytes);
+           cipher.init(Cipher.DECRYPT_MODE,keySpec,ivSpec);
+
+           BASE64Decoder decoder = new BASE64Decoder();
+           byte [] results = cipher.doFinal(decoder.decodeBuffer(text));
+
+           return new String(results,"UTF-8");
+     }
+
+	 /**
+	  * 암호화 함수
+	  * @param text
+	  * @param key
+	  * @return
+	  * @throws Exception
+	  */
+     public static String Encrypt(String text, String key) throws Exception{
+               Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+               byte[] keyBytes= new byte[16];
+               byte[] b= key.getBytes("UTF-8");
+               int len= b.length;
+
+               if (len > keyBytes.length) len = keyBytes.length;
+
+               System.arraycopy(b, 0, keyBytes, 0, len);
+               SecretKeySpec keySpec = new SecretKeySpec(keyBytes, "AES");
+               IvParameterSpec ivSpec = new IvParameterSpec(keyBytes);
+
+               cipher.init(Cipher.ENCRYPT_MODE,keySpec,ivSpec);
+
+               byte[] results = cipher.doFinal(text.getBytes("UTF-8"));
+               BASE64Encoder encoder = new BASE64Encoder();
+               return encoder.encode(results);
+     }
+
+
+
+     /**
+ 	 * HashMap 에서 Random Key 추출
+ 	 * @return
+ 	 */
+ 	public static Object randomKeyValue(HashMap<String, String> drwtMap){
+ 		Object[] keys = drwtMap.keySet().toArray();
+
+ 		Object randomKey = keys[new Random().nextInt(keys.length)];
+ 		drwtMap.get(randomKey);
+
+ 		return randomKey;
+ 	}
+
+
+ 	//DEXT5 에디터 전용 문자 치환
+	public static String htmlDext5Char( String s ) {
+
+		if(StringUtils.isNotEmpty(s)){
+			s = s.replaceAll( "'", "&#39;" );
+
+			return s;
+		}else{
+			return new String();
+		}
+
+	}
+
+	public static String getSHA512(String input){
+
+		String toReturn = null;
+		try {
+			MessageDigest digest = MessageDigest.getInstance("SHA-512");
+			digest.reset();
+			digest.update(input.getBytes("utf8"));
+			toReturn = String.format("%0128x",
+					new BigInteger(1, digest.digest()));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return toReturn;
+	}
+
+
+
+    public static String AesEncrypt(String str,String IV,String secretKey) throws IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException, InvalidAlgorithmParameterException, UnsupportedEncodingException, BadPaddingException {
+
+        IvParameterSpec iv = new IvParameterSpec(IV.getBytes("UTF-8"));
+        SecretKeySpec skeySpec = new SecretKeySpec(secretKey.getBytes("UTF-8"), "AES");
+
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+        cipher.init(Cipher.ENCRYPT_MODE, skeySpec, iv);
+
+        byte[] encrypted = cipher.doFinal(str.getBytes());
+        return DatatypeConverter.printBase64Binary(encrypted);
+
+    }
+
+    public static String AesDecrypt(String encrypted‌​String,String IV,String secretKey) throws UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
+
+        IvParameterSpec iv = new IvParameterSpec(IV.getBytes("UTF-8"));
+        SecretKeySpec skeySpec = new SecretKeySpec(secretKey.getBytes("UTF-8"), "AES");
+
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+        cipher.init(Cipher.DECRYPT_MODE, skeySpec, iv);
+
+        byte[] original = cipher.doFinal(DatatypeConverter.parseBase64Binary(encrypted‌​String));
+        return new String(original);
+    }
+
+	// HTTP POST request
+	public static String sendPost(String targetUrl, String parameters) throws Exception {
+
+		URL url = new URL(targetUrl);
+		HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
+
+		con.setRequestMethod("POST"); // HTTP POST 메소드 설정
+		con.setRequestProperty("User-Agent", "Mozilla/5.0 (iPod; U; CPU iPhone OS 3_1_3 like Mac OS X; ko-kr) AppleWebKit/528.18 (KHTML, like Gecko) Version/4.0 Mobile/7E18 Safari/528.16");
+		con.setDoOutput(true); // POST 파라미터 전달을 위한 설정
+
+		// Send post request
+		DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+		wr.writeBytes(parameters);
+		wr.flush();
+		wr.close();
+
+		int responseCode = con.getResponseCode();
+		BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream(), "euc-kr"));
+		String inputLine;
+		StringBuffer response = new StringBuffer();
+
+		while ((inputLine = in.readLine()) != null) {
+			response.append(inputLine);
+		}
+		in.close();
+
+		return response.toString();
+
+	}
+
+  public static String printException( Exception e ) {
+    return printException(e, false);
+  }
+
+
+  public static String printException( Exception e, Boolean doTrace ) {
+    StringBuilder sb = new StringBuilder();
+
+    StackTraceElement[] ste = e.getStackTrace();
+    String fileName = ste[0].getFileName();
+    String className = ste[0].getClassName();
+    String methodName = ste[0].getMethodName();
+    int lineNumber = ste[0].getLineNumber();
+
+    sb.append("\n>>> ERR ON " + fileName + " <<<");
+    sb.append("\n" + className + "." + methodName + "() line : " + lineNumber);
+    sb.append("\nMSG : " + e.getMessage());
+    if( null != e.getCause() ) {
+      sb.append("\nCUZ : " + e.getCause());
+    }
+
+    logger.error(sb.toString());
+    if( !className.contains("hanshin") || doTrace ) e.printStackTrace();
+    System.out.println("\n\n");
+
+    ste = null;
+    fileName = className = methodName = null;
+
+    return sb.toString();
+  }
+  
+  /**
+   * 입력 받은 문자열과 횟수만큼 반복하여 리턴한다.
+   */
+  public static String repeat(String str, int loop) {
+    StringBuilder sb = new StringBuilder(str);
+    for( int i = loop; i >= 0; i--) {
+      sb.append(str);
+    }
+    return sb.toString();
+  }
+  
+  /**
+   * 해당 함수를 호출한 함수와 그 함수를 호출한 함수의 클래스명, 메소드명, 라인번호를 출력한다.
+   * 디버깅용.
+   */
+  public static void mktrace( String msg, int logDepth, int spDepth, String sperator ) {
+    // 전처리
+    if( isEmpty(sperator) ) sperator = "-";
+    sperator = " " + repeat( sperator, spDepth ) + " ";
+    if( logDepth <= 1 ) logDepth = 1;
+    if( spDepth < 2 ) spDepth = 2;
+    if( msg == null ) msg = "";
+    else msg = " " + msg + " ";
+    
+    // 변수 선언
+    StringBuilder trace = new StringBuilder();
+    StringBuilder log = new StringBuilder();
+    final StackTraceElement[] stes = Thread.currentThread().getStackTrace();
+    
+    // mktrace를 부른 class와 그 class를 부른 class 찾기
+    for (int i = 1; i <= stes.length -1 ; i++) {
+      StackTraceElement ste = stes[i];
+      StackTraceElement tgt = stes[i + 1];
+      StackTraceElement cllr = stes[i + 2];
+
+      if( "mktrace".equals( ste.getMethodName() ) && !"mktrace".equals( tgt.getMethodName() ) ) {
+        trace.append( String.format("%s", tgt.getClassName()) );
+        trace.append( String.format(".%s", tgt.getMethodName()) );
+        trace.append( String.format(":%d", tgt.getLineNumber()) );
+        trace.append( " -- CALLED FROM -- " );
+        trace.append( String.format("%s", cllr.getClassName()) );
+        trace.append( String.format(".%s", cllr.getMethodName()) );
+        trace.append( String.format(":%d", cllr.getLineNumber()) );
+        //logger.debug( "{}", trace.toString() );
+        break;
+      }
+    }
+
+    log
+      .append("\n\n")
+      .append(repeat("\t", logDepth))
+      .append(sperator)
+      .append(trace.toString())
+      .append(msg)
+      .append(sperator)
+      .append("\n\n");
+    
+    logger.error(log.toString());
+  }
+  public static void mktrace( String msg ) {
+    mktrace(msg, 0, 0, "");
+  }
+  public static void mktrace() {
+    mktrace("", 0, 0, "");
+  }
+
+}

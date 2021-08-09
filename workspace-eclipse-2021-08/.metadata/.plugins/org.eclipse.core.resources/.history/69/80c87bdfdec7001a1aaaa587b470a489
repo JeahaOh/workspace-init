@@ -1,0 +1,628 @@
+<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<script type="text/javascript" src="${pageContext.request.contextPath}/js/outer/sheet.js"></script>
+<script type="text/javascript" src="${pageContext.request.contextPath}/js/outer/fileSaver.js"></script>
+<script type="text/javascript" src="${pageContext.request.contextPath}/js/outer/xlsxExportHandler.js"></script>
+<script>
+$(document).ready(function(){
+ //메세지
+ var prereturnHtml='';//페이징 반환 html 
+ var firstDataListCnt=0;//전체데이터 카운트
+ //최초실행
+ preScatFirst();
+ function preScatFirst(){
+  getCodeDataComm();
+  chkVersionInternetType();
+  
+  //엑셀 이면 곧바로 
+  if(!dataNullEmptyChk('${listForExcelLastVerType}') 
+  && '${listForExcelLastVerType}' == new String("Y") ){
+	  searchPreScatListCallBackForExcel();  
+  }else{
+    searchPreScatList();
+  };
+ 
+ };
+ 
+ //콜벡
+ function searchPreScatListCallBackForExcel(){
+	 var html='';	 
+	 $("#preListExcel").empty();	
+	 if(!dataNullEmptyChk('${listForExcelLastVer}')){
+		<c:forEach items="${listForExcelLastVer}" var="v" varStatus="i">
+			html += '<tr>';
+			html += '<td class=tc>'+"${v.rnum}"+'</td>';
+			html += '<td class=tc>'+"${v.nmpaOfeNm}"+'</td>';
+			html += '<td class=tc>'+"${v.fcltyKndNm}"+'</td>';
+			html += '<td class=tc>'+"${v.fcltyNm}"+'</td>';
+			html += '<td class=tc>'+"${v.adres}"+'</td>';
+			html += '<td class=tc>'+beforeData("${v.emphsMngAt}")+'</td>';
+			html += '<td class=tc>'+"${v.dataCode == 'MIF'? '연계' : '해경'}"+'</td>';
+			html += '<td class=tc>'+"${v.sttemntNo}"+'</td>';
+			html += '<td class=tc>'+"${v.rprsntvNm}"+'</td>';
+			html += '<td class=tc>'+"${v.rprsntvTelno}"+'</td>';
+			html += '<td class=tc>'+"${v.sttemntInsttCode}"+'</td>';
+			html += '<td class=tc>'+"${v.sttemntDe}"+'</td>';
+			html += '<td class=tc>'+"${v.sttemntSeCodeNm}"+'</td>';
+			html += '<td class=tc>'+"${v.sttemntCanclDe}"+'</td>';
+			html += '<td class=tc>'+"${v.bsnSeCodeNm}"+'</td>';
+			html += '<td class=tc>'+"${v.emphsMngAtNm}"+'</td>';
+			html += '</tr>';
+		</c:forEach>
+		$("#preListExcel").append(html);
+      }else{
+		$("#preListExcel").append('<tr><td colspan=12 align=center>조회된 데이터가 없습니다.</td><tr>');
+	 };
+	 
+ };
+ 
+ function getCodeDataComm(){
+	 //신고기관 
+	 resetCode('sttemntOne');
+	 commonOptionMake('getSingopriotry','getSingopriotry','/cmmn/getCommSelectBoxData.do',{commCodeBefore:'PM37',returnMapCodeNm:'getSingopriotry'},'all');
+	 //시설종류
+	 resetCode('fcltyOne');
+	 commonOptionMake('fcltySeCode','fcltySeCode','/cmmn/getCommSelectBoxData.do',{commCodeBefore:'PM1',returnMapCodeNm:'fcltySeCode'},'all');
+	 //등록신고구분
+	 resetCode('sttemntSeCode');
+	 commonOptionMake('sttemntSeCode','sttemntSeCode','/cmmn/getCommSelectBoxData.do',{commCodeBefore:'PM32',returnMapCodeNm:'sttemntSeCode'},'all');
+	 $('#sttemntSeCode').val('${FcltyInfoSearchVo.sttemntSeCode}');
+	 //영업구분
+	 resetCode('bsnSeCode');
+	 commonOptionMake('bsnSeCode','bsnSeCode','/cmmn/getCommSelectBoxData.do',{commCodeBefore:'PM28',returnMapCodeNm:'bsnSeCode'},'all');
+	 $('#bsnSeCode').val('${FcltyInfoSearchVo.bsnSeCode}');
+	 setDefaultSelectData();
+		
+ };
+ 
+ function setDefaultSelectData(){
+	   if(!dataNullEmptyChk('${FcltyInfoSearchVo.nmpaOfeCode}')){
+		   var urlDataAll='${pageContext.request.contextPath}/cmmn/selectIsnttView.do';
+		   var formData={insttCode:'${FcltyInfoSearchVo.nmpaOfeCode}'};
+		   ajaxCommonAsync(urlDataAll,formData,nmpaOfeCodeCntCallBack); 
+	   };
+};
+
+function nmpaOfeCodeCntCallBack(data){
+	   if(!dataNullEmptyChk(data)){
+		   $('#isnttCode').val(data.insttCode);
+		   $('#isnttName').val(data.lowestInsttNm);
+		   $('#upperIsnttCode').val(data.sehighInsttCode);
+		   $('#upperIsnttNm').val(data.upInsttNm);
+	   };
+};
+ 
+ $('#fcltySeCode').on('change',function(){
+	    resetCode('fcltyTwo');
+	    commonOptionMake('fcltyKndCode','fcltyKndCode','/cmmn/getCommSelectBoxData.do',{commCodeBefore:$(this).val(),returnMapCodeNm:'fcltyKndCode'},'select'); 
+	});
+
+$('#fcltyKndCode').on('change',function(){
+	 resetCode('fcltyThree');
+	if(!dataNullEmptyChk($(this).val())){
+		  $('#fcltyKndCodeThree').empty(); 
+		if($(this).val() == new String('PM5')){//기름 및 유해만 검색
+			 commonOptionMake('fcltyKndCodeThree','fcltyKndCodeThree','/cmmn/getCommSelectBoxData.do',{commCodeBefore:$(this).val(),returnMapCodeNm:'fcltyKndCodeThree'},'select'); 
+		}else{
+			$('#fcltyKndCodeThree').hide();	
+		};
+	};
+});
+ 
+ //신고기관
+ $('#getSingopriotry').on('change',function(){
+	    resetCode('sttemntTwo');
+	    if($(this).val() == 'PM1719'){
+	    	var html = '';
+	    	html += '<option value="PM1719">해경</option>'
+	    	$('#sttemntInsttCode').append(html);
+	    	$('#sttemntInsttCode').css('display','inline-block');
+	    }else{
+	    commonOptionMake('sttemntInsttCode','sttemntInsttCode','/cmmn/getCommSelectBoxData.do',{commCodeBefore:$(this).val(),returnMapCodeNm:'sttemntInsttCode'},'all');
+	    }
+	});
+
+ function resetCode(type){
+	 switch (type) {
+		case 'sttemntOne':
+	 $('#getSingopriotry').hide();
+	 $('#sttemntInsttCode').hide();
+	 $('#getSingopriotry').empty();
+	 $('#sttemntInsttCode').empty(); 
+			
+			break;
+		case 'sttemntTwo':
+	 $('#sttemntInsttCode').hide();
+	 $('#sttemntInsttCode').empty(); 
+			
+			break;
+		case 'fcltyOne':
+	 $('#fcltySeCode').hide();
+	 $('#fcltyKndCode').hide();
+	 $('#fcltyKndCodeThree').hide();
+	 $('#fcltySeCode').empty();
+	 $('#fcltyKndCode').empty(); 			
+	 $('#fcltyKndCodeThree').empty(); 			
+			break;
+		case 'fcltyTwo':
+  	$('#fcltyKndCode').hide();
+    $('#fcltyKndCodeThree').hide();
+    $('#fcltyKndCode').empty(); 			
+    $('#fcltyKndCodeThree').empty();  			
+			break;
+		case 'fcltyThree':
+	$('#fcltyKndCodeThree').hide();
+	$('#fcltyKndCodeThree').empty();  			
+			break;
+		case 'sttemntSeCode':
+	$('#sttemntSeCode').hide();
+	$('#sttemntSeCode').empty();  			
+			break;
+		case 'bsnSeCode':
+	$('#bsnSeCode').hide();
+	$('#bsnSeCode').empty();  			
+			break;
+	
+		default:
+			break;
+	}
+ };
+ 
+ //조회
+ function searchPreScatList(pageNo){
+  searchBeforeDataSuper();	 
+  var totalPageCount=0; 
+  $("#preListP").empty();
+  $('#pageListP').empty(); 
+  var precurrentPageNo = 1;
+  var preTotalRecordCount =0;
+  var formData='';
+  prereturnHtml='';
+  firstDataListCnt=0;
+  var urlDataAll='${pageContext.request.contextPath}/ext/FcltyInfo/FcltyInfofirstDataListCnt.do';
+  formData=$('#searchFormData').serialize();
+  ajaxCommonAsync(urlDataAll,formData,firstDataListCntCallBack);
+  if(Number(firstDataListCnt) > 0){	
+	  preTotalRecordCount=firstDataListCnt; 
+	  if (!dataNullEmptyChk(pageNo)) {
+	  		precurrentPageNo = pageNo;
+	 };
+	  
+  var params = {
+  	  		currentPageNo : precurrentPageNo,
+  	  		totalRecordCount : preTotalRecordCount
+  	  };
+  var returnData = ajaxPagingCommon(params);
+    //페이징 성공시만 리스트 조회
+  	if (!dataNullEmptyChk(returnData.firstRecordIndex) 
+  	 && !dataNullEmptyChk(returnData.lastRecordIndex)
+  	 && !dataNullEmptyChk(returnData.returnHtml)
+  	){
+  		prereturnHtml = returnData.returnHtml;
+  		totalPageCount=returnData.totalPageCount;
+  
+	  		$('input[name="firstRecordIndex"]').val(returnData.firstRecordIndex);
+	  		$('input[name="lastRecordIndex"]').val(returnData.lastRecordIndex);
+  	
+	///////////////////////조회 리스트///////////////////////////////////////////////////////////
+  		formData='';
+  		formData=$('#searchFormData').serialize();
+	  	var urlData='${pageContext.request.contextPath}/ext/FcltyInfo/searchFcltyInfoListP.do';
+	  	ajaxCommonAsync(urlData,formData,searchPreScatListCallBack);
+   ///////////////////////조회 리스트///////////////////////////////////////////////////////////  	
+  	}else{
+  	  $("#preListP").append('<tr><td colspan=7 align=center>조회된 데이터가 없습니다.</td><tr>');
+	  $('#pageListP').append('<a href="javascript:void(0)" >1</a>');
+  	};
+  	
+  }else{
+	  $("#preListP").append('<tr><td colspan=7 align=center>조회된 데이터가 없습니다.</td><tr>');
+	  $('#pageListP').append('<a href="javascript:void(0)" >1</a>');
+	
+  };
+	 
+  changeCount(precurrentPageNo,totalPageCount);
+
+ };
+
+ function changeCount(precurrentPageNo,totalPageCount){
+     var pagecnt=0;
+	 if(firstDataListCnt > 0){
+		 pagecnt=firstDataListCnt; 
+	 }else{
+		 pagecnt=0; 
+	 };
+	 $('#infoListP').text('총 [ '+pagecnt+' ]건 현재 '+precurrentPageNo+'/'+totalPageCount+' 페이지');
+ };
+ 
+ //전체 카운트 콜벡
+ function firstDataListCntCallBack(data){
+   if(!dataNullEmptyChk(data.refrnCount)){
+	   firstDataListCnt=data.refrnCount;  
+   };
+ };
+ //콜벡
+ function searchPreScatListCallBack(data){
+	 var html='';
+	 if(!dataNullEmptyChk(data)){
+	    $.each(data,function(i,e){
+		    html += '<tr name=prereListData data-fcltysn='+e.fcltySn+' data-datacode='+e.dataCode+' data-fcltykndcode='+e.fcltyKndCode+'>'; 
+		    html += '<td class=tc>'+changeEmptyNull(e.rnum)+'</td>';//순번 
+		    html += '<td class=tl title="'+changeEmptyNull(e.nmpaOfeNm)+'">'+changeEmptyNull(e.nmpaOfeNm)+'</td>';//소재지(주소) 
+		    html += '<td class=tl title="'+changeEmptyNull(e.fcltyKndNm)+'">'+changeEmptyNull(e.fcltyKndNm)+'</td>';//명칭 
+		    html += '<td class=tl title="'+changeEmptyNull(e.fcltyNm)+'">'+changeEmptyNull(e.fcltyNm)+'</td>';//개설시기 
+		    html += '<td class=tl title="'+changeEmptyNull(e.adres)+'">'+changeEmptyNull(e.adres)+'</td>';//수용능력
+		    html += '<td class=tc>'+beforeData(changeEmptyNull(e.emphsMngAt))+'</td>';//등록일자 
+		    html += '<td class=tc title="'+ changeEmptyNull(e.dataCode) +'">'+changeEmptyNull(e.dataCode == 'MIF' ? '연계' : '해경')+'</td>';
+		    html += '</tr>'; 
+	    });
+	    $("#preListP").append(html);
+	    $('#pageListP').append(prereturnHtml);
+	 }else{
+		//조회값 못받아올시
+		$("#preListP").append('<tr><td colspan=7 align=center>조회된 데이터가 없습니다.</td><tr>');
+		$('#pageListP').append('<a href="#" >1</a>'); 
+	 };
+ };
+ 
+ function beforeData(data){
+	 var ret='';
+		switch (data) {
+			case 'Y':
+				ret='중점관리';
+				break;
+			case '':
+				ret='일반관리';
+				break;
+			default:
+				break;
+		}
+		return ret;
+ }; 
+ 
+//페이징 이동
+ $('#pageListP').on('click','a[name=pageAssosiateAtag]',function(){
+	 searchPreScatList($(this).data('no'));
+ });
+
+$('#secbtnBtnListP').on('click',function(){
+	 searchPreScatList();
+});
+
+function searchBeforeDataSuper(){
+// 	$('input[name="nmpaOfeCode"]').val($('#isnttCode').val());
+	//시설종류
+	if(!dataNullEmptyChk($('#fcltyKndCodeThree').val())){
+	 $('input[name="fcltyKndCode"]').val($('#fcltyKndCodeThree').val());//3번활성화=기름 및 유해 선택
+	}else{
+	 if(!dataNullEmptyChk($('#fcltyKndCode').val())){
+	 $('input[name="fcltyKndCode"]').val($('#fcltyKndCode').val());//2
+	 }else{
+		 $('input[name="fcltyKndCode"]').val($('#fcltySeCode').val());//1 
+	 }	
+	};
+};
+
+ //등록화면 
+	 $('#PreScatInsert').on('click',function(){
+	 	$('#searchFormData').attr('action','${pageContext.request.contextPath}/ext/FcltyInfo/FcltyInfoInsertForm.do');
+		$('#searchFormData').submit();
+	 });
+ //상세보기
+ $('#preListP').on('click','[name=prereListData]',function(){
+	 $('#fcltySn').val($(this).data('fcltysn'));
+	 $('#dataCode1').val($(this).data('datacode'));
+	 $('#searchFormData').attr('action','${pageContext.request.contextPath}/ext/FcltyInfo/FcltyInfoView.do');
+	 $('#searchFormData').submit();
+ });
+/*  $('#preListP').on('click','[name=prereListData]',function(){
+	if(!dataNullEmptyChk($(this).data('fcltysn')) ){
+		$('input[name="fcltySn"]').val($(this).data('fcltysn'));	 
+		  $.ajax({
+				url : '${pageContext.request.contextPath}/ext/FcltyInfo/FcltyInfoFirstInsertMdh.do',
+				type : 'post',
+				data : {fcltySn:$(this).data('fcltysn')
+					  , wrterId:$('#wrterId').val()
+					  , fcltyKndCode:$(this).data('fcltykndcode')
+					  , verEx:$('input[name="verEx"]').val()} ,
+				dataType : 'json',
+				async: false,
+				success :function(data){
+					if(data.data.successStat == new String("success")){
+					   $('#searchFormData').attr('action','${pageContext.request.contextPath}/ext/FcltyInfo/FcltyInfoView.do');
+					   $('#searchFormData').submit();
+					}else{
+					   alert('필수값 누락 되었습니다.');
+					};
+				}
+			});
+	}else{
+	   alert('필수값 누락 되었습니다.')	
+	};
+ }); */
+ 
+ $('#resetCodent').on('click',function(){
+	  $('#upperIsnttCode').val(''); 
+	  $('#isnttCode').val(''); 
+	  $('#upperIsnttNm').val(''); 
+	  $('#isnttName').val(''); 
+});
+ 
+ 
+ triggerManual();
+ function triggerManual(){
+	 if(!dataNullEmptyChk('${FcltyInfoSearchVo.fcltyKndCodeFirst}')){//1
+		 $('#fcltySeCode').val('${FcltyInfoSearchVo.fcltyKndCodeFirst}');
+		 $('#fcltySeCode').trigger('change'); 
+		 if(!dataNullEmptyChk('${FcltyInfoSearchVo.fcltyKndCodeBefore}')){//2
+			 $('#fcltyKndCode').val('${FcltyInfoSearchVo.fcltyKndCodeBefore}'); 
+			 $('#fcltyKndCode').trigger('change');
+			 if(!dataNullEmptyChk('${FcltyInfoSearchVo.fcltyKndCodeThree}')){//기름 -3
+				 $('#fcltyKndCodeThree').val('${FcltyInfoSearchVo.fcltyKndCodeThree}');  
+			 };
+		 };
+	 };
+	 
+	 if(!dataNullEmptyChk('${FcltyInfoSearchVo.sttemntInsttCodeFirst}')){//1
+		 $('#getSingopriotry').val('${FcltyInfoSearchVo.sttemntInsttCodeFirst}');
+		 $('#getSingopriotry').trigger('change'); 
+		 if(!dataNullEmptyChk('${FcltyInfoSearchVo.sttemntInsttCode}')){//2
+			 $('#sttemntInsttCode').val('${FcltyInfoSearchVo.sttemntInsttCode}'); 
+		 };
+	 };
+ };
+
+});
+
+
+function fn_openIsnttCodeSearchPopup(){
+	var isnttCodeSearchPopup = 
+		CmmnUtil.openWin({
+			"url" : "/cmmn/isnttCodeSearchPopup.do"
+		,   "args" : {"selectType": "NMPA"}
+		,	"callback":''
+		,	"name": "isnttCodeSearchPopup"
+		,	"width": "800"
+		,	"height": "600"
+		,	"scrollbar": "yes"
+		});
+};
+
+function fn_resetIsntt(){
+	  $('#upperIsnttCode').val(''); 
+	  $('#isnttCode').val(''); 
+	  $('#upperIsnttNm').val(''); 
+	  $('#isnttName').val(''); 
+};
+/* ********************************************************
+ * 엑셀 다운로드
+ ******************************************************** */
+CmmnUtil.excelFunc = fn_downloadExcel;
+function fn_downloadExcel() {
+	<%--
+	$("[name='excelDownloadFrame']").remove(); // 화면에 보여지는부분만 조회되므로 해당 iframe 삭제해야함.
+	CmmnUtil.pagingToExcelAjax({
+		tableClass : "dataTable2",
+		fileName : "시설",
+		params : $("#searchFormData").serializeArray(),
+		excelPageUrl : "/ext/FcltyInfo/searchFcltyInfoListPForExcel.do"
+	});
+  /**
+   * @author - Jeaha
+   * @date : 2020.07.08
+   * @cmmt : 기존 엑셀 제작 방식의 비효율성과 제대로 된 주석이 없어서 새로 만든 엑셀 제작 로직.
+   * @cmmt : legacy code는 위에 주석 처리 해 뒀음.
+   */
+  --%>
+  CmmnUtil.ajaxJSON({
+	    params : $("#searchFormData").serializeArray()
+	    , url : "/ext/FcltyInfo/searchFcltyInfoListPForJSON.do"
+	    , callback: function(data) {
+	      console.log( data );
+	      return;
+	      if( !data.success ) {
+	        alert("조회에 실패했습니다.");
+	        return false;
+	      }
+	      var list = data.list;
+	      list.forEach( function( row ) {
+	        row = renameKey(row, 'rnum', '순번');
+	        row = renameKey(row, 'nmpaOfeNm', '해경서');
+	        row = renameKey(row, 'fcltyKndNm', '시설종류');
+	        row = renameKey(row, 'fcltyNm', '시설명');
+	        row = renameKey(row, 'adres', '주소');
+	        row = renameKey(row, 'emphsMngAtNm', '관리대상');
+	        row = renameKey(row, 'registDt', '등록일');
+	        row = renameKey(row, 'rm', '비고');
+
+	        delete row.adres;
+	        delete row.atchmnflId;
+	        delete row.bsnSeCode;
+	        delete row.useAt;
+	        delete row.lastUpdusrId;
+	        delete row.registerId;
+	        delete row.lastUpdtDt;
+	        delete row.rb;
+	        //console.log( row );
+	      });
+
+	      exportExcel(list, '신속동원협약업체', '신속동원협약업체.xlsx');
+	    }
+	  });
+}
+</script>
+<!--bodywrap start-->
+<div class="bodywrap">
+  <jsp:include page="/menu/location.do"></jsp:include>
+  <!--content start-->
+  <div class="content" id="content">
+    <input type="hidden" id="upperIsnttCode" />
+    <div class="confirm">
+      <form id="searchFormData" method="post">
+        <input type="hidden" name="verEx" />
+        <input type="hidden" name="menuCode" value="${param.menuCode}" />
+        <input type="hidden" name="firstRecordIndex" />
+        <input type="hidden" name="lastRecordIndex" />
+        <input type="hidden" id="fcltySn" name="fcltySn" />
+        <input type="hidden" name="fcltyKndCode" />
+        <input type="hidden" id="isnttCode" name="nmpaOfeCode" />
+        <input type="hidden" id="dataCode1" name="dataCode1" />
+        <input type="hidden" id="wrterId" value="${loginVO.userId}" />
+
+        <table>
+          <caption>시설 목록 조회영역</caption>
+          <colgroup>
+            <col style="width: 12%" />
+            <col style="width: 38%" />
+            <col style="width: 16%" />
+            <col style="width: 34%" />
+          </colgroup>
+          <tbody>
+            <tr>
+              <th scope="row">해경서</th>
+              <td colspan="3">
+                <input type="text" id="upperIsnttNm" name="" class="inputsrch vm" size="16" readonly="readonly" title="해경서" />
+                <input type="text" id="isnttName" name="" class="inputsrch vm" size="16" readonly="readonly" title="상세해경서" />
+                <a href="#" class="btn inline" onclick="javascript:fn_openIsnttCodeSearchPopup(); return false;">찾기</a>
+                <a class="btn inline" onclick="javascript:fn_resetIsntt(); return false;" href="#">X</a>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">시설종류</th>
+              <td>
+                <select id="fcltySeCode" name="fcltyKndCodeFirst" class="vm" title="시설종류"> </select>
+                <select id="fcltyKndCode" name="fcltyKndCodeBefore" class="vm" title="시설종류"> </select>
+                <select id="fcltyKndCodeThree" name="fcltyKndCodeThree" class="vm" title="시설종류"> </select>
+              </td>
+              <th scope="row"><label for="idname_1">신고기관</label></th>
+              <td>
+                <select id="getSingopriotry" name="sttemntInsttCodeFirst" class="vm" title="신고기관">
+                </select>
+                <select id="sttemntInsttCode" name="sttemntInsttCode" class="vm" title="상세신고기관">
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row"><label for="emphsMngAt">관리대상</label></th>
+              <td>
+                <select id="emphsMngAt" name="emphsMngAt" class="vm">
+                  <option value="" <c:if test="${FcltyInfoSearchVo.emphsMngAt eq ''}">selected</c:if>>전체</option>
+                  <option value="N" <c:if test="${FcltyInfoSearchVo.emphsMngAt eq 'N'}">selected</c:if>>일반관리</option>
+                  <option value="Y" <c:if test="${FcltyInfoSearchVo.emphsMngAt eq 'Y'}">selected</c:if>>중점관리</option>
+                </select>
+              </td>
+              <th scope="row"><label for="sttemntSeCode">등록.신고구분</label></th>
+              <td>
+                <select id="sttemntSeCode" name="sttemntSeCode" class="vm">
+                </select>
+              </td>
+            </tr>
+            <tr>
+
+              <th scope="row"><label for="bsnSeCode">영업구분</label></th>
+              <td>
+                <select id="bsnSeCode" name="bsnSeCode" class="vm">
+                </select>
+              </td>
+              <th scope="row"><label for="dataCode">DB구분</label></th>
+              <td>
+                <select id="dataCode" name="dataCode" class="vm">
+                  <option selected="selected" value="">전체</option>
+                  <option value="MIF">연계</option>
+                  <option value="MPC">해경</option>
+                </select>
+              </td>
+
+            </tr>
+            <tr>
+              <th scope="row"><label for="searchType">조회조건</label></th>
+              <td>
+                <select id="searchType" name="searchType" class="vm">
+                  <option value="" <c:if test="${FcltyInfoSearchVo.emphsMngAt eq ''}">selected</c:if>>전체</option>
+                  <option value="fcltyNm" <c:if test="${FcltyInfoSearchVo.emphsMngAt eq 'fcltyNm'}">selected</c:if>>시설명</option>
+                </select>
+                <input type="text" name="searchWord" class="inputsrch vm" value="${FcltyInfoSearchVo.searchWord}" title="검색어" />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </form>
+    </div>
+    <div class="btn_wrap pt10 tr">
+      <a href="#" class="btn secbtn plus" onclick="javascript:fn_downloadExcel(); return false;">엑셀다운로드</a>
+      <a href="javascript:void(0)" class="btn secbtn plus" id="secbtnBtnListP">조회</a>
+    </div>
+    <div class="table_top mt10 overx">
+      <div class="gridheader">
+        <div class="left">
+          <span class="info" id="infoListP"></span>
+        </div>
+      </div>
+      <table class="dataTable txtOver">
+        <caption>시설관리</caption>
+        <colgroup>
+          <col style="width: 8%" />
+          <col style="width: 15%" />
+          <col style="width: 20%" />
+          <col />
+          <col style="width: 20%" />
+          <col style="width: 10%" />
+          <col style="width: 10%" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th scope="col">순번</th>
+            <th scope="col">해경서</th>
+            <th scope="col">시설종류</th>
+            <th scope="col">시설명</th>
+            <th scope="col">주소</th>
+            <th scope="col">관리대상</th>
+            <th scope="col">DB구분</th>
+          </tr>
+        </thead>
+        <tbody id="preListP" name="preListP">
+        </tbody>
+      </table>
+
+      <table class="dataTable2 txtOver" hidden="true">
+        <caption>시설관리</caption>
+        <colgroup>
+          <col style="width: 8%" />
+          <col style="width: 15%" />
+          <col style="width: 20%" />
+          <col />
+          <col style="width: 20%" />
+          <col style="width: 10%" />
+          <col style="width: 10%" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th scope="col">순번</th>
+            <th scope="col">해경서</th>
+            <th scope="col">시설종류</th>
+            <th scope="col">시설명</th>
+            <th scope="col">주소</th>
+            <th scope="col">관리대상</th>
+            <th scope="col">DB구분</th>
+            <th scope="col">등록번호</th>
+            <th scope="col">대표자</th>
+            <th scope="col">연락처</th>
+            <th scope="col">등록기관</th>
+            <th scope="col">등록일</th>
+            <th scope="col">등록구분</th>
+            <th scope="col">등록취소일</th>
+            <th scope="col">영업구분</th>
+            <th scope="col">관리대상</th>
+          </tr>
+        </thead>
+        <tbody id="preListExcel" name="preListP">
+        </tbody>
+      </table>
+
+      <div class="pagenavigation" id="pageListP"></div>
+    </div>
+    <div class="btn_wrap pt10 tr">
+      <a href="javascript:void(0)" class="btn pagebtn positive" id="PreScatInsert">등록</a>
+    </div>
+  </div>
+</div>

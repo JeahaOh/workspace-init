@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="waterdepth">
+
+  <resultMap id="areaResult" type="com.koem.vms.area.dto.AreaDTO">
+    <result property="areaIdx" column="IDX"/>
+    <result property="areaName" column="TITLE"/>
+    <result property="areaGeometry" column="GEOM"/>
+    <result property="createDate" column="CREATE_DATE"/>
+  </resultMap>
+  
+  <select id="selectAll" resultType="list">
+    <![CDATA[
+      SELECT
+        A.IDX, ST_ASTEXT(A.GEOM), A.DEPT
+      FROM
+        TB_DEPTH_DATA AS A;
+    ]]>
+  </select>
+  
+  <select id="getWaterDepthInRage" parameterType="String" resultType="Map">
+    <![CDATA[
+      SELECT
+        POINT.IDX, ST_ASTEXT(POINT.GEOM), POINT.DEPT
+      FROM
+        TB_DEPTH_DATA AS POINT,
+        ST_GEOMFROMTEXT('SRID=4326;${value}')
+          AS POLY
+      WHERE
+        ST_WITHIN(
+          POINT.GEOM, POLY
+        ) = TRUE
+    ]]>
+  </select>
+
+</mapper>
